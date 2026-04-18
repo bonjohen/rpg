@@ -26,6 +26,11 @@ Phase End
   file path and instruct it to read STARTUP.md, find the next Open phase, and
   execute end-to-end. Do not continue in the current context after committing.
 
+On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
+* Provide a few paragraphs about what was accomplished this phase, also lauch
+  any necessary servers and services, indicate their paths, and explain how to
+  use the sites, in context with the design document. Pause work on the plan.
+
 ## Phase 0: Repository Foundation and Startup Context
 
 [#] Phase Startup | Started (PST): 2026-04-18 09:00 AM | Completed (PST): 2026-04-18 09:02 AM
@@ -104,16 +109,22 @@ Phase End
 
 ## Phase 4: Scope and Visibility Enforcement
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement public scope delivery rules | Started (PST): | Completed (PST):
-[ ] Implement private-referee scope delivery rules | Started (PST): | Completed (PST):
-[ ] Implement side-channel scope model and permissions | Started (PST): | Completed (PST):
-[ ] Implement referee-only storage rules | Started (PST): | Completed (PST):
-[ ] Implement KnowledgeFact ownership by scope | Started (PST): | Completed (PST):
-[ ] Implement scope-safe retrieval for prompts and message generation | Started (PST): | Completed (PST):
-[ ] Implement guardrails against accidental public leakage | Started (PST): | Completed (PST):
-[ ] Add tests for awareness checks, hidden clues, stealth, and secret objectives | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 11:28 PM | Completed (PST): 2026-04-18 11:30 PM
+[#] Implement public scope delivery rules | Started (PST): 2026-04-18 11:31 PM | Completed (PST): 2026-04-18 11:35 PM
+[#] Implement private-referee scope delivery rules | Started (PST): 2026-04-18 11:35 PM | Completed (PST): 2026-04-18 11:36 PM
+[#] Implement side-channel scope model and permissions | Started (PST): 2026-04-18 11:36 PM | Completed (PST): 2026-04-18 11:39 PM
+[#] Implement referee-only storage rules | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:41 PM
+[#] Implement KnowledgeFact ownership by scope | Started (PST): 2026-04-18 11:41 PM | Completed (PST): 2026-04-18 11:44 PM
+[#] Implement scope-safe retrieval for prompts and message generation | Started (PST): 2026-04-18 11:44 PM | Completed (PST): 2026-04-18 11:46 PM
+[#] Implement guardrails against accidental public leakage | Started (PST): 2026-04-18 11:46 PM | Completed (PST): 2026-04-18 11:49 PM
+[#] Add tests for awareness checks, hidden clues, stealth, and secret objectives | Started (PST): 2026-04-18 11:49 PM | Completed (PST): 2026-04-18 11:57 PM
+[#] Phase End | Started (PST): 2026-04-18 11:57 PM | Completed (PST): 2026-04-18 11:58 PM
+
+### Phase 4 Summary
+
+- **Changes:** Created `server/scope/` package: `engine.py` (ScopeEngine: delivery targets, visibility checks, fact filtering, scope-safe context assembly), `side_channel.py` (SideChannelPolicy: membership, lifecycle, recipient rules), `referee.py` (RefereeGuard: strip/assert referee-only content), `facts.py` (FactOwnershipPolicy: fact creation and VisibilityGrant creation with scope enforcement), `leakage_guard.py` (LeakageGuard: pre-flight checks before any player-visible or LLM operation). Added `tests/unit/test_scope_engine.py` (46 tests covering all scope types, awareness, hidden clues, stealth, secret objectives, leakage prevention).
+- **Changes hosted at:** local only
+- **Commit:** `Phase 4: Scope and Visibility Enforcement`
 
 ## Phase 5: Countdown Timer and Readiness Control
 
@@ -148,7 +159,7 @@ Phase End
 ## Phase 7: Main Gameplay Model Integration
 
 [ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement Gemma 4 26B A4B inference adapter | Started (PST): | Completed (PST):
+[!] Implement Gemma 4 26B A4B inference adapter | Started (PST): | Completed (PST):
 [ ] Define prompt contract for narration | Started (PST): | Completed (PST):
 [ ] Define prompt contract for NPC dialogue | Started (PST): | Completed (PST):
 [ ] Define prompt contract for structured arbitration proposals | Started (PST): | Completed (PST):
