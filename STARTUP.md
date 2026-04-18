@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 5 — Countdown Timer and Readiness Control** (not started). Phase 4 completed 2026-04-18 11:58 PM.
+Current phase: **Phase 6 — Fast Local Model Routing Layer** (not started). Phase 5 completed 2026-04-19 12:22 AM.
 
 ## Key Design Decisions (do not revisit without cause)
 

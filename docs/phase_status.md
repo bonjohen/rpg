@@ -9,7 +9,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 2 | Canonical Turn Engine | Completed | 2026-04-18 10:54 PM | |
 | 3 | Telegram Bot Integration Skeleton | Completed | 2026-04-18 11:27 PM | |
 | 4 | Scope and Visibility Enforcement | Completed | 2026-04-18 11:58 PM | |
-| 5 | Countdown Timer and Readiness Control | Not Started | — | |
+| 5 | Countdown Timer and Readiness Control | Completed | 2026-04-19 12:22 AM | |
 | 6 | Fast Local Model Routing Layer | Not Started | — | |
 | 7 | Main Gameplay Model Integration | Not Started | — | |
 | 8 | Exploration Loop | Not Started | — | |

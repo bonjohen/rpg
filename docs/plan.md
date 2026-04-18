@@ -128,17 +128,23 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 5: Countdown Timer and Readiness Control
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement timer creation for each turn | Started (PST): | Completed (PST):
-[ ] Implement timer expiration handling | Started (PST): | Completed (PST):
-[ ] Implement all-ready early completion | Started (PST): | Completed (PST):
-[ ] Implement timeout fallback action application | Started (PST): | Completed (PST):
-[ ] Implement pause and admin-stop controls | Started (PST): | Completed (PST):
-[ ] Implement a single public turn-control message | Started (PST): | Completed (PST):
-[ ] Implement inline controls for Ready, Pass, Ask Ref, Revise, and Submit | Started (PST): | Completed (PST):
-[ ] Implement timer message update logic | Started (PST): | Completed (PST):
-[ ] Add tests for expiry, early close, pause, and late submission | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 11:59 PM | Completed (PST): 2026-04-19 12:00 AM
+[#] Implement timer creation for each turn | Started (PST): 2026-04-19 12:00 AM | Completed (PST): 2026-04-19 12:05 AM
+[#] Implement timer expiration handling | Started (PST): 2026-04-19 12:05 AM | Completed (PST): 2026-04-19 12:09 AM
+[#] Implement all-ready early completion | Started (PST): 2026-04-19 12:05 AM | Completed (PST): 2026-04-19 12:09 AM
+[#] Implement timeout fallback action application | Started (PST): 2026-04-19 12:05 AM | Completed (PST): 2026-04-19 12:09 AM
+[#] Implement pause and admin-stop controls | Started (PST): 2026-04-19 12:09 AM | Completed (PST): 2026-04-19 12:10 AM
+[#] Implement a single public turn-control message | Started (PST): 2026-04-19 12:10 AM | Completed (PST): 2026-04-19 12:13 AM
+[#] Implement inline controls for Ready, Pass, Ask Ref, Revise, and Submit | Started (PST): 2026-04-19 12:10 AM | Completed (PST): 2026-04-19 12:13 AM
+[#] Implement timer message update logic | Started (PST): 2026-04-19 12:13 AM | Completed (PST): 2026-04-19 12:15 AM
+[#] Add tests for expiry, early close, pause, and late submission | Started (PST): 2026-04-19 12:15 AM | Completed (PST): 2026-04-19 12:21 AM
+[#] Phase End | Started (PST): 2026-04-19 12:21 AM | Completed (PST): 2026-04-19 12:22 AM
+
+### Phase 5 Summary
+
+- **Changes:** Created `server/timer/` package: `controller.py` (TimerController: create, start, check_expiry, trigger_early_close, pause, resume, stop; TimerRecord entity; TimerState machine), `integration.py` (process_tick: expiry→lock→fallback; process_early_close: all-ready→lock→resolve), `control_message.py` (ControlMessageBuilder: turn-control message text + inline keyboard with Ready/Pass/Ask Ref/Revise/Submit), `update_policy.py` (UpdatePolicy: interval + state-change edit throttle). Added `tests/unit/test_timer.py` (37 tests).
+- **Changes hosted at:** local only
+- **Commit:** `Phase 5: Countdown Timer and Readiness Control`
 
 ## Phase 6: Fast Local Model Routing Layer
 
