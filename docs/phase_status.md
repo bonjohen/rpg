@@ -6,7 +6,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 |---|---|---|---|---|
 | 0 | Repository Foundation and Startup Context | Completed | 2026-04-18 09:16 AM | |
 | 1 | Core Domain Model and Persistence | Completed | 2026-04-18 09:52 AM | |
-| 2 | Canonical Turn Engine | Not Started | — | |
+| 2 | Canonical Turn Engine | Completed | 2026-04-18 10:54 PM | |
 | 3 | Telegram Bot Integration Skeleton | Not Started | — | |
 | 4 | Scope and Visibility Enforcement | Not Started | — | |
 | 5 | Countdown Timer and Readiness Control | Not Started | — | |
@@ -37,3 +37,13 @@ Inputs: `docs/design.md`, `docs/pdr.md` (both pre-existing from initial document
 Outputs: `STARTUP.md`, `docs/architecture.md`, `docs/testing.md`, `docs/phase_status.md`, `docs/model_routing.md`, `docs/repo_conventions.md`.
 
 No code changes. Foundation documentation only.
+
+### Phase 2
+
+Started: 2026-04-18
+
+Inputs: `server/domain/entities.py`, `server/domain/enums.py`, `server/storage/repository.py` (all from Phase 1).
+
+Outputs: `server/engine/turn_engine.py`, `tests/unit/test_turn_engine.py`.
+
+Pure domain engine with no DB calls. All lifecycle transitions, action submission, validation, rejection, timeout fallbacks, deterministic ordering, append-only log production, and replay. 54 unit tests, all passing.

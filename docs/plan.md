@@ -21,8 +21,10 @@ Phase End
 * Run all tests and repair failures
 * Update phase_status.md, STARTUP.md, and record Phase completion
 * Commit Phase work locally without pushing
-* Clear the context
-* Move to the next phase without delay.
+* Spawn a subagent via the Agent tool to execute the next phase. The subagent
+  starts with a clean context window (equivalent to /clear). Pass it the plan
+  file path and instruct it to read STARTUP.md, find the next Open phase, and
+  execute end-to-end. Do not continue in the current context after committing.
 
 ## Phase 0: Repository Foundation and Startup Context
 
@@ -59,18 +61,24 @@ Phase End
 
 ## Phase 2: Canonical Turn Engine
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement TurnWindow lifecycle states and transitions | Started (PST): | Completed (PST):
-[ ] Implement one authoritative committed action per player per turn | Started (PST): | Completed (PST):
-[ ] Implement action validation and rejection flow | Started (PST): | Completed (PST):
-[ ] Implement late-submission rejection after turn lock | Started (PST): | Completed (PST):
-[ ] Implement all-ready early-close behavior | Started (PST): | Completed (PST):
-[ ] Implement timeout fallback behavior hooks | Started (PST): | Completed (PST):
-[ ] Implement append-only turn log writing | Started (PST): | Completed (PST):
-[ ] Implement deterministic turn commit ordering | Started (PST): | Completed (PST):
-[ ] Implement turn replay support from committed records | Started (PST): | Completed (PST):
-[ ] Add unit tests for open, lock, resolve, commit, abort, and replay | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 10:43 PM | Completed (PST): 2026-04-18 10:44 PM
+[#] Implement TurnWindow lifecycle states and transitions | Started (PST): 2026-04-18 10:44 PM | Completed (PST): 2026-04-18 10:45 PM
+[#] Implement one authoritative committed action per player per turn | Started (PST): 2026-04-18 10:45 PM | Completed (PST): 2026-04-18 10:46 PM
+[#] Implement action validation and rejection flow | Started (PST): 2026-04-18 10:46 PM | Completed (PST): 2026-04-18 10:47 PM
+[#] Implement late-submission rejection after turn lock | Started (PST): 2026-04-18 10:47 PM | Completed (PST): 2026-04-18 10:48 PM
+[#] Implement all-ready early-close behavior | Started (PST): 2026-04-18 10:48 PM | Completed (PST): 2026-04-18 10:49 PM
+[#] Implement timeout fallback behavior hooks | Started (PST): 2026-04-18 10:49 PM | Completed (PST): 2026-04-18 10:50 PM
+[#] Implement append-only turn log writing | Started (PST): 2026-04-18 10:50 PM | Completed (PST): 2026-04-18 10:51 PM
+[#] Implement deterministic turn commit ordering | Started (PST): 2026-04-18 10:51 PM | Completed (PST): 2026-04-18 10:52 PM
+[#] Implement turn replay support from committed records | Started (PST): 2026-04-18 10:52 PM | Completed (PST): 2026-04-18 10:53 PM
+[#] Add unit tests for open, lock, resolve, commit, abort, and replay | Started (PST): 2026-04-18 10:53 PM | Completed (PST): 2026-04-18 10:54 PM
+[#] Phase End | Started (PST): 2026-04-18 10:54 PM | Completed (PST): 2026-04-18 10:55 PM
+
+### Phase 2 Summary
+
+- **Changes:** Created `server/engine/turn_engine.py` (TurnEngine class: lifecycle transitions, submit/validate/reject actions, timeout fallback synthesis, deterministic ordering, append-only log entry production, replay) and `tests/unit/test_turn_engine.py` (54 unit tests covering all lifecycle paths). Also `server/engine/__init__.py`.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 2: Canonical Turn Engine`
 
 ## Phase 3: Telegram Bot Integration Skeleton
 
