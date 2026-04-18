@@ -7,7 +7,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 0 | Repository Foundation and Startup Context | Completed | 2026-04-18 09:16 AM | |
 | 1 | Core Domain Model and Persistence | Completed | 2026-04-18 09:52 AM | |
 | 2 | Canonical Turn Engine | Completed | 2026-04-18 10:54 PM | |
-| 3 | Telegram Bot Integration Skeleton | Not Started | — | |
+| 3 | Telegram Bot Integration Skeleton | Completed | 2026-04-18 11:27 PM | |
 | 4 | Scope and Visibility Enforcement | Not Started | — | |
 | 5 | Countdown Timer and Readiness Control | Not Started | — | |
 | 6 | Fast Local Model Routing Layer | Not Started | — | |

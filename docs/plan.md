@@ -82,19 +82,25 @@ Phase End
 
 ## Phase 3: Telegram Bot Integration Skeleton
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement Telegram bot gateway entry point | Started (PST): | Completed (PST):
-[ ] Implement webhook or polling handler | Started (PST): | Completed (PST):
-[ ] Implement public group message parsing | Started (PST): | Completed (PST):
-[ ] Implement private DM message parsing | Started (PST): | Completed (PST):
-[ ] Implement user-to-player and chat-to-campaign mapping | Started (PST): | Completed (PST):
-[ ] Implement player onboarding requirement for private DM initiation | Started (PST): | Completed (PST):
-[ ] Implement topic-aware routing for the main play topic | Started (PST): | Completed (PST):
-[ ] Implement minimal command handling for /start, /join, /help, /status | Started (PST): | Completed (PST):
-[ ] Implement outbound public message sending | Started (PST): | Completed (PST):
-[ ] Implement outbound private DM sending | Started (PST): | Completed (PST):
-[ ] Add Telegram payload fixtures and integration tests | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 10:56 PM | Completed (PST): 2026-04-18 10:57 PM
+[#] Implement Telegram bot gateway entry point | Started (PST): 2026-04-18 10:57 PM | Completed (PST): 2026-04-18 10:59 PM
+[#] Implement webhook or polling handler | Started (PST): 2026-04-18 10:59 PM | Completed (PST): 2026-04-18 11:01 PM
+[#] Implement public group message parsing | Started (PST): 2026-04-18 11:01 PM | Completed (PST): 2026-04-18 11:03 PM
+[#] Implement private DM message parsing | Started (PST): 2026-04-18 11:03 PM | Completed (PST): 2026-04-18 11:04 PM
+[#] Implement user-to-player and chat-to-campaign mapping | Started (PST): 2026-04-18 11:04 PM | Completed (PST): 2026-04-18 11:06 PM
+[#] Implement player onboarding requirement for private DM initiation | Started (PST): 2026-04-18 11:06 PM | Completed (PST): 2026-04-18 11:08 PM
+[#] Implement topic-aware routing for the main play topic | Started (PST): 2026-04-18 11:08 PM | Completed (PST): 2026-04-18 11:10 PM
+[#] Implement minimal command handling for /start, /join, /help, /status | Started (PST): 2026-04-18 11:10 PM | Completed (PST): 2026-04-18 11:14 PM
+[#] Implement outbound public message sending | Started (PST): 2026-04-18 11:14 PM | Completed (PST): 2026-04-18 11:16 PM
+[#] Implement outbound private DM sending | Started (PST): 2026-04-18 11:16 PM | Completed (PST): 2026-04-18 11:17 PM
+[#] Add Telegram payload fixtures and integration tests | Started (PST): 2026-04-18 11:17 PM | Completed (PST): 2026-04-18 11:26 PM
+[#] Phase End | Started (PST): 2026-04-18 11:26 PM | Completed (PST): 2026-04-18 11:27 PM
+
+### Phase 3 Summary
+
+- **Changes:** Created `bot/` package: `config.py` (BotConfig), `gateway.py` (build_app, run_polling, run_webhook), `__main__.py` (env-driven entry point), `handlers.py` (PTB handler registration), `parsers.py` (classify/parse group and private messages), `mapping.py` (BotRegistry: user↔player, chat↔campaign), `onboarding.py` (onboarding gate), `routing.py` (topic-aware RouteTarget dispatch), `commands.py` (/start, /join, /help, /status), `outbound.py` (send_public, send_private, send_private_by_player_id). Added `tests/fixtures/telegram_builders.py` and 40 unit tests across 5 test files. Added `pytest.ini` (asyncio_mode=auto) and updated `requirements.txt`.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 3: Telegram Bot Integration Skeleton`
 
 ## Phase 4: Scope and Visibility Enforcement
 
