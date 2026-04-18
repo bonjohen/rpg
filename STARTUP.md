@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 1 — Core Domain Model and Persistence** (not started). Phase 0 completed 2026-04-18.
+Current phase: **Phase 2 — Canonical Turn Engine** (not started). Phase 1 completed 2026-04-18.
 
 ## Key Design Decisions (do not revisit without cause)
 

@@ -5,7 +5,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | Phase | Title | Status | Completed (PST) | Notes |
 |---|---|---|---|---|
 | 0 | Repository Foundation and Startup Context | Completed | 2026-04-18 09:16 AM | |
-| 1 | Core Domain Model and Persistence | Not Started | — | |
+| 1 | Core Domain Model and Persistence | Completed | 2026-04-18 09:52 AM | |
 | 2 | Canonical Turn Engine | Not Started | — | |
 | 3 | Telegram Bot Integration Skeleton | Not Started | — | |
 | 4 | Scope and Visibility Enforcement | Not Started | — | |

@@ -21,7 +21,8 @@ Phase End
 * Run all tests and repair failures
 * Update phase_status.md, STARTUP.md, and record Phase completion
 * Commit Phase work locally without pushing
-* Clear the context and move to the next phase without delay.
+* Clear the context
+* Move to the next phase without delay.
 
 ## Phase 0: Repository Foundation and Startup Context
 
@@ -40,21 +41,21 @@ Phase End
 
 ## Phase 1: Core Domain Model and Persistence
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Define Campaign entity and persistence fields | Started (PST): | Completed (PST):
-[ ] Define Player entity and persistence fields | Started (PST): | Completed (PST):
-[ ] Define Character entity and persistence fields | Started (PST): | Completed (PST):
-[ ] Define Scene entity and persistence fields | Started (PST): | Completed (PST):
-[ ] Define ConversationScope and SideChannel entities | Started (PST): | Completed (PST):
-[ ] Define TurnWindow, CommittedAction, and TurnLogEntry entities | Started (PST): | Completed (PST):
-[ ] Define NPC and MonsterGroup entities | Started (PST): | Completed (PST):
-[ ] Define InventoryItem, QuestState, PuzzleState, and KnowledgeFact entities | Started (PST): | Completed (PST):
-[ ] Define state-machine enums for scene, turn, and action lifecycles | Started (PST): | Completed (PST):
-[ ] Implement schema or ORM models | Started (PST): | Completed (PST):
-[ ] Implement migrations or schema creation flow | Started (PST): | Completed (PST):
-[ ] Add fixture builders for core entities | Started (PST): | Completed (PST):
-[ ] Add persistence tests for create, load, update, and replayability | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 09:20 AM | Completed (PST): 2026-04-18 09:21 AM
+[#] Define Campaign entity and persistence fields | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define Player entity and persistence fields | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define Character entity and persistence fields | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define Scene entity and persistence fields | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define ConversationScope and SideChannel entities | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define TurnWindow, CommittedAction, and TurnLogEntry entities | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define NPC and MonsterGroup entities | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define InventoryItem, QuestState, PuzzleState, and KnowledgeFact entities | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Define state-machine enums for scene, turn, and action lifecycles | Started (PST): 2026-04-18 09:21 AM | Completed (PST): 2026-04-18 09:25 AM
+[#] Implement schema or ORM models | Started (PST): 2026-04-18 09:25 AM | Completed (PST): 2026-04-18 09:40 AM
+[#] Implement migrations or schema creation flow | Started (PST): 2026-04-18 09:25 AM | Completed (PST): 2026-04-18 09:40 AM
+[#] Add fixture builders for core entities | Started (PST): 2026-04-18 09:40 AM | Completed (PST): 2026-04-18 09:50 AM
+[#] Add persistence tests for create, load, update, and replayability | Started (PST): 2026-04-18 09:40 AM | Completed (PST): 2026-04-18 09:50 AM
+[#] Phase End | Started (PST): 2026-04-18 09:50 AM | Completed (PST): 2026-04-18 09:52 AM
 
 ## Phase 2: Canonical Turn Engine
 
