@@ -11,7 +11,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 4 | Scope and Visibility Enforcement | Completed | 2026-04-18 11:58 PM | |
 | 5 | Countdown Timer and Readiness Control | Completed | 2026-04-19 12:22 AM | |
 | 6 | Fast Local Model Routing Layer | Completed | 2026-04-18 11:26 PM | |
-| 7 | Main Gameplay Model Integration | Not Started | — | |
+| 7 | Main Gameplay Model Integration | Completed | 2026-04-18 11:46 PM | Gemma inference adapter [!] disabled; all other deliverables complete |
 | 8 | Exploration Loop | Not Started | — | |
 | 9 | NPC Social Loop | Not Started | — | |
 | 10 | Combat Loop | Not Started | — | |
@@ -45,6 +45,14 @@ Started: 2026-04-18
 Inputs: `server/engine/turn_engine.py`, `server/timer/`, `docs/model_routing.md` (from prior phases).
 
 Outputs: `models/fast/adapter.py` (OllamaFastAdapter: async Ollama HTTP wrapper, failure-safe), `models/fast/instrumentation.py` (ModelCallLog), `models/fast/router.py` (TaskType enum, routing predicates), `models/fast/tasks.py` (classify_intent, normalize_command, extract_action_packet, suggest_scope, summarize_context, generate_clarification, repair_schema — all with structured JSON output and deterministic fallbacks). Added `tests/unit/test_fast_model.py` (35 tests, all passing). Added `httpx>=0.27` to `requirements.txt`.
+
+### Phase 7
+
+Started: 2026-04-18
+
+Inputs: `models/fast/` (Phase 6), `docs/model_routing.md`.
+
+Outputs: `models/main/__init__.py`, `models/main/adapter.py` (OllamaMainAdapter: async Ollama HTTP wrapper for gemma3:27b, configurable model name), `models/main/router.py` (MainTaskType enum, is_main_tier, assert_main_tier), `models/main/schemas.py` (output dataclasses + validate_* functions for all 6 main-tier task types, SchemaValidationError, SCHEMA_DESCRIPTIONS registry), `models/main/context.py` (SceneContext, PlayerContext, NpcContext, ActionContext, RecentHistory; assemble_* prompt functions for all task types; token budget helpers), `models/main/fallback.py` (deterministic fallbacks for all task types, get_fallback registry), `models/main/tasks.py` (narrate_scene, generate_npc_dialogue, summarize_combat, propose_ruling, arbitrate_social, generate_puzzle_flavor — all with full 3-step failure pipeline: validate → repair → fallback). Added `tests/fixtures/main_model_fixtures.py` (representative game state fixtures) and `tests/unit/test_main_model.py` (103 tests, all passing). The OllamaMainAdapter [!] requires live gemma3:27b; all other code fully testable via mocks. Total tests: 338, all passing.
 
 ### Phase 2
 

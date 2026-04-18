@@ -72,12 +72,11 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Stub: in Phase 3 we create a minimal player record and register it.
     # Full character creation happens in later phases.
     import uuid
+
     player_id = str(uuid.uuid4())
     registry.register_player(user.id, player_id)
 
-    logger.info(
-        "Player joined: telegram_user_id=%s player_id=%s", user.id, player_id
-    )
+    logger.info("Player joined: telegram_user_id=%s player_id=%s", user.id, player_id)
     await update.message.reply_text(
         f"Welcome, {user.first_name}! You've been registered as a player.\n"
         "You can now DM me directly for private game actions."

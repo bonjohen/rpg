@@ -45,9 +45,7 @@ class SideChannelPolicy:
 
         unknown = set(member_player_ids) - set(all_campaign_player_ids)
         if unknown:
-            raise SideChannelError(
-                f"Unknown player IDs in side-channel: {unknown}"
-            )
+            raise SideChannelError(f"Unknown player IDs in side-channel: {unknown}")
 
         distinct = set(member_player_ids)
         if len(distinct) < self.MIN_MEMBERS:

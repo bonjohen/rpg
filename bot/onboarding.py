@@ -20,9 +20,7 @@ ONBOARDING_PROMPT = (
 )
 
 
-def requires_onboarding(
-    registry: BotRegistry, telegram_user_id: int
-) -> bool:
+def requires_onboarding(registry: BotRegistry, telegram_user_id: int) -> bool:
     """Return True if the user has NOT completed onboarding.
 
     Callers should send ONBOARDING_PROMPT and drop the message when this

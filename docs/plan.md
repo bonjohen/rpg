@@ -170,17 +170,23 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 7: Main Gameplay Model Integration
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 11:38 PM | Completed (PST): 2026-04-18 11:39 PM
 [!] Implement Gemma 4 26B A4B inference adapter | Started (PST): | Completed (PST):
-[ ] Define prompt contract for narration | Started (PST): | Completed (PST):
-[ ] Define prompt contract for NPC dialogue | Started (PST): | Completed (PST):
-[ ] Define prompt contract for structured arbitration proposals | Started (PST): | Completed (PST):
-[ ] Implement scoped context assembly from canonical state | Started (PST): | Completed (PST):
-[ ] Implement schema validation and repair for model output | Started (PST): | Completed (PST):
-[ ] Implement fallback behavior for model timeout or invalid output | Started (PST): | Completed (PST):
-[ ] Add regression fixtures for representative game states | Started (PST): | Completed (PST):
-[ ] Add tests for prompt assembly, schema validation, and fallback behavior | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Define prompt contract for narration | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:42 PM
+[#] Define prompt contract for NPC dialogue | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:42 PM
+[#] Define prompt contract for structured arbitration proposals | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:42 PM
+[#] Implement scoped context assembly from canonical state | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:42 PM
+[#] Implement schema validation and repair for model output | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:42 PM
+[#] Implement fallback behavior for model timeout or invalid output | Started (PST): 2026-04-18 11:39 PM | Completed (PST): 2026-04-18 11:42 PM
+[#] Add regression fixtures for representative game states | Started (PST): 2026-04-18 11:42 PM | Completed (PST): 2026-04-18 11:46 PM
+[#] Add tests for prompt assembly, schema validation, and fallback behavior | Started (PST): 2026-04-18 11:42 PM | Completed (PST): 2026-04-18 11:46 PM
+[#] Phase End | Started (PST): 2026-04-18 11:46 PM | Completed (PST): 2026-04-18 11:47 PM
+
+### Phase 7 Summary
+
+- **Changes:** Created `models/main/` package: `adapter.py` (OllamaMainAdapter: async Ollama HTTP wrapper for configurable main gameplay model, default "gemma3:27b", failure-safe, never raises), `router.py` (MainTaskType enum: scene_narration, npc_dialogue, combat_summary, ruling_proposal, social_arbitration, puzzle_flavor, unusual_action_interpretation; is_main_tier, assert_main_tier), `schemas.py` (output dataclasses + validate_* functions for all 6 structured task types, SchemaValidationError, SCHEMA_DESCRIPTIONS registry for fast-tier repair), `context.py` (SceneContext, PlayerContext, NpcContext, ActionContext, RecentHistory input containers; assemble_* prompt assembly functions for all task types; token budget helpers and history truncation), `fallback.py` (deterministic fallbacks for all task types, get_fallback() registry), `tasks.py` (narrate_scene, generate_npc_dialogue, summarize_combat, propose_ruling, arbitrate_social, generate_puzzle_flavor — each with 3-step failure pipeline: validate → fast-tier repair → deterministic fallback; full ModelCallLog instrumentation). Added `tests/fixtures/main_model_fixtures.py` (representative game state fixtures: tavern, dungeon, puzzle room scenes; Bram NPC; valid and invalid JSON responses for all task types) and `tests/unit/test_main_model.py` (103 tests). Also fixed pre-existing `F841` lint issue in `server/timer/controller.py`. The [!] OllamaMainAdapter requires a live gemma3:27b instance; all contracts, assembly, validation, and fallback logic is fully testable with mocks.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 7: Main Gameplay Model Integration`
 
 ## Phase 8: Exploration Loop
 

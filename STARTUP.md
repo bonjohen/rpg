@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 7 — Main Gameplay Model Integration** (not started). Phase 6 completed 2026-04-18 11:26 PM.
+Current phase: **Phase 8 — Exploration Loop** (not started). Phase 7 completed 2026-04-18 11:46 PM.
 
 ## Key Design Decisions (do not revisit without cause)
 

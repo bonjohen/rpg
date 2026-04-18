@@ -104,9 +104,7 @@ class ScopeEngine:
 
         if scope.scope_type == ScopeType.private_referee:
             if scope.player_id is None:
-                raise ScopeViolationError(
-                    "private_referee scope missing player_id"
-                )
+                raise ScopeViolationError("private_referee scope missing player_id")
             return DeliveryTarget(send_private_to=[scope.player_id])
 
         if scope.scope_type == ScopeType.side_channel:
@@ -116,18 +114,14 @@ class ScopeEngine:
                 )
             if not side_channel.is_open:
                 return DeliveryTarget()  # closed channel → deliver nothing
-            return DeliveryTarget(
-                send_private_to=list(side_channel.member_player_ids)
-            )
+            return DeliveryTarget(send_private_to=list(side_channel.member_player_ids))
 
         if scope.scope_type == ScopeType.referee_only:
             raise ScopeViolationError(
                 "referee_only content must never be delivered to any player"
             )
 
-        raise ScopeViolationError(
-            f"Unknown scope_type: {scope.scope_type!r}"
-        )
+        raise ScopeViolationError(f"Unknown scope_type: {scope.scope_type!r}")
 
     # ------------------------------------------------------------------
     # Visibility checks
@@ -219,9 +213,7 @@ class ScopeEngine:
             if scope.scope_type == ScopeType.side_channel and scope.side_channel_id:
                 side_channel = side_channels_by_id.get(scope.side_channel_id)
             grants = grants_by_fact_id.get(fact.fact_id, [])
-            if self.can_player_see_fact(
-                player_id, fact, scope, grants, side_channel
-            ):
+            if self.can_player_see_fact(player_id, fact, scope, grants, side_channel):
                 visible.append(fact)
         return visible
 
@@ -274,10 +266,15 @@ class ScopeEngine:
         # Extra safety: strip referee_only even if filter_facts_for_player
         # somehow included one (should not happen, but belt-and-suspenders)
         return [
-            f for f in candidate
-            if scopes_by_id.get(f.owner_scope_id, ConversationScope(
-                scope_id="", campaign_id="", scope_type=ScopeType.referee_only
-            )).scope_type != ScopeType.referee_only
+            f
+            for f in candidate
+            if scopes_by_id.get(
+                f.owner_scope_id,
+                ConversationScope(
+                    scope_id="", campaign_id="", scope_type=ScopeType.referee_only
+                ),
+            ).scope_type
+            != ScopeType.referee_only
         ]
 
     def assemble_referee_context(

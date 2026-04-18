@@ -15,7 +15,7 @@ Covers:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -217,9 +217,7 @@ class TestProcessTick:
             turn_window_id=w.turn_window_id,
             state=ActionState.submitted,
         )
-        result = process_tick(
-            t, w, [a1], [p1], {}, now=_t(120)
-        )
+        result = process_tick(t, w, [a1], [p1], {}, now=_t(120))
         assert result.timer_expired is True
         assert result.window_locked is True
         assert result.resolve_result is not None
@@ -235,9 +233,7 @@ class TestProcessTick:
             state=ActionState.submitted,
         )
         # p2 did not submit
-        result = process_tick(
-            t, w, [a1], [p1, p2], {p2: "defend"}, now=_t(60)
-        )
+        result = process_tick(t, w, [a1], [p1, p2], {p2: "defend"}, now=_t(60))
         assert result.timer_expired is True
         assert len(result.new_fallback_actions) == 1
         fb = result.new_fallback_actions[0]

@@ -5,7 +5,13 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
 from bot.commands import cmd_help, cmd_join, cmd_start, cmd_status
 from bot.mapping import BotRegistry

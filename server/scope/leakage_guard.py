@@ -16,7 +16,12 @@ serialised into a prompt string.
 
 from __future__ import annotations
 
-from server.domain.entities import ConversationScope, KnowledgeFact, SideChannel, VisibilityGrant
+from server.domain.entities import (
+    ConversationScope,
+    KnowledgeFact,
+    SideChannel,
+    VisibilityGrant,
+)
 from server.domain.enums import ScopeType
 from server.scope.engine import ScopeEngine, ScopeViolationError
 from server.scope.referee import RefereeGuard

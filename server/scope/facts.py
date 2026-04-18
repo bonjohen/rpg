@@ -39,8 +39,7 @@ def fact_scope_type(
     scope = scopes_by_id.get(fact.owner_scope_id)
     if scope is None:
         raise FactOwnershipError(
-            f"Fact {fact.fact_id!r} has unknown owner_scope_id "
-            f"{fact.owner_scope_id!r}"
+            f"Fact {fact.fact_id!r} has unknown owner_scope_id {fact.owner_scope_id!r}"
         )
     return scope.scope_type
 

@@ -25,8 +25,8 @@ from server.domain.entities import (
     VisibilityGrant,
 )
 from server.domain.enums import KnowledgeFactType, ScopeType
-from server.scope.engine import DeliveryTarget, ScopeEngine, ScopeViolationError
-from server.scope.facts import FactOwnershipPolicy, FactOwnershipError
+from server.scope.engine import ScopeEngine, ScopeViolationError
+from server.scope.facts import FactOwnershipPolicy
 from server.scope.leakage_guard import LeakageGuard
 from server.scope.referee import RefereeGuard
 from server.scope.side_channel import SideChannelError, SideChannelPolicy
@@ -45,8 +45,11 @@ def _now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def _scope(scope_type: ScopeType, player_id: str | None = None,
-           side_channel_id: str | None = None) -> ConversationScope:
+def _scope(
+    scope_type: ScopeType,
+    player_id: str | None = None,
+    side_channel_id: str | None = None,
+) -> ConversationScope:
     return ConversationScope(
         scope_id=_uid(),
         campaign_id="c1",
@@ -56,9 +59,11 @@ def _scope(scope_type: ScopeType, player_id: str | None = None,
     )
 
 
-def _fact(owner_scope_id: str,
-          fact_type: KnowledgeFactType = KnowledgeFactType.clue,
-          payload: str = "test payload") -> KnowledgeFact:
+def _fact(
+    owner_scope_id: str,
+    fact_type: KnowledgeFactType = KnowledgeFactType.clue,
+    payload: str = "test payload",
+) -> KnowledgeFact:
     return KnowledgeFact(
         fact_id=_uid(),
         campaign_id="c1",
@@ -168,14 +173,23 @@ class TestCanPlayerSeeFact:
         ch = _channel(["p1", "p2"])
         scope = _scope(ScopeType.side_channel, side_channel_id=ch.side_channel_id)
         fact = _fact(scope.scope_id)
-        assert ENGINE.can_player_see_fact("p1", fact, scope, [], side_channel=ch) is True
-        assert ENGINE.can_player_see_fact("p2", fact, scope, [], side_channel=ch) is True
-        assert ENGINE.can_player_see_fact("p3", fact, scope, [], side_channel=ch) is False
+        assert (
+            ENGINE.can_player_see_fact("p1", fact, scope, [], side_channel=ch) is True
+        )
+        assert (
+            ENGINE.can_player_see_fact("p2", fact, scope, [], side_channel=ch) is True
+        )
+        assert (
+            ENGINE.can_player_see_fact("p3", fact, scope, [], side_channel=ch) is False
+        )
 
     def test_secret_objective_private_to_owner(self):
         scope = _scope(ScopeType.private_referee, player_id="p2")
-        fact = _fact(scope.scope_id, KnowledgeFactType.secret_objective,
-                     "Steal the artifact without the others knowing")
+        fact = _fact(
+            scope.scope_id,
+            KnowledgeFactType.secret_objective,
+            "Steal the artifact without the others knowing",
+        )
         assert ENGINE.can_player_see_fact("p2", fact, scope, []) is True
         assert ENGINE.can_player_see_fact("p1", fact, scope, []) is False
 
@@ -323,8 +337,12 @@ class TestFactOwnershipPolicy:
     def test_create_visibility_grant(self):
         priv = _scope(ScopeType.private_referee, player_id="p1")
         pub = _scope(ScopeType.public)
-        fact = FACT_POLICY.create_fact("c1", "sc1", priv, KnowledgeFactType.clue, "clue")
-        grant = FACT_POLICY.create_visibility_grant(fact, priv, pub, granting_player_id="p1")
+        fact = FACT_POLICY.create_fact(
+            "c1", "sc1", priv, KnowledgeFactType.clue, "clue"
+        )
+        grant = FACT_POLICY.create_visibility_grant(
+            fact, priv, pub, granting_player_id="p1"
+        )
         assert grant.fact_id == fact.fact_id
         assert grant.granted_to_scope_id == pub.scope_id
 

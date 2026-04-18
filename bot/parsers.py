@@ -86,8 +86,7 @@ def parse_group_message(
         thread_id=message.message_thread_id,
         text=message.text or "",
         is_play_topic=(
-            play_topic_id is not None
-            and message.message_thread_id == play_topic_id
+            play_topic_id is not None and message.message_thread_id == play_topic_id
         ),
         username=sender.username if sender else None,
         first_name=sender.first_name if sender else "",

@@ -23,7 +23,7 @@ Integration:
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Optional
@@ -195,11 +195,14 @@ class TimerController:
         if the timer just expired; otherwise has_expired=False.
         """
         if timer.state in _TERMINAL_STATES:
-            return ExpiryCheckResult(has_expired=False, timer=timer, seconds_remaining=0)
+            return ExpiryCheckResult(
+                has_expired=False, timer=timer, seconds_remaining=0
+            )
 
         if timer.state != TimerState.running:
-            return ExpiryCheckResult(has_expired=False, timer=timer,
-                                     seconds_remaining=timer.duration_seconds)
+            return ExpiryCheckResult(
+                has_expired=False, timer=timer, seconds_remaining=timer.duration_seconds
+            )
 
         t = now or _now_utc()
         if timer.expires_at is None or t < timer.expires_at:
@@ -240,9 +243,7 @@ class TimerController:
     # Pause / resume / stop
     # ------------------------------------------------------------------
 
-    def pause(
-        self, timer: TimerRecord, now: datetime | None = None
-    ) -> TimerResult:
+    def pause(self, timer: TimerRecord, now: datetime | None = None) -> TimerResult:
         """Pause a running timer.  Preserves elapsed time for resume."""
         if timer.state != TimerState.running:
             return TimerResult(
@@ -251,11 +252,7 @@ class TimerController:
                 reason=f"Cannot pause timer in state {timer.state.value!r}.",
             )
         t = now or _now_utc()
-        elapsed_now = int((t - (timer.expires_at or t - timedelta(
-            seconds=timer.duration_seconds)
-        )).total_seconds() * -1 + timer.duration_seconds
-                          - timer.elapsed_before_pause)
-        # Actually: elapsed = total duration - remaining
+        # elapsed = total duration - remaining (computed below)
         if timer.expires_at:
             remaining = max(0, (timer.expires_at - t).total_seconds())
             timer.elapsed_before_pause = timer.duration_seconds - int(remaining)
@@ -264,9 +261,7 @@ class TimerController:
         timer.state = TimerState.paused
         return TimerResult(success=True, timer=timer)
 
-    def resume(
-        self, timer: TimerRecord, now: datetime | None = None
-    ) -> TimerResult:
+    def resume(self, timer: TimerRecord, now: datetime | None = None) -> TimerResult:
         """Resume a paused timer from where it left off."""
         if timer.state != TimerState.paused:
             return TimerResult(
@@ -301,9 +296,7 @@ class TimerController:
     # Seconds remaining helper
     # ------------------------------------------------------------------
 
-    def seconds_remaining(
-        self, timer: TimerRecord, now: datetime | None = None
-    ) -> int:
+    def seconds_remaining(self, timer: TimerRecord, now: datetime | None = None) -> int:
         """Return integer seconds remaining on the timer (0 if terminal)."""
         if timer.state in _TERMINAL_STATES:
             return 0
