@@ -10,7 +10,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 3 | Telegram Bot Integration Skeleton | Completed | 2026-04-18 11:27 PM | |
 | 4 | Scope and Visibility Enforcement | Completed | 2026-04-18 11:58 PM | |
 | 5 | Countdown Timer and Readiness Control | Completed | 2026-04-19 12:22 AM | |
-| 6 | Fast Local Model Routing Layer | Not Started | — | |
+| 6 | Fast Local Model Routing Layer | Completed | 2026-04-18 11:26 PM | |
 | 7 | Main Gameplay Model Integration | Not Started | — | |
 | 8 | Exploration Loop | Not Started | — | |
 | 9 | NPC Social Loop | Not Started | — | |
@@ -37,6 +37,14 @@ Inputs: `docs/design.md`, `docs/pdr.md` (both pre-existing from initial document
 Outputs: `STARTUP.md`, `docs/architecture.md`, `docs/testing.md`, `docs/phase_status.md`, `docs/model_routing.md`, `docs/repo_conventions.md`.
 
 No code changes. Foundation documentation only.
+
+### Phase 6
+
+Started: 2026-04-18
+
+Inputs: `server/engine/turn_engine.py`, `server/timer/`, `docs/model_routing.md` (from prior phases).
+
+Outputs: `models/fast/adapter.py` (OllamaFastAdapter: async Ollama HTTP wrapper, failure-safe), `models/fast/instrumentation.py` (ModelCallLog), `models/fast/router.py` (TaskType enum, routing predicates), `models/fast/tasks.py` (classify_intent, normalize_command, extract_action_packet, suggest_scope, summarize_context, generate_clarification, repair_schema — all with structured JSON output and deterministic fallbacks). Added `tests/unit/test_fast_model.py` (35 tests, all passing). Added `httpx>=0.27` to `requirements.txt`.
 
 ### Phase 2
 

@@ -148,19 +148,25 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 6: Fast Local Model Routing Layer
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement fast-model inference adapter | Started (PST): | Completed (PST):
-[ ] Define routing rules for simple and low-risk requests | Started (PST): | Completed (PST):
-[ ] Implement intent classification | Started (PST): | Completed (PST):
-[ ] Implement command normalization | Started (PST): | Completed (PST):
-[ ] Implement action packet extraction from raw player text | Started (PST): | Completed (PST):
-[ ] Implement likely-scope suggestion from message content | Started (PST): | Completed (PST):
-[ ] Implement short clarification-question generation | Started (PST): | Completed (PST):
-[ ] Implement recent-turn context summarization | Started (PST): | Completed (PST):
-[ ] Implement structured output validation and repair | Started (PST): | Completed (PST):
-[ ] Add latency, usage, and failure instrumentation | Started (PST): | Completed (PST):
-[ ] Add tests for extraction, repair, and fallback behavior | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-19 12:23 AM | Completed (PST): 2026-04-19 12:24 AM
+[#] Implement fast-model inference adapter | Started (PST): 2026-04-18 11:21 PM | Completed (PST): 2026-04-18 11:22 PM
+[#] Define routing rules for simple and low-risk requests | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:22 PM
+[#] Implement intent classification | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Implement command normalization | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Implement action packet extraction from raw player text | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Implement likely-scope suggestion from message content | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Implement short clarification-question generation | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Implement recent-turn context summarization | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Implement structured output validation and repair | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Add latency, usage, and failure instrumentation | Started (PST): 2026-04-18 11:22 PM | Completed (PST): 2026-04-18 11:23 PM
+[#] Add tests for extraction, repair, and fallback behavior | Started (PST): 2026-04-18 11:23 PM | Completed (PST): 2026-04-18 11:26 PM
+[#] Phase End | Started (PST): 2026-04-18 11:26 PM | Completed (PST): 2026-04-18 11:26 PM
+
+### Phase 6 Summary
+
+- **Changes:** Created `models/fast/` package: `adapter.py` (OllamaFastAdapter: async Ollama HTTP wrapper, failure-safe, never raises), `instrumentation.py` (ModelCallLog dataclass), `router.py` (TaskType enum, is_fast_tier, is_main_tier_only, assert_fast_tier), `tasks.py` (classify_intent, normalize_command, extract_action_packet, suggest_scope, summarize_context, generate_clarification, repair_schema — all with structured JSON output, deterministic fallbacks, and per-call ModelCallLog). Added `tests/unit/test_fast_model.py` (35 tests). Added `httpx>=0.27` to `requirements.txt`.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 6: Fast Local Model Routing Layer`
 
 ## Phase 7: Main Gameplay Model Integration
 
