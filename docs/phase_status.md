@@ -21,7 +21,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 14 | Prompt Contracts and Context Assembly | Completed | 2026-04-18 03:20 PM | 174 new tests; models/contracts/ package |
 | 15 | Reliability, Recovery, and Observability | Completed | 2026-04-18 04:15 PM | 87 new tests; server/observability/ + server/reliability/ packages |
 | 16 | Internal Playtest Release | Completed | 2026-04-18 05:45 PM | 49 new tests; server/orchestrator/ package |
-| 17 | Mini App Foundation | Not Started | — | |
+| 17 | Mini App Foundation | Completed | 2026-04-18 06:35 PM | 26 new tests; server/api/ + webapp/ packages |
 | 18 | Mini App Gameplay Utilities | Not Started | — | |
 | 19 | Content Expansion and Quality Pass | Not Started | — | |
 | 20 | Pre-Release Stabilization | Not Started | — | |
@@ -117,6 +117,14 @@ Started: 2026-04-18
 Inputs: All prior domain engines (Phases 1-15), `scenarios/starters/goblin_caves.yaml` (Phase 13), `bot/commands.py` (Phase 3), `bot/handlers.py` (Phase 3).
 
 Outputs: `server/orchestrator/` package -- `game_loop.py` (GameOrchestrator: top-level coordinator wiring all subsystems; in-memory state management; scenario loading, player management, turn lifecycle, action submission and resolution, message dispatching, deterministic narration; DispatchResult), `message_dispatcher.py` (MessageDispatcher: thin wrapper over orchestrator message handling). Extended `bot/commands.py` (6 new commands: /newgame, /nextturn, /forceresolve, /diagnostics, /scene, /who). Extended `bot/handlers.py` (registered new commands). Created `docs/playtest_findings.md` (defect tracking template). Added `tests/integration/test_playtest_setup.py` (16 tests: scenario loading, player joining, turn opening), `tests/integration/test_playtest_session.py` (19 tests: exploration, social, combat, timer fallback, action submission, turn log), `tests/integration/test_playtest_logging.py` (4 tests: logging, transcript reconstruction), `tests/integration/test_defect_categories.py` (10 tests: timing, leakage, routing, rules defects). Updated `docs/architecture.md` (added orchestrator layer). Total suite: 1127 tests, all green.
+
+### Phase 17
+
+Started: 2026-04-18
+
+Inputs: `server/orchestrator/game_loop.py` (Phase 16), `server/domain/entities.py`, `docs/phases_16_20_guide.md`.
+
+Outputs: `server/api/` package (FastAPI REST API: auth, player, character, inventory, scene, recap endpoints), `webapp/` directory (Telegram Mini App: HTML/CSS/JS shell with character sheet, inventory, and recap views), `docs/miniapp_architecture.md` (architecture doc). Added `fastapi>=0.100` and `uvicorn>=0.20` to `requirements.txt`. Added `tests/unit/test_api_routes.py` (26 tests). Total suite: 1153 tests, all green.
 
 ### Phase 2
 

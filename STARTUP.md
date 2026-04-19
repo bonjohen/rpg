@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 17 — Mini App Foundation** (not started). Phase 16 completed 2026-04-18 05:45 PM.
+Current phase: **Phase 18 — Mini App Gameplay Utilities** (not started). Phase 17 completed 2026-04-18 06:35 PM.
 
 Review docs\phases_16_20_guide.md for additional instructions.
 
@@ -39,9 +39,12 @@ C:\Projects\rpg\
 │   ├── design.md            # Original design document
 │   └── pdr.md               # Product design requirements
 ├── server/                  # Game server (Python, added in Phase 1+)
+│   ├── api/                 # REST API for Mini App (FastAPI, added in Phase 17)
+│   └── orchestrator/        # Top-level game loop (added in Phase 16)
 ├── bot/                     # Telegram bot gateway (added in Phase 3+)
 ├── models/                  # Inference adapters (added in Phase 6+)
 ├── scenarios/               # Scenario content files (added in Phase 13+)
+├── webapp/                  # Mini App frontend (HTML/JS/CSS, added in Phase 17)
 └── prompts/                 # Prompt contracts (added in Phase 14+)
 ```
 

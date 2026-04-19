@@ -356,14 +356,20 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 17: Mini App Foundation
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Define Mini App architecture and launch flow | Started (PST): | Completed (PST):
-[ ] Implement Telegram-linked Mini App shell | Started (PST): | Completed (PST):
-[ ] Implement read-only character sheet view | Started (PST): | Completed (PST):
-[ ] Implement read-only inventory view | Started (PST): | Completed (PST):
-[ ] Implement read-only turn recap view | Started (PST): | Completed (PST):
-[ ] Add Mini App state-hydration tests | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 06:00 PM | Completed (PST): 2026-04-18 06:02 PM
+[#] Define Mini App architecture and launch flow | Started (PST): 2026-04-18 06:02 PM | Completed (PST): 2026-04-18 06:04 PM
+[#] Implement Telegram-linked Mini App shell | Started (PST): 2026-04-18 06:04 PM | Completed (PST): 2026-04-18 06:15 PM
+[#] Implement read-only character sheet view | Started (PST): 2026-04-18 06:15 PM | Completed (PST): 2026-04-18 06:20 PM
+[#] Implement read-only inventory view | Started (PST): 2026-04-18 06:15 PM | Completed (PST): 2026-04-18 06:20 PM
+[#] Implement read-only turn recap view | Started (PST): 2026-04-18 06:15 PM | Completed (PST): 2026-04-18 06:20 PM
+[#] Add Mini App state-hydration tests | Started (PST): 2026-04-18 06:20 PM | Completed (PST): 2026-04-18 06:30 PM
+[#] Phase End | Started (PST): 2026-04-18 06:30 PM | Completed (PST): 2026-04-18 06:35 PM
+
+### Phase 17 Summary
+
+- **Changes:** Created `server/api/` package: `app.py` (create_api_app: FastAPI factory with CORS, static file mount for webapp/, orchestrator DI), `auth.py` (validate_init_data: Telegram WebApp HMAC-SHA256 validation, user extraction), `routes.py` (6 API endpoints: POST /api/auth/validate, GET /api/player/{id}, GET /api/character/{id}, GET /api/character/{id}/inventory, GET /api/scene/{id}, GET /api/campaign/{id}/recap), `responses.py` (response dataclasses: AuthResult, PlayerResponse, CharacterResponse, InventoryResponse, ItemResponse, SceneResponse, RecapEntry, RecapResponse). Created `webapp/` directory: `index.html` (Mini App shell with Telegram WebApp SDK, hash-based routing, nav bar), `css/style.css` (Telegram theme integration via CSS custom properties, card-based mobile-first layout), `js/app.js` (API client wrapper, hash-based router, AppState management, menu view), `js/views/sheet.js` (character sheet: stats grid, status effect pills, health indicator), `js/views/inventory.js` (item cards with quantity badges, property tags, empty state), `js/views/recap.js` (reverse-chronological turn entries with relative timestamps). Created `docs/miniapp_architecture.md` (architecture doc: tech stack, launch flow, URL scheme, API endpoints, security). Added `fastapi>=0.100` and `uvicorn>=0.20` to `requirements.txt`. Added `tests/unit/test_api_routes.py` (26 tests: auth validation, character sheet, inventory, scene, recap, player, full hydration flow). Total suite: 1153 tests, all green; lint clean.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 17: Mini App Foundation`
 
 ## Phase 18: Mini App Gameplay Utilities
 

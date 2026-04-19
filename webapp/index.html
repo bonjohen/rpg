@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <header id="app-header">
+            <h1 id="app-title">RPG</h1>
+            <nav id="app-nav">
+                <a href="#menu" class="nav-link active">Menu</a>
+                <a href="#sheet" class="nav-link">Sheet</a>
+                <a href="#inventory" class="nav-link">Items</a>
+                <a href="#recap" class="nav-link">Recap</a>
+            </nav>
+        </header>
+
+        <main id="app-content">
+            <!-- Views are rendered here by the JS router -->
+            <div id="view-loading" class="view">
+                <p class="loading-text">Loading...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/views/sheet.js"></script>
+    <script src="js/views/inventory.js"></script>
+    <script src="js/views/recap.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
