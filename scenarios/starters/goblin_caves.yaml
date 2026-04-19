@@ -1,0 +1,313 @@
+scenario_id: goblin_caves
+title: "The Goblin Caves"
+description: "A party of adventurers investigates reports of goblin raids."
+version: "1.0.0"
+author: "rpg-system"
+starting_scene_id: cave_entrance
+
+scenes:
+  - scene_id: cave_entrance
+    name: "Cave Entrance"
+    description: >
+      A dark mouth in the hillside, flanked by dead bushes. Claw marks
+      score the stone around the opening. A faint smell of smoke drifts out.
+    referee_notes: "The goblins have a lookout posted just inside (see goblin_lookout trigger)."
+    exits:
+      - exit_id: entrance_to_main_hall
+        direction: "north (into the cave)"
+        target_scene_id: main_hall
+        description: "A rough tunnel leads deeper into the hill."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [discarded_torch]
+    npc_ids: []
+    monster_ids: [goblin_scouts]
+    puzzle_ids: []
+    trigger_ids: [goblin_lookout]
+    tags: [outdoor, dark]
+
+  - scene_id: main_hall
+    name: "Main Hall"
+    description: >
+      A wide cavern lit by a sputtering fire pit. Crude shelves line the walls,
+      holding stolen goods and scraps of food. Three tunnels branch off.
+    referee_notes: "The goblin chief is here if not alerted. The locked chest contains the merchant's ledger."
+    exits:
+      - exit_id: hall_to_entrance
+        direction: south
+        target_scene_id: cave_entrance
+        description: "The tunnel back to the entrance."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: hall_to_prison
+        direction: east
+        target_scene_id: prison_cells
+        description: "A narrow passage with iron-banded doors."
+        is_hidden: false
+        is_locked: true
+        unlock_condition: "requires iron_key"
+      - exit_id: hall_to_treasury
+        direction: "hidden passage behind shelves"
+        target_scene_id: treasury
+        description: "A cleverly concealed passage behind the supply shelves."
+        is_hidden: true
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [iron_key, stolen_goods]
+    npc_ids: [goblin_chief_grix]
+    monster_ids: [goblin_guards]
+    puzzle_ids: [locked_chest]
+    trigger_ids: [fire_pit_trap]
+    tags: [indoor, lit]
+
+  - scene_id: prison_cells
+    name: "Prison Cells"
+    description: >
+      A damp corridor lined with crude iron cages. One cage holds a
+      disheveled merchant, the others are empty.
+    referee_notes: "The merchant (Aldric) knows about the hidden treasury passage."
+    exits:
+      - exit_id: prison_to_hall
+        direction: west
+        target_scene_id: main_hall
+        description: "Back to the main hall."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [cage_key]
+    npc_ids: [merchant_aldric]
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: []
+    tags: [indoor, dark, damp]
+
+  - scene_id: treasury
+    name: "Hidden Treasury"
+    description: >
+      A small chamber crammed with stolen valuables: coin pouches, a silver
+      candelabra, and a locked wooden box.
+    referee_notes: "The wooden box contains the merchant's ledger -- quest objective."
+    exits:
+      - exit_id: treasury_to_hall
+        direction: "back through the passage"
+        target_scene_id: main_hall
+        description: "The concealed passage back to the main hall."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [merchants_ledger, silver_candelabra, coin_pouch]
+    npc_ids: []
+    monster_ids: []
+    puzzle_ids: [wooden_box]
+    trigger_ids: []
+    tags: [indoor, hidden]
+
+npcs:
+  - npc_id: goblin_chief_grix
+    name: "Grix, the Goblin Chief"
+    description: "A scarred goblin wearing a dented crown, bigger than the others."
+    personality_tags: [aggressive, cunning, cowardly_when_losing]
+    goals: ["protect the tribe", "hoard treasure"]
+    trust_initial: {}
+    faction: goblin_tribe
+    scene_id: main_hall
+    inventory_item_ids: [iron_key]
+    dialogue_hints: ["speaks in broken Common", "refers to self as 'Grix the Mighty'"]
+    referee_notes: "Will negotiate if outnumbered. Knows about the hidden treasury."
+    tells:
+      - tell_id: grix_nervous
+        trigger_type: trust_below
+        trigger_value: "-30"
+        behavior: "Grix's eyes dart toward the supply shelves."
+        scope: public
+      - tell_id: grix_secret_path
+        trigger_type: trust_above
+        trigger_value: "40"
+        behavior: "Grix knows about the hidden passage behind the shelves."
+        scope: referee_only
+
+  - npc_id: merchant_aldric
+    name: "Aldric the Merchant"
+    description: "A middle-aged man in torn travel clothes, caged and frightened."
+    personality_tags: [grateful, cautious, knowledgeable]
+    goals: ["escape the caves", "recover his ledger"]
+    trust_initial: {}
+    faction: neutral
+    scene_id: prison_cells
+    inventory_item_ids: []
+    dialogue_hints: ["speaks formally", "offers rewards for rescue"]
+    referee_notes: "Knows about the hidden passage if asked about the treasury."
+    tells:
+      - tell_id: aldric_passage_hint
+        trigger_type: action_type
+        trigger_value: "question"
+        behavior: "Aldric mentions hearing goblins moving things behind the shelves."
+        scope: public
+
+monsters:
+  - monster_id: goblin_scouts
+    unit_type: goblin_scout
+    count: 2
+    behavior_mode: patrol
+    awareness_state: alert
+    stats: {attack: 4, defense: 1, hp_per_unit: 5}
+    special_rules: []
+    territory_id: cave_entrance
+    scene_id: cave_entrance
+    loot_item_ids: []
+    referee_notes: "Lookouts -- will call for help if engaged."
+
+  - monster_id: goblin_guards
+    unit_type: goblin_guard
+    count: 4
+    behavior_mode: guard
+    awareness_state: unaware
+    stats: {attack: 6, defense: 2, hp_per_unit: 8}
+    special_rules: [leader_dead_routs]
+    territory_id: main_hall
+    scene_id: main_hall
+    loot_item_ids: [stolen_goods]
+    referee_notes: "Will rout if Grix is defeated."
+
+items:
+  - item_id: discarded_torch
+    name: "Discarded Torch"
+    description: "A half-burned torch, still usable."
+    properties: {effect: light, duration: "30 minutes"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: cave_entrance
+
+  - item_id: iron_key
+    name: "Iron Key"
+    description: "A heavy iron key on a leather cord."
+    properties: {}
+    is_hidden: false
+    is_key: true
+    unlocks_exit_ids: [hall_to_prison]
+    quantity: 1
+    scene_id: ""
+
+  - item_id: cage_key
+    name: "Cage Key"
+    description: "A small rusted key hanging on a wall hook."
+    properties: {}
+    is_hidden: false
+    is_key: true
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: prison_cells
+
+  - item_id: stolen_goods
+    name: "Stolen Goods"
+    description: "A pile of looted trade goods."
+    properties: {value: "50 gold"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: main_hall
+
+  - item_id: merchants_ledger
+    name: "Merchant's Ledger"
+    description: "A leather-bound book of trade records."
+    properties: {quest_item: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: treasury
+
+  - item_id: silver_candelabra
+    name: "Silver Candelabra"
+    description: "An ornate candelabra, clearly stolen from a manor house."
+    properties: {value: "25 gold"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: treasury
+
+  - item_id: coin_pouch
+    name: "Coin Pouch"
+    description: "A leather pouch heavy with mixed coins."
+    properties: {value: "30 gold"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: treasury
+
+puzzles:
+  - puzzle_id: locked_chest
+    name: "Locked Iron Chest"
+    description: "A heavy iron chest with a complex lock mechanism."
+    solution_hint: "The key is hidden in the fire pit ashes."
+    solution_actions: ["use iron_key on chest", "pick lock"]
+    success_text: "The chest clicks open, revealing trade documents inside."
+    failure_text: "The lock doesn't budge."
+    max_attempts: 0
+    effects_on_solve: ["reveal:merchants_ledger_copy"]
+    scene_id: main_hall
+    referee_notes: "Contains copies of Aldric's trade routes."
+
+  - puzzle_id: wooden_box
+    name: "Locked Wooden Box"
+    description: "A sturdy wooden box with a brass latch."
+    solution_hint: "Can be forced open with strength or unlocked with cage_key."
+    solution_actions: ["force open", "use cage_key"]
+    success_text: "The box opens to reveal Aldric's ledger."
+    failure_text: "The latch holds firm."
+    max_attempts: 3
+    effects_on_solve: []
+    scene_id: treasury
+    referee_notes: "The ledger is the main quest objective."
+
+quests:
+  - quest_id: rescue_aldric
+    title: "Rescue the Merchant"
+    description: "Find and free the captured merchant Aldric from the goblin caves."
+    objectives:
+      - "Enter the goblin caves"
+      - "Find the prison cells"
+      - "Free Aldric from his cage"
+    completion_condition: "Aldric freed from cage AND escorted to cave_entrance"
+    reward_description: "Aldric offers 100 gold and information about trade routes."
+    referee_notes: "Aldric will also reveal the hidden passage if rescued."
+
+  - quest_id: recover_ledger
+    title: "The Lost Ledger"
+    description: "Recover Aldric's stolen trade ledger from the goblin treasury."
+    objectives:
+      - "Locate the hidden treasury"
+      - "Recover the merchant's ledger"
+    completion_condition: "merchants_ledger in party inventory"
+    reward_description: "Aldric's gratitude and a trade route map."
+    referee_notes: "Secondary objective -- can be discovered through Aldric or exploration."
+
+triggers:
+  - trigger_id: goblin_lookout
+    kind: on_enter
+    scene_id: cave_entrance
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "A sharp whistle echoes from inside the cave -- you've been spotted!"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Alerts goblin_guards in main_hall to 'alert' awareness."
+
+  - trigger_id: fire_pit_trap
+    kind: trap
+    scene_id: main_hall
+    condition_type: always
+    condition_value: ""
+    effect_type: damage
+    effect_value: "3"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Hidden coals around the fire pit. Triggers on 'search fire pit' or 'interact fire pit'."

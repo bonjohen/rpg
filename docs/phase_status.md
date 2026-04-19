@@ -17,7 +17,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 10 | Combat Loop | Completed | 2026-04-18 02:00 AM | 89 new tests; server/combat/ package |
 | 11 | Side-Channels and Private Coordination | Completed | 2026-04-18 02:35 AM | 58 new tests; server/scope/ extensions + side_channel_engine + side_channel_audit |
 | 12 | Split Party and Multi-Scene Handling | Completed | 2026-04-19 12:55 AM | 56 new tests; server/scene/ package |
-| 13 | Scenario Authoring Format | Not Started | — | |
+| 13 | Scenario Authoring Format | Completed | 2026-04-18 02:05 PM | 89 new tests; scenarios/ package |
 | 14 | Prompt Contracts and Context Assembly | Not Started | — | |
 | 15 | Reliability, Recovery, and Observability | Not Started | — | |
 | 16 | Internal Playtest Release | Not Started | — | |

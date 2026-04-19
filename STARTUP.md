@@ -10,7 +10,9 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 13 — Scenario Authoring Format** (not started). Phase 12 completed 2026-04-19 12:55 AM.
+Current phase: **Phase 14 — Prompt Contracts and Context Assembly** (not started). Phase 13 completed 2026-04-18 02:05 PM.
+
+Review docs\phases_13_15_guide.md for additional instructions.
 
 ## Key Design Decisions (do not revisit without cause)
 

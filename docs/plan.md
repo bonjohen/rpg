@@ -282,15 +282,21 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 13: Scenario Authoring Format
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Define scenario file structure and schema | Started (PST): | Completed (PST):
-[ ] Define scene, exit, item, NPC, monster, puzzle, and trigger formats | Started (PST): | Completed (PST):
-[ ] Define public versus hidden content authoring rules | Started (PST): | Completed (PST):
-[ ] Implement scenario validation tools | Started (PST): | Completed (PST):
-[ ] Implement scenario import and load flow | Started (PST): | Completed (PST):
-[ ] Create starter scenario package in the new format | Started (PST): | Completed (PST):
-[ ] Add validation tests and content fixtures | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 01:00 PM | Completed (PST): 2026-04-18 01:02 PM
+[#] Define scenario file structure and schema | Started (PST): 2026-04-18 01:02 PM | Completed (PST): 2026-04-18 01:10 PM
+[#] Define scene, exit, item, NPC, monster, puzzle, and trigger formats | Started (PST): 2026-04-18 01:02 PM | Completed (PST): 2026-04-18 01:10 PM
+[#] Define public versus hidden content authoring rules | Started (PST): 2026-04-18 01:10 PM | Completed (PST): 2026-04-18 01:15 PM
+[#] Implement scenario validation tools | Started (PST): 2026-04-18 01:15 PM | Completed (PST): 2026-04-18 01:25 PM
+[#] Implement scenario import and load flow | Started (PST): 2026-04-18 01:25 PM | Completed (PST): 2026-04-18 01:40 PM
+[#] Create starter scenario package in the new format | Started (PST): 2026-04-18 01:40 PM | Completed (PST): 2026-04-18 01:45 PM
+[#] Add validation tests and content fixtures | Started (PST): 2026-04-18 01:45 PM | Completed (PST): 2026-04-18 02:00 PM
+[#] Phase End | Started (PST): 2026-04-18 02:00 PM | Completed (PST): 2026-04-18 02:05 PM
+
+### Phase 13 Summary
+
+- **Changes:** Created `scenarios/` package: `schema.py` (13 dataclasses: ScenarioManifest, SceneDefinition, ExitDefinition, NpcDefinition, NpcTellDefinition, MonsterDefinition, ItemDefinition, PuzzleDefinition, QuestDefinition, TriggerDefinition), `visibility_rules.py` (AuthoringVisibilityPolicy: classify_field, validate_no_leakage — referee/hidden/public field classification and cross-check for leaked referee text), `validator.py` (ScenarioValidator: 8 validation checks — unique IDs, valid references, starting scene, orphans, dead ends, enum values, puzzle solvability, visibility leakage), `loader.py` (ScenarioLoader: YAML parse → deserialize → validate → convert to domain entities + KnowledgeFacts + ConversationScopes + TriggerDefinitions). Created `scenarios/starters/goblin_caves.yaml` (4 scenes, 2 NPCs, 2 monster groups, 7 items, 2 puzzles, 2 quests, 2 triggers). Added `tests/fixtures/scenario_fixtures.py` (12 fixture builders) and `tests/unit/test_scenario.py` (89 tests). Added `pyyaml>=6.0` to `requirements.txt`. Total suite: 817 tests, all green.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 13: Scenario Authoring Format`
 
 ## Phase 14: Prompt Contracts and Context Assembly
 
