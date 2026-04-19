@@ -209,7 +209,7 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 9: NPC Social Loop
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
+[X] Phase Startup | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST):
 [ ] Implement NPC hard-state usage in scene resolution | Started (PST): | Completed (PST):
 [ ] Implement trust-by-player and party-stance fields in logic | Started (PST): | Completed (PST):
 [ ] Implement NPC memory-tag updates after interactions | Started (PST): | Completed (PST):
