@@ -1,0 +1,400 @@
+"""Main-tier (Gemma 4 26B A4B) prompt contracts.
+
+One contract per main-tier task type.  Each contract codifies the system
+prompt, user prompt template, expected JSON output schema, scope rules, and
+deterministic fallback so that prompt assembly, validation, and failure
+handling are testable and auditable.
+"""
+
+from __future__ import annotations
+
+from models.contracts.fast_contracts import PromptContract
+
+# ---------------------------------------------------------------------------
+# Main-tier contracts registry
+# ---------------------------------------------------------------------------
+
+MAIN_CONTRACTS: dict[str, PromptContract] = {}
+
+
+def _register(contract: PromptContract) -> PromptContract:
+    MAIN_CONTRACTS[contract.contract_id] = contract
+    return contract
+
+
+# --- scene_narration ------------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.scene_narration",
+        version="1.0.0",
+        tier="main",
+        task_type="scene_narration",
+        system_prompt_template=(
+            "You are the narrator for a multiplayer text RPG. "
+            "Write vivid, concise scene narration. Use second-person plural ('you'). "
+            "Do not reveal hidden information. Stay within the facts provided. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "Scene: {scene_context}\n\n"
+            "Players: {active_players}\n\n"
+            "Committed actions:\n{committed_actions}\n\n"
+            "Known facts:\n{public_facts}\n\n"
+            "{history_block}"
+            "Write the official public narration for this turn."
+        ),
+        input_fields=[
+            "scene_context",
+            "committed_actions",
+            "public_facts",
+            "active_players",
+            "tone_hint",
+        ],
+        output_schema={
+            "type": "object",
+            "required": ["narration"],
+            "properties": {
+                "narration": {"type": "string"},
+                "private_notes": {"type": "string"},
+                "tone": {
+                    "type": "string",
+                    "enum": ["neutral", "tense", "triumphant", "ominous", "comic"],
+                },
+            },
+        },
+        output_example=(
+            '{"narration": "You press deeper into the cave.", '
+            '"private_notes": "", "tone": "tense"}'
+        ),
+        max_input_tokens=16384,
+        max_output_tokens=2048,
+        scope_rules=["no_referee_facts", "no_side_channel_facts", "public_facts_only"],
+        fallback_output={
+            "narration": "The party pauses. The results of their actions settle around them.",
+            "private_notes": "[Fallback narration]",
+            "tone": "neutral",
+        },
+    )
+)
+
+# --- npc_dialogue ---------------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.npc_dialogue",
+        version="1.0.0",
+        tier="main",
+        task_type="npc_dialogue",
+        system_prompt_template=(
+            "You are voicing an NPC in a text RPG. Stay in character based on "
+            "the personality, goals, and trust level provided. Do not reveal "
+            "information the NPC would not share at this trust level. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "NPC: {npc_context}\n\n"
+            "Scene: {scene_context}\n\n"
+            "Action: {action_context}\n\n"
+            "Dialogue hints: {dialogue_hints}\n\n"
+            "Write the NPC's spoken dialogue and any brief action beat."
+        ),
+        input_fields=[
+            "npc_context",
+            "action_context",
+            "scene_context",
+            "dialogue_hints",
+        ],
+        output_schema={
+            "type": "object",
+            "required": ["dialogue"],
+            "properties": {
+                "dialogue": {"type": "string"},
+                "internal_thought": {"type": "string"},
+                "trust_shift_suggestion": {"type": "integer"},
+            },
+        },
+        output_example=(
+            '{"dialogue": "Welcome, travelers.", '
+            '"internal_thought": "They seem trustworthy.", '
+            '"trust_shift_suggestion": 1}'
+        ),
+        max_input_tokens=8192,
+        max_output_tokens=1024,
+        scope_rules=["npc_scoped", "no_other_npc_facts"],
+        fallback_output={
+            "dialogue": "The NPC remains silent for a moment.",
+            "internal_thought": "",
+            "trust_shift_suggestion": 0,
+        },
+    )
+)
+
+# --- combat_summary -------------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.combat_summary",
+        version="1.0.0",
+        tier="main",
+        task_type="combat_summary",
+        system_prompt_template=(
+            "You are the narrator for a multiplayer text RPG. "
+            "Write vivid combat narration based only on the provided "
+            "mechanically-resolved outcomes. Do not invent outcomes. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "Battlefield: {battlefield_summary}\n\n"
+            "Action results:\n{action_results}\n\n"
+            "Scene: {scene_context}\n\n"
+            "Write the public combat narration."
+        ),
+        input_fields=["battlefield_summary", "action_results", "scene_context"],
+        output_schema={
+            "type": "object",
+            "required": ["narration"],
+            "properties": {
+                "narration": {"type": "string"},
+                "tone": {
+                    "type": "string",
+                    "enum": ["neutral", "tense", "triumphant", "ominous", "comic"],
+                },
+            },
+        },
+        output_example='{"narration": "Steel clashes in the darkness.", "tone": "tense"}',
+        max_input_tokens=8192,
+        max_output_tokens=1024,
+        scope_rules=["public_only", "no_hidden_monster_stats"],
+        fallback_output={
+            "narration": "The exchange of blows concludes. The dust settles.",
+            "tone": "medium",
+        },
+    )
+)
+
+# --- ruling_proposal ------------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.ruling_proposal",
+        version="1.0.0",
+        tier="main",
+        task_type="ruling_proposal",
+        system_prompt_template=(
+            "You are the rules arbiter for an AI-refereed text RPG. "
+            "Evaluate the player's action against the game rules and scene context. "
+            "Propose a ruling. Be fair, consistent, and brief. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "Action: {action_text}\n\n"
+            "Character: {character_context}\n\n"
+            "Scene: {scene_context}\n\n"
+            "Rules:\n{relevant_rules}\n\n"
+            "Propose a ruling on this action."
+        ),
+        input_fields=[
+            "action_text",
+            "character_context",
+            "scene_context",
+            "relevant_rules",
+        ],
+        output_schema={
+            "type": "object",
+            "required": ["ruling", "success", "confidence", "reasoning"],
+            "properties": {
+                "ruling": {"type": "string"},
+                "success": {"type": "boolean"},
+                "confidence": {
+                    "type": "string",
+                    "enum": ["high", "medium", "low"],
+                },
+                "reasoning": {"type": "string"},
+            },
+        },
+        output_example=(
+            '{"ruling": "allow", "success": true, '
+            '"confidence": "high", "reasoning": "Action is valid."}'
+        ),
+        max_input_tokens=8192,
+        max_output_tokens=512,
+        scope_rules=["minimal_private_facts"],
+        fallback_output={
+            "ruling": "request_clarification",
+            "success": False,
+            "confidence": "low",
+            "reasoning": "Unable to evaluate at this time.",
+        },
+    )
+)
+
+# --- social_arbitration ---------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.social_arbitration",
+        version="1.0.0",
+        tier="main",
+        task_type="social_arbitration",
+        system_prompt_template=(
+            "You are the social arbiter for an AI-refereed text RPG. "
+            "Resolve the described social situation fairly. "
+            "Narrate the public outcome and note any trust or attitude shifts. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "Situation: {situation}\n\n"
+            "Scene: {scene_context}\n\n"
+            "Players involved: {players}\n\n"
+            "NPCs involved: {npcs}\n\n"
+            "Resolve the social situation and narrate the outcome."
+        ),
+        input_fields=["situation", "scene_context", "players", "npcs"],
+        output_schema={
+            "type": "object",
+            "required": ["outcome", "narration"],
+            "properties": {
+                "outcome": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "partial_success",
+                        "failure",
+                        "escalation",
+                    ],
+                },
+                "narration": {"type": "string"},
+                "trust_delta": {"type": "object"},
+                "private_notes": {"type": "string"},
+            },
+        },
+        output_example=(
+            '{"outcome": "success", "narration": "Diplomacy prevails.", '
+            '"trust_delta": {}, "private_notes": ""}'
+        ),
+        max_input_tokens=8192,
+        max_output_tokens=1024,
+        scope_rules=["public_only"],
+        fallback_output={
+            "outcome": "failure",
+            "narration": "The attempt at resolution remains inconclusive.",
+            "trust_delta": {},
+            "private_notes": "[Fallback]",
+        },
+    )
+)
+
+# --- puzzle_flavor --------------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.puzzle_flavor",
+        version="1.0.0",
+        tier="main",
+        task_type="puzzle_flavor",
+        system_prompt_template=(
+            "You are the narrative voice for an AI-refereed text RPG. "
+            "Describe the player's interaction with the puzzle in immersive prose. "
+            "Do not reveal the puzzle solution. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "Puzzle: {puzzle_description}\n\n"
+            "Scene: {scene_context}\n\n"
+            "Action: {action_text}\n\n"
+            "State: {puzzle_state}\n\n"
+            "Narrate the puzzle interaction."
+        ),
+        input_fields=[
+            "puzzle_description",
+            "scene_context",
+            "action_text",
+            "puzzle_state",
+        ],
+        output_schema={
+            "type": "object",
+            "required": ["flavor"],
+            "properties": {
+                "flavor": {"type": "string"},
+                "hint": {"type": "string"},
+                "progress": {
+                    "type": "string",
+                    "enum": ["none", "partial", "solved", "failed"],
+                },
+            },
+        },
+        output_example='{"flavor": "You study the mechanism.", "hint": "", "progress": "none"}',
+        max_input_tokens=8192,
+        max_output_tokens=1024,
+        scope_rules=["public_only", "no_solution_hints"],
+        fallback_output={
+            "flavor": "You study the puzzle carefully, but the answer eludes you for now.",
+            "hint": "",
+            "progress": "none",
+        },
+    )
+)
+
+# --- unusual_action -------------------------------------------------------
+
+_register(
+    PromptContract(
+        contract_id="main.unusual_action",
+        version="1.0.0",
+        tier="main",
+        task_type="unusual_action_interpretation",
+        system_prompt_template=(
+            "You are the rules interpreter for an AI-refereed text RPG. "
+            "Interpret an unusual player action that standard rules cannot classify. "
+            "Reply with valid JSON only. Schema: {output_schema_inline}"
+        ),
+        user_prompt_template=(
+            "Action: {action_text}\n\n"
+            "Character: {character_context}\n\n"
+            "Scene: {scene_context}\n\n"
+            "Interpret this unusual action and suggest how to resolve it."
+        ),
+        input_fields=["action_text", "character_context", "scene_context"],
+        output_schema={
+            "type": "object",
+            "required": ["interpretation", "suggested_resolution"],
+            "properties": {
+                "interpretation": {"type": "string"},
+                "suggested_resolution": {"type": "string"},
+                "difficulty_class": {"type": "integer"},
+                "requires_roll": {"type": "boolean"},
+            },
+        },
+        output_example=(
+            '{"interpretation": "Player attempts to climb the wall.", '
+            '"suggested_resolution": "Dexterity check", '
+            '"difficulty_class": 12, "requires_roll": true}'
+        ),
+        max_input_tokens=8192,
+        max_output_tokens=512,
+        scope_rules=["minimal_private_facts"],
+        fallback_output={
+            "interpretation": "Unable to interpret the action.",
+            "suggested_resolution": "request_clarification",
+            "difficulty_class": 10,
+            "requires_roll": False,
+        },
+    )
+)
+
+
+# ---------------------------------------------------------------------------
+# Lookup
+# ---------------------------------------------------------------------------
+
+
+def get_main_contract(task_type: str) -> PromptContract:
+    """Look up a main-tier contract by task_type.
+
+    Raises KeyError if the task_type has no registered contract.
+    """
+    for contract in MAIN_CONTRACTS.values():
+        if contract.task_type == task_type:
+            return contract
+    raise KeyError(f"No main-tier contract for task_type={task_type!r}")

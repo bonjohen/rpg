@@ -300,15 +300,21 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 14: Prompt Contracts and Context Assembly
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Define fast-model prompt contracts | Started (PST): | Completed (PST):
-[ ] Define Gemma gameplay prompt contracts | Started (PST): | Completed (PST):
-[ ] Define context assembly rules for narration, arbitration, dialogue, and summaries | Started (PST): | Completed (PST):
-[ ] Define prompt size limits and truncation policies | Started (PST): | Completed (PST):
-[ ] Define schema validation and output-repair rules | Started (PST): | Completed (PST):
-[ ] Add prompt-assembly regression fixtures | Started (PST): | Completed (PST):
-[ ] Add tests for scope-safe context assembly and leakage prevention | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 02:10 PM | Completed (PST): 2026-04-18 02:12 PM
+[#] Define fast-model prompt contracts | Started (PST): 2026-04-18 02:12 PM | Completed (PST): 2026-04-18 02:20 PM
+[#] Define Gemma gameplay prompt contracts | Started (PST): 2026-04-18 02:20 PM | Completed (PST): 2026-04-18 02:30 PM
+[#] Define context assembly rules for narration, arbitration, dialogue, and summaries | Started (PST): 2026-04-18 02:30 PM | Completed (PST): 2026-04-18 02:40 PM
+[#] Define prompt size limits and truncation policies | Started (PST): 2026-04-18 02:40 PM | Completed (PST): 2026-04-18 02:48 PM
+[#] Define schema validation and output-repair rules | Started (PST): 2026-04-18 02:48 PM | Completed (PST): 2026-04-18 02:55 PM
+[#] Add prompt-assembly regression fixtures | Started (PST): 2026-04-18 02:55 PM | Completed (PST): 2026-04-18 03:02 PM
+[#] Add tests for scope-safe context assembly and leakage prevention | Started (PST): 2026-04-18 03:02 PM | Completed (PST): 2026-04-18 03:15 PM
+[#] Phase End | Started (PST): 2026-04-18 03:15 PM | Completed (PST): 2026-04-18 03:20 PM
+
+### Phase 14 Summary
+
+- **Changes:** Created `models/contracts/` package with 5 modules: `fast_contracts.py` (7 fast-tier prompt contracts), `main_contracts.py` (7 main-tier prompt contracts), `context_assembly.py` (scope-safe context assembler with fact filtering and leakage detection), `truncation.py` (token estimation and history/fact truncation policies), `output_repair.py` (schema validation and repair pipeline). Added `tests/fixtures/prompt_fixtures.py` with builder functions for narration, NPC dialogue, combat, ruling, oversized history, and broken/valid JSON outputs. Added `tests/unit/test_prompt_contracts.py` with 174 tests covering contract registry, scope filtering, context assembly, truncation, output validation, fallback validation, repair pipeline, and template rendering. All 991 tests pass, lint clean.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 14: Prompt Contracts and Context Assembly`
 
 ## Phase 15: Reliability, Recovery, and Observability
 

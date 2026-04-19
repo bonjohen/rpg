@@ -18,7 +18,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 11 | Side-Channels and Private Coordination | Completed | 2026-04-18 02:35 AM | 58 new tests; server/scope/ extensions + side_channel_engine + side_channel_audit |
 | 12 | Split Party and Multi-Scene Handling | Completed | 2026-04-19 12:55 AM | 56 new tests; server/scene/ package |
 | 13 | Scenario Authoring Format | Completed | 2026-04-18 02:05 PM | 89 new tests; scenarios/ package |
-| 14 | Prompt Contracts and Context Assembly | Not Started | — | |
+| 14 | Prompt Contracts and Context Assembly | Completed | 2026-04-18 03:20 PM | 174 new tests; models/contracts/ package |
 | 15 | Reliability, Recovery, and Observability | Not Started | — | |
 | 16 | Internal Playtest Release | Not Started | — | |
 | 17 | Mini App Foundation | Not Started | — | |
@@ -93,6 +93,14 @@ Started: 2026-04-18
 Inputs: `server/scope/side_channel.py` (SideChannelPolicy from Phase 4), `server/scope/engine.py` (ScopeEngine), `bot/outbound.py` (send_private_by_player_id), `server/domain/entities.py` (SideChannel, ConversationScope, KnowledgeFact).
 
 Outputs: Extended `server/scope/side_channel.py` (add_member, remove_member with auto-close, can_create with per-player limit). Created `server/scope/side_channel_engine.py` (SideChannelEngine: create_channel, close_channel with audit fact). Created `server/scope/side_channel_audit.py` (SideChannelAuditor: record_creation, record_message, record_closure — all referee-only). Extended `bot/outbound.py` (send_side_channel DM relay). Extended `server/scope/engine.py` (assert_no_side_channel_leakage). Added `tests/fixtures/side_channel_scenario.py` and `tests/unit/test_side_channels.py` (58 tests). Total suite: 672 tests, all green.
+
+### Phase 14
+
+Started: 2026-04-18
+
+Inputs: `models/fast/tasks.py`, `models/main/tasks.py`, `models/main/context.py`, `models/main/schemas.py`, `models/main/fallback.py`, `docs/model_routing.md`.
+
+Outputs: `models/contracts/` package -- `fast_contracts.py` (PromptContract dataclass, 7 fast-tier contracts registry, get_fast_contract), `main_contracts.py` (7 main-tier contracts registry, get_main_contract), `context_assembly.py` (ContextAssembler: scope-safe prompt rendering with ScopedFact filtering, scope violation detection, template rendering), `truncation.py` (TruncationPolicy: token estimation, history truncation oldest-first, fact truncation preserving critical facts, tier-aware limit checks), `output_repair.py` (RepairPipeline: validate-repair-fallback pipeline, schema validation against contract output_schema). Added `tests/fixtures/prompt_fixtures.py` (narration, NPC dialogue, combat, ruling, oversized history, broken/valid JSON builders) and `tests/unit/test_prompt_contracts.py` (174 tests). Total suite: 991 tests, all green.
 
 ### Phase 2
 
