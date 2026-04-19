@@ -373,14 +373,20 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 18: Mini App Gameplay Utilities
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement draft action builder | Started (PST): | Completed (PST):
-[ ] Implement private inbox view | Started (PST): | Completed (PST):
-[ ] Implement side-channel management UI | Started (PST): | Completed (PST):
-[ ] Implement quest log and clue journal views | Started (PST): | Completed (PST):
-[ ] Implement optional map or scene view | Started (PST): | Completed (PST):
-[ ] Add Mini App submission-flow tests | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-19 02:27 AM | Completed (PST): 2026-04-19 02:28 AM
+[#] Implement draft action builder | Started (PST): 2026-04-19 02:28 AM | Completed (PST): 2026-04-19 02:38 AM
+[#] Implement private inbox view | Started (PST): 2026-04-19 02:38 AM | Completed (PST): 2026-04-19 02:40 AM
+[#] Implement side-channel management UI | Started (PST): 2026-04-19 02:40 AM | Completed (PST): 2026-04-19 02:44 AM
+[#] Implement quest log and clue journal views | Started (PST): 2026-04-19 02:44 AM | Completed (PST): 2026-04-19 02:47 AM
+[#] Implement optional map or scene view | Started (PST): 2026-04-19 02:47 AM | Completed (PST): 2026-04-19 02:50 AM
+[#] Add Mini App submission-flow tests | Started (PST): 2026-04-19 02:50 AM | Completed (PST): 2026-04-19 02:55 AM
+[#] Phase End | Started (PST): 2026-04-19 02:55 AM | Completed (PST): 2026-04-19 02:58 AM
+
+### Phase 18 Summary
+
+- **Changes:** Extended `server/api/routes.py` with 13 new endpoints: GET /api/scene/{id}/context (scene context for action builder), POST /api/action/submit (action submission with validation), GET /api/action/draft/{id} (draft retrieval), GET /api/player/{id}/inbox (private-referee inbox with read tracking), GET /api/player/{id}/channels (side-channel list), GET /api/channel/{id}/messages (channel message history), POST /api/channel/create (channel creation with member validation), POST /api/channel/{id}/send (channel messaging), POST /api/channel/{id}/leave (leave channel with auto-close), GET /api/campaign/{id}/quests (quest log), GET /api/player/{id}/clues (clue journal filtered by scope), GET /api/campaign/{id}/map (scene graph with discovered/undiscovered nodes). Extended `server/api/responses.py` with 20 new response dataclasses. Extended `server/orchestrator/game_loop.py` with side_channels, drafts, inbox_read, and channel_messages in-memory state. Created `webapp/js/views/action.js` (action builder: type selector, exit/target pickers, submit flow), `webapp/js/views/inbox.js` (inbox with unread badges), `webapp/js/views/channels.js` (channel list), `webapp/js/views/quests.js` (quest log grouped by status), `webapp/js/views/clues.js` (clue journal grouped by scene), `webapp/js/views/map.js` (SVG node-link scene graph). Updated `webapp/index.html` and `webapp/js/app.js` (added 6 view scripts, expanded menu and router). Updated `webapp/css/style.css` (form elements for action builder). Added `tests/unit/test_api_gameplay.py` (26 tests: scene context, action submission, draft, inbox, channels, quests, clues, map). Total suite: 1179 tests, all green; lint clean.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 18: Mini App Gameplay Utilities`
 
 ## Phase 19: Content Expansion and Quality Pass
 

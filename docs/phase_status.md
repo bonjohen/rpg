@@ -22,7 +22,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 15 | Reliability, Recovery, and Observability | Completed | 2026-04-18 04:15 PM | 87 new tests; server/observability/ + server/reliability/ packages |
 | 16 | Internal Playtest Release | Completed | 2026-04-18 05:45 PM | 49 new tests; server/orchestrator/ package |
 | 17 | Mini App Foundation | Completed | 2026-04-18 06:35 PM | 26 new tests; server/api/ + webapp/ packages |
-| 18 | Mini App Gameplay Utilities | Not Started | — | |
+| 18 | Mini App Gameplay Utilities | Completed | 2026-04-19 02:55 AM | 26 new tests; server/api/ + webapp/ extensions |
 | 19 | Content Expansion and Quality Pass | Not Started | — | |
 | 20 | Pre-Release Stabilization | Not Started | — | |
 
@@ -117,6 +117,14 @@ Started: 2026-04-18
 Inputs: All prior domain engines (Phases 1-15), `scenarios/starters/goblin_caves.yaml` (Phase 13), `bot/commands.py` (Phase 3), `bot/handlers.py` (Phase 3).
 
 Outputs: `server/orchestrator/` package -- `game_loop.py` (GameOrchestrator: top-level coordinator wiring all subsystems; in-memory state management; scenario loading, player management, turn lifecycle, action submission and resolution, message dispatching, deterministic narration; DispatchResult), `message_dispatcher.py` (MessageDispatcher: thin wrapper over orchestrator message handling). Extended `bot/commands.py` (6 new commands: /newgame, /nextturn, /forceresolve, /diagnostics, /scene, /who). Extended `bot/handlers.py` (registered new commands). Created `docs/playtest_findings.md` (defect tracking template). Added `tests/integration/test_playtest_setup.py` (16 tests: scenario loading, player joining, turn opening), `tests/integration/test_playtest_session.py` (19 tests: exploration, social, combat, timer fallback, action submission, turn log), `tests/integration/test_playtest_logging.py` (4 tests: logging, transcript reconstruction), `tests/integration/test_defect_categories.py` (10 tests: timing, leakage, routing, rules defects). Updated `docs/architecture.md` (added orchestrator layer). Total suite: 1127 tests, all green.
+
+### Phase 18
+
+Started: 2026-04-19
+
+Inputs: `server/api/routes.py` (Phase 17), `server/api/responses.py` (Phase 17), `server/orchestrator/game_loop.py` (Phase 16), `server/scope/side_channel_engine.py` (Phase 11), `docs/phases_16_20_guide.md`.
+
+Outputs: Extended `server/api/routes.py` (13 new endpoints: scene context, action submit, draft, inbox, channel CRUD, channel messaging, quests, clues, map). Extended `server/api/responses.py` (20 new response dataclasses). Extended `server/orchestrator/game_loop.py` (side_channels, drafts, inbox_read, channel_messages state dicts). Created 6 new webapp view files: `action.js` (action builder with type selector, exit/target pickers, submit), `inbox.js` (private messages with unread indicators), `channels.js` (side-channel list), `quests.js` (quest log grouped by status), `clues.js` (clue journal grouped by scene), `map.js` (SVG node-link diagram). Updated `index.html` and `app.js` (new view registrations, expanded menu). Added `tests/unit/test_api_gameplay.py` (26 tests). Total suite: 1179 tests, all green.
 
 ### Phase 17
 

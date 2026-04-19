@@ -285,3 +285,53 @@ body {
     font-size: 0.85rem;
     font-weight: 600;
 }
+
+/* Form elements (action builder) */
+.form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tg-hint);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.form-select,
+.form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--tg-secondary-bg);
+    border-radius: 8px;
+    background-color: var(--tg-bg);
+    color: var(--tg-text);
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+.form-input {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.btn:active {
+    opacity: 0.8;
+}
+
+.btn-primary {
+    background-color: var(--tg-button);
+    color: var(--tg-button-text);
+}

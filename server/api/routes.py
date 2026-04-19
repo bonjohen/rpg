@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, HTTPException, Query
@@ -10,14 +11,36 @@ from pydantic import BaseModel
 
 from server.api.auth import validate_init_data
 from server.api.responses import (
+    ActionSubmitResponse,
+    ChannelInfo,
+    ChannelListResponse,
+    ChannelMessage,
+    ChannelMessagesResponse,
     CharacterResponse,
+    ClueInfo,
+    ClueListResponse,
+    CreateChannelResponse,
+    DraftResponse,
+    ExitInfo,
+    InboxMessage,
+    InboxResponse,
     InventoryResponse,
     ItemResponse,
+    LeaveChannelResponse,
+    MapEdge,
+    MapNode,
+    MapResponse,
     PlayerResponse,
+    QuestInfo,
+    QuestListResponse,
     RecapEntry,
     RecapResponse,
+    SceneContextResponse,
     SceneResponse,
+    SendMessageResponse,
+    TargetInfo,
 )
+from server.domain.enums import ActionType, ScopeType, TurnWindowState
 
 if TYPE_CHECKING:
     from server.orchestrator.game_loop import GameOrchestrator
@@ -136,7 +159,7 @@ async def get_inventory(character_id: str) -> dict:
 
 
 # -----------------------------------------------------------------------
-# Scene
+# Scene (basic)
 # -----------------------------------------------------------------------
 
 
@@ -180,6 +203,157 @@ async def get_scene(scene_id: str) -> dict:
 
 
 # -----------------------------------------------------------------------
+# Scene context (for action builder)
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/scene/{scene_id}/context")
+async def get_scene_context(scene_id: str) -> dict:
+    orch = _orch()
+    scene = orch.scenes.get(scene_id)
+    if scene is None:
+        raise HTTPException(status_code=404, detail="Scene not found.")
+
+    # Exits — non-hidden only
+    exits: list[ExitInfo] = []
+    for direction, target_id in scene.exits.items():
+        target = orch.scenes.get(target_id)
+        target_name = target.name if target else target_id
+        exits.append(
+            ExitInfo(
+                direction=direction, target_scene_name=target_name, is_locked=False
+            )
+        )
+
+    # Targets — visible NPCs and monster groups
+    targets: list[TargetInfo] = []
+    for npc_id in scene.npc_ids:
+        npc = orch.npcs.get(npc_id)
+        if npc and npc.is_visible:
+            targets.append(
+                TargetInfo(target_id=npc_id, name=npc.name, target_type="npc")
+            )
+    for mg_id in scene.monster_group_ids:
+        mg = orch.monster_groups.get(mg_id)
+        if mg and mg.is_visible:
+            targets.append(
+                TargetInfo(
+                    target_id=mg_id, name=mg.unit_type, target_type="monster_group"
+                )
+            )
+
+    # Active turn window
+    tw_id = scene.active_turn_window_id or ""
+
+    resp = SceneContextResponse(
+        scene_id=scene.scene_id,
+        scene_name=scene.name,
+        description=scene.description,
+        exits=exits,
+        targets=targets,
+        objects=[],  # objects not tracked in current orchestrator state
+        inventory_items=[],  # populated per-player on the frontend
+        active_turn_window_id=tw_id,
+    )
+    return asdict(resp)
+
+
+# -----------------------------------------------------------------------
+# Action submission
+# -----------------------------------------------------------------------
+
+
+class ActionSubmissionRequest(BaseModel):
+    player_id: str
+    turn_window_id: str
+    action_type: str
+    target_id: str = ""
+    item_id: str = ""
+    public_text: str = ""
+    private_ref_text: str = ""
+    movement_target: str = ""
+
+
+@router.post("/api/action/submit")
+async def submit_action(req: ActionSubmissionRequest) -> dict:
+    orch = _orch()
+
+    # Validate turn window
+    tw = orch.turn_windows.get(req.turn_window_id)
+    if tw is None:
+        return asdict(
+            ActionSubmitResponse(
+                accepted=False, rejection_reason="Turn window not found."
+            )
+        )
+    if tw.state != TurnWindowState.open:
+        return asdict(
+            ActionSubmitResponse(
+                accepted=False, rejection_reason="Turn window is not open."
+            )
+        )
+
+    # Validate action type
+    try:
+        action_type = ActionType(req.action_type)
+    except ValueError:
+        return asdict(
+            ActionSubmitResponse(
+                accepted=False,
+                rejection_reason=f"Invalid action type: {req.action_type}",
+            )
+        )
+
+    target_ids = [req.target_id] if req.target_id else []
+    item_ids = [req.item_id] if req.item_id else []
+
+    action = orch.submit_action(
+        player_id=req.player_id,
+        action_type=action_type,
+        public_text=req.public_text,
+        private_ref_text=req.private_ref_text,
+        target_ids=target_ids,
+        item_ids=item_ids,
+        movement_target=req.movement_target or None,
+    )
+
+    if action:
+        # Clear any draft for this player
+        orch.drafts.pop(req.player_id, None)
+        return asdict(ActionSubmitResponse(accepted=True, action_id=action.action_id))
+    return asdict(
+        ActionSubmitResponse(
+            accepted=False,
+            rejection_reason="Could not submit action. No active turn or already submitted.",
+        )
+    )
+
+
+# -----------------------------------------------------------------------
+# Draft
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/action/draft/{player_id}")
+async def get_draft(player_id: str) -> dict:
+    orch = _orch()
+    draft = orch.drafts.get(player_id)
+    if draft is None:
+        return asdict(DraftResponse(player_id=player_id, has_draft=False))
+    return asdict(
+        DraftResponse(
+            player_id=player_id,
+            turn_window_id=draft.get("turn_window_id", ""),
+            action_type=draft.get("action_type", ""),
+            target_id=draft.get("target_id", ""),
+            public_text=draft.get("public_text", ""),
+            private_ref_text=draft.get("private_ref_text", ""),
+            has_draft=True,
+        )
+    )
+
+
+# -----------------------------------------------------------------------
 # Recap
 # -----------------------------------------------------------------------
 
@@ -212,3 +386,365 @@ async def get_recap(
 
     resp = RecapResponse(campaign_id=campaign_id, entries=recap_entries)
     return asdict(resp)
+
+
+# -----------------------------------------------------------------------
+# Inbox
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/player/{player_id}/inbox")
+async def get_inbox(player_id: str, since: str = "") -> dict:
+    orch = _orch()
+    player = orch.players.get(player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    # Find the player's private-referee scope(s)
+    private_scope_ids: set[str] = set()
+    for scope in orch.scopes.values():
+        if (
+            scope.scope_type == ScopeType.private_referee
+            and scope.player_id == player_id
+        ):
+            private_scope_ids.add(scope.scope_id)
+
+    read_facts = orch.inbox_read.get(player_id, set())
+    messages: list[InboxMessage] = []
+    for fact in orch.knowledge_facts.values():
+        if fact.owner_scope_id not in private_scope_ids:
+            continue
+        scene = orch.scenes.get(fact.scene_id)
+        scene_name = scene.name if scene else fact.scene_id
+        messages.append(
+            InboxMessage(
+                fact_id=fact.fact_id,
+                fact_type=fact.fact_type.value,
+                payload=fact.payload,
+                scene_id=fact.scene_id,
+                scene_name=scene_name,
+                revealed_at=fact.revealed_at.isoformat() if fact.revealed_at else "",
+                is_read=fact.fact_id in read_facts,
+            )
+        )
+
+    # Sort chronologically
+    messages.sort(key=lambda m: m.revealed_at)
+    unread = sum(1 for m in messages if not m.is_read)
+
+    # Mark all as read
+    if player_id not in orch.inbox_read:
+        orch.inbox_read[player_id] = set()
+    orch.inbox_read[player_id].update(m.fact_id for m in messages)
+
+    resp = InboxResponse(player_id=player_id, messages=messages, unread_count=unread)
+    return asdict(resp)
+
+
+# -----------------------------------------------------------------------
+# Channels
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/player/{player_id}/channels")
+async def get_channels(player_id: str) -> dict:
+    orch = _orch()
+    channels: list[ChannelInfo] = []
+    for ch in orch.side_channels.values():
+        if player_id not in ch.member_player_ids:
+            continue
+        member_names = []
+        for mid in ch.member_player_ids:
+            p = orch.players.get(mid)
+            member_names.append(p.display_name if p else mid)
+        msg_count = len(orch.channel_messages.get(ch.side_channel_id, []))
+        channels.append(
+            ChannelInfo(
+                channel_id=ch.side_channel_id,
+                label=ch.label,
+                members=member_names,
+                message_count=msg_count,
+                is_open=ch.is_open,
+            )
+        )
+    return asdict(ChannelListResponse(channels=channels))
+
+
+@router.get("/api/channel/{channel_id}/messages")
+async def get_channel_messages(channel_id: str) -> dict:
+    orch = _orch()
+    ch = orch.side_channels.get(channel_id)
+    if ch is None:
+        raise HTTPException(status_code=404, detail="Channel not found.")
+
+    raw_msgs = orch.channel_messages.get(channel_id, [])
+    messages: list[ChannelMessage] = []
+    for msg in raw_msgs:
+        sender = orch.players.get(msg.get("sender_id", ""))
+        sender_name = sender.display_name if sender else msg.get("sender_id", "")
+        messages.append(
+            ChannelMessage(
+                sender_name=sender_name,
+                text=msg.get("text", ""),
+                sent_at=msg.get("sent_at", ""),
+            )
+        )
+    return asdict(ChannelMessagesResponse(channel_id=channel_id, messages=messages))
+
+
+class CreateChannelRequest(BaseModel):
+    creator_player_id: str
+    member_player_ids: list[str]
+    label: str
+
+
+@router.post("/api/channel/create")
+async def create_channel(req: CreateChannelRequest) -> dict:
+    orch = _orch()
+    if orch.campaign is None:
+        return asdict(
+            CreateChannelResponse(success=False, rejection_reason="No campaign loaded.")
+        )
+
+    # Validate all members exist
+    for mid in req.member_player_ids:
+        if mid not in orch.players:
+            return asdict(
+                CreateChannelResponse(
+                    success=False, rejection_reason=f"Player {mid} not found."
+                )
+            )
+
+    from server.scope.side_channel_engine import SideChannelEngine
+
+    engine = SideChannelEngine()
+    all_pids = list(orch.players.keys())
+    result = engine.create_channel(
+        creator_player_id=req.creator_player_id,
+        member_player_ids=req.member_player_ids,
+        campaign_id=orch.campaign.campaign_id,
+        all_campaign_player_ids=all_pids,
+        label=req.label,
+    )
+    if not result.success:
+        return asdict(
+            CreateChannelResponse(
+                success=False, rejection_reason=result.rejection_reason
+            )
+        )
+
+    # Store the channel and scope
+    ch = result.channel
+    orch.side_channels[ch.side_channel_id] = ch
+    if result.scope:
+        orch.scopes[result.scope.scope_id] = result.scope
+    orch.channel_messages[ch.side_channel_id] = []
+
+    return asdict(CreateChannelResponse(success=True, channel_id=ch.side_channel_id))
+
+
+class SendMessageRequest(BaseModel):
+    sender_player_id: str
+    text: str
+
+
+@router.post("/api/channel/{channel_id}/send")
+async def send_channel_message(channel_id: str, req: SendMessageRequest) -> dict:
+    orch = _orch()
+    ch = orch.side_channels.get(channel_id)
+    if ch is None:
+        return asdict(SendMessageResponse(success=False, error="Channel not found."))
+    if not ch.is_open:
+        return asdict(SendMessageResponse(success=False, error="Channel is closed."))
+    if req.sender_player_id not in ch.member_player_ids:
+        return asdict(
+            SendMessageResponse(success=False, error="Not a member of this channel.")
+        )
+
+    msg = {
+        "sender_id": req.sender_player_id,
+        "text": req.text,
+        "sent_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if channel_id not in orch.channel_messages:
+        orch.channel_messages[channel_id] = []
+    orch.channel_messages[channel_id].append(msg)
+
+    return asdict(SendMessageResponse(success=True))
+
+
+class LeaveChannelRequest(BaseModel):
+    player_id: str
+
+
+@router.post("/api/channel/{channel_id}/leave")
+async def leave_channel(channel_id: str, req: LeaveChannelRequest) -> dict:
+    orch = _orch()
+    ch = orch.side_channels.get(channel_id)
+    if ch is None:
+        return asdict(LeaveChannelResponse(success=False, error="Channel not found."))
+    if req.player_id not in ch.member_player_ids:
+        return asdict(
+            LeaveChannelResponse(success=False, error="Not a member of this channel.")
+        )
+
+    ch.member_player_ids.remove(req.player_id)
+    # Auto-close if fewer than 2 members
+    if len(ch.member_player_ids) < 2:
+        ch.is_open = False
+
+    return asdict(LeaveChannelResponse(success=True))
+
+
+# -----------------------------------------------------------------------
+# Quests
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/campaign/{campaign_id}/quests")
+async def get_quests(campaign_id: str) -> dict:
+    orch = _orch()
+    if orch.campaign is None or orch.campaign.campaign_id != campaign_id:
+        raise HTTPException(status_code=404, detail="Campaign not found.")
+
+    quests: list[QuestInfo] = []
+    for quest in orch.quests.values():
+        quests.append(
+            QuestInfo(
+                quest_id=quest.quest_id,
+                title=quest.quest_id,  # quest_id is used as title
+                description="",
+                status=quest.status.value,
+                objectives=[],
+                player_progress=dict(quest.player_progress),
+            )
+        )
+    return asdict(QuestListResponse(quests=quests))
+
+
+# -----------------------------------------------------------------------
+# Clues
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/player/{player_id}/clues")
+async def get_clues(player_id: str) -> dict:
+    orch = _orch()
+    player = orch.players.get(player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Player not found.")
+
+    from server.domain.enums import KnowledgeFactType
+
+    # Find the player's private-referee scope(s) + public scopes
+    accessible_scope_ids: set[str] = set()
+    for scope in orch.scopes.values():
+        if scope.scope_type == ScopeType.public:
+            accessible_scope_ids.add(scope.scope_id)
+        elif (
+            scope.scope_type == ScopeType.private_referee
+            and scope.player_id == player_id
+        ):
+            accessible_scope_ids.add(scope.scope_id)
+
+    clues: list[ClueInfo] = []
+    for fact in orch.knowledge_facts.values():
+        if fact.fact_type != KnowledgeFactType.clue:
+            continue
+        if fact.owner_scope_id not in accessible_scope_ids:
+            continue
+        scene = orch.scenes.get(fact.scene_id)
+        scene_name = scene.name if scene else fact.scene_id
+        clues.append(
+            ClueInfo(
+                fact_id=fact.fact_id,
+                payload=fact.payload,
+                scene_name=scene_name,
+                discovered_at=fact.revealed_at.isoformat() if fact.revealed_at else "",
+            )
+        )
+
+    return asdict(ClueListResponse(clues=clues))
+
+
+# -----------------------------------------------------------------------
+# Map
+# -----------------------------------------------------------------------
+
+
+@router.get("/api/campaign/{campaign_id}/map")
+async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
+    orch = _orch()
+    if orch.campaign is None or orch.campaign.campaign_id != campaign_id:
+        raise HTTPException(status_code=404, detail="Campaign not found.")
+
+    # Determine which scenes the player has visited
+    char = orch._get_player_character(player_id) if player_id else None
+    current_scene_id = char.scene_id or "" if char else ""
+
+    # For simplicity, treat any scene that has or had the player's character
+    # as "discovered". Without persistent visit records in the orchestrator,
+    # we consider the current scene plus scenes connected to it.
+    discovered_ids: set[str] = set()
+    if current_scene_id:
+        discovered_ids.add(current_scene_id)
+        # Add scenes connected via exits from discovered scenes
+        scene = orch.scenes.get(current_scene_id)
+        if scene:
+            for target_id in scene.exits.values():
+                discovered_ids.add(target_id)
+
+    nodes: list[MapNode] = []
+    seen_node_ids: set[str] = set()
+
+    # Add discovered nodes
+    for sid in discovered_ids:
+        scene = orch.scenes.get(sid)
+        if scene and sid not in seen_node_ids:
+            is_current = sid == current_scene_id
+            nodes.append(
+                MapNode(
+                    scene_id=sid,
+                    name=scene.name
+                    if is_current or sid == current_scene_id
+                    else scene.name,
+                    discovered=sid == current_scene_id,
+                )
+            )
+            seen_node_ids.add(sid)
+
+    # Add undiscovered adjacent nodes as "?" for scenes connected from discovered
+    for sid in list(discovered_ids):
+        scene = orch.scenes.get(sid)
+        if scene:
+            for target_id in scene.exits.values():
+                if target_id not in seen_node_ids:
+                    target = orch.scenes.get(target_id)
+                    nodes.append(
+                        MapNode(
+                            scene_id=target_id,
+                            name=target.name if target else "?",
+                            discovered=False,
+                        )
+                    )
+                    seen_node_ids.add(target_id)
+
+    # Build edges
+    edges: list[MapEdge] = []
+    for sid in discovered_ids:
+        scene = orch.scenes.get(sid)
+        if scene:
+            for direction, target_id in scene.exits.items():
+                if target_id in seen_node_ids:
+                    edges.append(
+                        MapEdge(
+                            from_scene_id=sid,
+                            to_scene_id=target_id,
+                            direction=direction,
+                            discovered=target_id in discovered_ids,
+                        )
+                    )
+
+    return asdict(
+        MapResponse(nodes=nodes, edges=edges, current_scene_id=current_scene_id)
+    )

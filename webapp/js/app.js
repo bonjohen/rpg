@@ -82,6 +82,12 @@ const views = {
     sheet: typeof renderSheet === 'function' ? renderSheet : () => {},
     inventory: typeof renderInventory === 'function' ? renderInventory : () => {},
     recap: typeof renderRecap === 'function' ? renderRecap : () => {},
+    action: typeof renderActionBuilder === 'function' ? renderActionBuilder : () => {},
+    inbox: typeof renderInbox === 'function' ? renderInbox : () => {},
+    channels: typeof renderChannels === 'function' ? renderChannels : () => {},
+    quests: typeof renderQuestLog === 'function' ? renderQuestLog : () => {},
+    clues: typeof renderClueJournal === 'function' ? renderClueJournal : () => {},
+    map: typeof renderMap === 'function' ? renderMap : () => {},
 };
 
 function getHash() {
@@ -129,9 +135,25 @@ function renderMenu(container) {
                 <span class="menu-icon">&#x1F4DC;</span>
                 <span class="menu-label">Recap</span>
             </a>
-            <a href="#" class="menu-item" style="opacity:0.4;pointer-events:none">
+            <a href="#action" class="menu-item">
                 <span class="menu-icon">&#x2694;</span>
                 <span class="menu-label">Actions</span>
+            </a>
+            <a href="#inbox" class="menu-item">
+                <span class="menu-icon">&#x1F4E8;</span>
+                <span class="menu-label">Inbox</span>
+            </a>
+            <a href="#channels" class="menu-item">
+                <span class="menu-icon">&#x1F4AC;</span>
+                <span class="menu-label">Channels</span>
+            </a>
+            <a href="#quests" class="menu-item">
+                <span class="menu-icon">&#x1F4CB;</span>
+                <span class="menu-label">Quests</span>
+            </a>
+            <a href="#map" class="menu-item">
+                <span class="menu-icon">&#x1F5FA;</span>
+                <span class="menu-label">Map</span>
             </a>
         </div>
     `;

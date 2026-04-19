@@ -32,6 +32,7 @@ from server.domain.entities import (
     PuzzleState,
     QuestState,
     Scene,
+    SideChannel,
     TurnLogEntry,
     TurnWindow,
 )
@@ -112,6 +113,12 @@ class GameOrchestrator:
         self.turn_windows: dict[str, TurnWindow] = {}
         self.committed_actions: dict[str, CommittedAction] = {}
         self.turn_log: list[TurnLogEntry] = []
+        self.side_channels: dict[str, SideChannel] = {}
+
+        # Phase 18: in-memory draft and inbox-read tracking
+        self.drafts: dict[str, dict] = {}  # player_id -> draft dict
+        self.inbox_read: dict[str, set[str]] = {}  # player_id -> set of read fact_ids
+        self.channel_messages: dict[str, list[dict]] = {}  # channel_id -> messages
 
         # Engines (all stateless, instantiated once)
         self.turn_engine = TurnEngine()
