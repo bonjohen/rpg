@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-AI-refereed multiplayer text RPG delivered via Telegram, with a local inference backend (Gemma 4 26B A4B) and a fast local model routing layer. Work is tracked phase-by-phase in `docs/plan.md`.
+AI-refereed multiplayer text RPG delivered via Telegram, with a fast local model (qwen2.5:1.5b via Ollama) and a main model tier (GPT-5.4 mini via OpenAI API). Work is tracked phase-by-phase in `docs/plan.md`.
 
 ## Development Workflow
 

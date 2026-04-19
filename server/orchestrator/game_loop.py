@@ -16,7 +16,7 @@ from models.contracts.context_assembly import ContextAssembler
 from models.contracts.output_repair import RepairPipeline
 from models.fast.adapter import OllamaFastAdapter
 from models.fast.tasks import classify_intent, extract_action_packet
-from models.main.adapter import OllamaMainAdapter
+from models.main.adapter import OpenAIMainAdapter
 from scenarios.loader import ScenarioLoader
 from server.combat.conditions import CombatConditionEngine
 from server.domain.entities import (
@@ -88,7 +88,7 @@ class GameOrchestrator:
     def __init__(
         self,
         fast_adapter: OllamaFastAdapter | None = None,
-        main_adapter: OllamaMainAdapter | None = None,
+        main_adapter: OpenAIMainAdapter | None = None,
         bot_registry: BotRegistry | None = None,
         config: BotConfig | None = None,
     ) -> None:

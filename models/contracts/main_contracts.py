@@ -1,4 +1,4 @@
-"""Main-tier (Gemma 4 26B A4B) prompt contracts.
+"""Main-tier (GPT-5.4 mini via OpenAI) prompt contracts.
 
 One contract per main-tier task type.  Each contract codifies the system
 prompt, user prompt template, expected JSON output schema, scope rules, and

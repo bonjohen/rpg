@@ -2,7 +2,7 @@
 
 Each public function wraps one main-tier LLM call with the full failure-
 handling pipeline:
-  1. Call the main model (OllamaMainAdapter).
+  1. Call the main model (OpenAIMainAdapter).
   2. Validate output schema (schemas.validate_*).
   3. On validation failure: attempt fast-tier repair (one retry via
      fast.tasks.repair_schema).
@@ -10,8 +10,8 @@ handling pipeline:
      (fallback.*).
 
 All functions:
-  - Accept an OllamaMainAdapter and task-specific inputs.
-  - Accept an optional OllamaFastAdapter for the repair step.
+  - Accept an OpenAIMainAdapter and task-specific inputs.
+  - Accept an optional fast-tier adapter for the repair step.
   - Return (typed_result, ModelCallLog).
   - Never raise on model failure.
   - Set fallback_triggered=True on the log if fallback was used.
@@ -27,7 +27,7 @@ import uuid
 
 from models.fast.adapter import OllamaFastAdapter
 from models.fast.tasks import repair_schema
-from models.main.adapter import OllamaMainAdapter, GenerateResult
+from models.main.adapter import OpenAIMainAdapter, GenerateResult
 from models.main.context import (
     ActionContext,
     NpcContext,
@@ -74,7 +74,7 @@ from models.fast.instrumentation import ModelCallLog
 
 
 async def narrate_scene(
-    adapter: OllamaMainAdapter,
+    adapter: OpenAIMainAdapter,
     scene: SceneContext,
     committed_actions: list[ActionContext],
     recent_history: RecentHistory | None = None,
@@ -141,7 +141,7 @@ async def narrate_scene(
 
 
 async def generate_npc_dialogue(
-    adapter: OllamaMainAdapter,
+    adapter: OpenAIMainAdapter,
     npc: NpcContext,
     scene: SceneContext,
     trigger_action: ActionContext | None = None,
@@ -202,7 +202,7 @@ async def generate_npc_dialogue(
 
 
 async def summarize_combat(
-    adapter: OllamaMainAdapter,
+    adapter: OpenAIMainAdapter,
     scene: SceneContext,
     combat_outcomes: list[dict],
     committed_actions: list[ActionContext],
@@ -266,7 +266,7 @@ async def summarize_combat(
 
 
 async def propose_ruling(
-    adapter: OllamaMainAdapter,
+    adapter: OpenAIMainAdapter,
     action: ActionContext,
     scene: SceneContext,
     acting_player: PlayerContext,
@@ -335,7 +335,7 @@ async def propose_ruling(
 
 
 async def arbitrate_social(
-    adapter: OllamaMainAdapter,
+    adapter: OpenAIMainAdapter,
     scene: SceneContext,
     players_involved: list[PlayerContext],
     npcs_involved: list[NpcContext],
@@ -400,7 +400,7 @@ async def arbitrate_social(
 
 
 async def generate_puzzle_flavor(
-    adapter: OllamaMainAdapter,
+    adapter: OpenAIMainAdapter,
     scene: SceneContext,
     puzzle_description: str,
     player_action: ActionContext,
@@ -471,7 +471,7 @@ def _make_log(
 ) -> ModelCallLog:
     return ModelCallLog(
         trace_id=trace_id,
-        tier="gemma",
+        tier="openai",
         task_type=task_type,
         prompt_token_count=result.prompt_token_count,
         output_token_count=result.output_token_count,

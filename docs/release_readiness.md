@@ -4,7 +4,7 @@
 
 | ID | Severity | Category | Description | Status |
 |---|---|---|---|---|
-| BUG-001 | P2 | Routing | Gemma inference adapter disabled ([!] in Phase 7); all narration uses deterministic fallback | Deferred (requires live model) |
+| BUG-001 | P2 | Routing | OpenAI inference adapter requires live API key; all narration uses deterministic fallback without it | Deferred (requires OPENAI_API_KEY) |
 | BUG-002 | P3 | Clarity | Narration fallback text is functional but repetitive across turns | Open |
 | BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | Deferred (post-Phase 20) |
 
@@ -29,6 +29,6 @@
 ## Notes
 
 - No P0 or P1 bugs found during review of playtest findings or Phase 17-19 work.
-- The disabled Gemma adapter (BUG-001) is by design; mock adapters provide full coverage.
+- The OpenAI adapter (BUG-001) requires a live API key; mock adapters provide full test coverage.
 - Scope enforcement has comprehensive unit tests (Phase 4) and will be validated by
   privacy audit tests (Task 4 of this phase).

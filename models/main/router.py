@@ -1,7 +1,7 @@
 """Main-tier routing definitions.
 
 Defines the task types handled exclusively by the main gameplay model tier
-(Gemma 4 26B A4B). These tasks require narrative quality that the fast tier
+(GPT-5.4 mini via OpenAI). These tasks require narrative quality that the fast tier
 cannot reliably provide.
 
 Per model_routing.md — main tier handles:

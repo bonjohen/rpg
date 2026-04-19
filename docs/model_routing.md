@@ -38,7 +38,7 @@ All authoritative turn resolution stays server-side regardless of which tier is 
 
 ---
 
-## Main Game Model Tier: Gemma 4 26B A4B
+## Main Game Model Tier: GPT-5.4 mini (OpenAI API)
 
 **Purpose:** High-quality narrative and social tasks.
 
@@ -60,7 +60,7 @@ All authoritative turn resolution stays server-side regardless of which tier is 
 - Format repair of its own output (use fast tier for that)
 - Anything that should be deterministic (use server logic)
 
-**Context window:** Up to 256K tokens (26B A4B variant). Use for long campaign context when needed; but keep prompts lean — long prompts increase latency.
+**API:** OpenAI Chat Completions (`/v1/chat/completions`). Requires `OPENAI_API_KEY` environment variable.
 
 **Latency target:** < 5 s for narration calls in standard play. Combat and exploration narration can tolerate slightly longer.
 
@@ -81,7 +81,7 @@ Incoming task
 │   YES → Fast tier
 │
 ├─ Does quality of narration/dialogue matter to players?
-│   YES → Main tier (Gemma 4 26B A4B)
+│   YES → Main tier (GPT-5.4 mini)
 │
 ├─ Is this a ruling proposal for an ambiguous action?
 │   YES → Main tier
@@ -98,7 +98,7 @@ Routing is performed by the server's LLM router component. The router is determi
 | Tier | Target prompt size | Hard limit |
 |---|---|---|
 | Fast | < 2K tokens | 4K tokens |
-| Main (Gemma 4 26B A4B) | < 16K tokens | 32K tokens (standard); 256K (deep-context mode) |
+| Main (GPT-5.4 mini) | < 16K tokens | 32K tokens |
 
 Truncation policy: prefer dropping oldest public chat history before dropping scene state or player facts.
 
@@ -121,7 +121,7 @@ Never pass raw unfiltered chat history to any LLM call where secrecy matters.
 Every model call must log:
 
 - `trace_id` (tied to the TurnWindow or request context)
-- `tier` (fast / gemma)
+- `tier` (fast / openai)
 - `task_type`
 - `prompt_token_count`
 - `output_token_count`

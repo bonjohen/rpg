@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from models.fast.adapter import GenerateResult as FastGenerateResult
-from models.main.adapter import GenerateResult, OllamaMainAdapter
+from models.main.adapter import GenerateResult, OpenAIMainAdapter
 from models.main.context import (
     _estimate_tokens,
     _truncate_history,
@@ -133,8 +133,8 @@ def _fast_failure() -> FastGenerateResult:
     )
 
 
-def _mock_main_adapter(result: GenerateResult) -> OllamaMainAdapter:
-    adapter = MagicMock(spec=OllamaMainAdapter)
+def _mock_main_adapter(result: GenerateResult) -> OpenAIMainAdapter:
+    adapter = MagicMock(spec=OpenAIMainAdapter)
     adapter.generate = AsyncMock(return_value=result)
     return adapter
 
@@ -629,7 +629,7 @@ class TestNarrateScene:
         output, log = await narrate_scene(adapter, scene, [], trace_id="t1")
         assert isinstance(output, NarrationOutput)
         assert log.success is True
-        assert log.tier == "gemma"
+        assert log.tier == "openai"
         assert log.task_type == "scene_narration"
         assert log.fallback_triggered is False
 
@@ -899,7 +899,7 @@ class TestModelCallLog:
     async def test_log_tier_is_gemma(self):
         adapter = _mock_main_adapter(_success_result(VALID_NARRATION_JSON))
         _, log = await narrate_scene(adapter, make_tavern_scene(), [])
-        assert log.tier == "gemma"
+        assert log.tier == "openai"
 
     @pytest.mark.asyncio
     async def test_log_has_token_counts_on_success(self):

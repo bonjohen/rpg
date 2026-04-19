@@ -1,6 +1,6 @@
-"""Ollama HTTP adapter for the main gameplay model tier.
+"""OpenAI Chat Completions adapter for the main gameplay model tier.
 
-Wraps the Ollama /api/generate endpoint for Gemma 4 26B A4B (gemma3:27b).
+Wraps the OpenAI API for GPT-5.4 mini.
 All inference calls are async; callers own the event loop.
 
 Failure-safe: never raises on model errors — returns a failed GenerateResult
@@ -8,12 +8,12 @@ instead. Callers must check GenerateResult.success before using .text.
 
 Per model_routing.md:
   - Latency target: < 5 s for narration calls in standard play
-  - Hard timeout: configurable, default 30 s (generous for 26B model)
-  - Context window: up to 256K tokens; keep prompts lean for latency
+  - Hard timeout: configurable, default 30 s
 """
 
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -21,16 +21,14 @@ from typing import Any
 import httpx
 
 
-DEFAULT_BASE_URL = "http://localhost:11434"
-DEFAULT_MODEL = "gemma3:27b"
-# 30 s default — the 26B model needs more headroom than the fast model.
-# Standard narration should resolve well within this ceiling.
+DEFAULT_MODEL = "gpt-5.4-mini"
 DEFAULT_TIMEOUT_SECONDS = 30.0
+DEFAULT_BASE_URL = "https://api.openai.com/v1"
 
 
 @dataclass
 class GenerateResult:
-    """Result of a single Ollama inference call."""
+    """Result of a single OpenAI inference call."""
 
     text: str = ""
     prompt_token_count: int = 0
@@ -40,15 +38,15 @@ class GenerateResult:
     failure_reason: str = ""
 
 
-class OllamaMainAdapter:
-    """Async HTTP adapter for the main gameplay model (Ollama Gemma 4 26B A4B).
+class OpenAIMainAdapter:
+    """Async HTTP adapter for the main gameplay model (OpenAI GPT-5.4 mini).
 
-    Model name is configurable so callers can point at any Ollama model
-    identifier (e.g. "gemma3:27b", "gemma3:latest") without code changes.
+    Uses the OpenAI Chat Completions API via httpx (no SDK dependency).
+    The API key is read from the OPENAI_API_KEY environment variable.
 
     Usage::
 
-        adapter = OllamaMainAdapter()
+        adapter = OpenAIMainAdapter()
         result = await adapter.generate(prompt, system=system_prompt)
         if result.success:
             data = json.loads(result.text)
@@ -58,13 +56,15 @@ class OllamaMainAdapter:
 
     def __init__(
         self,
-        base_url: str = DEFAULT_BASE_URL,
         model: str = DEFAULT_MODEL,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        api_key: str | None = None,
+        base_url: str = DEFAULT_BASE_URL,
     ) -> None:
-        self._base_url = base_url.rstrip("/")
         self._model = model
         self._timeout = timeout_seconds
+        self._api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+        self._base_url = base_url.rstrip("/")
 
     @property
     def model(self) -> str:
@@ -85,27 +85,40 @@ class OllamaMainAdapter:
         Args:
             prompt: The user-turn prompt to send.
             system: Optional system prompt prepended to the conversation.
-            expect_json: When True, instructs Ollama to enforce JSON output.
+            expect_json: When True, requests JSON output via response_format.
             temperature: Sampling temperature (default 0.7 for narrative
                 quality; set lower for structured outputs like ruling proposals).
         """
+        if not self._api_key:
+            return GenerateResult(
+                failure_reason="missing OPENAI_API_KEY",
+            )
+
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
         payload: dict[str, Any] = {
             "model": self._model,
-            "prompt": prompt,
-            "stream": False,
-            "options": {"temperature": temperature},
+            "messages": messages,
+            "temperature": temperature,
         }
-        if system:
-            payload["system"] = system
         if expect_json:
-            payload["format"] = "json"
+            payload["response_format"] = {"type": "json_object"}
+
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
 
         start = time.monotonic()
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.post(
-                    f"{self._base_url}/api/generate",
+                    f"{self._base_url}/chat/completions",
                     json=payload,
+                    headers=headers,
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -129,10 +142,22 @@ class OllamaMainAdapter:
             )
 
         latency_ms = (time.monotonic() - start) * 1000
+
+        # Extract text from Chat Completions response
+        text = ""
+        choices = data.get("choices", [])
+        if choices:
+            text = choices[0].get("message", {}).get("content", "")
+
+        # Extract token usage
+        usage = data.get("usage", {})
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+
         return GenerateResult(
-            text=data.get("response", ""),
-            prompt_token_count=data.get("prompt_eval_count", 0),
-            output_token_count=data.get("eval_count", 0),
+            text=text,
+            prompt_token_count=prompt_tokens,
+            output_token_count=completion_tokens,
             latency_ms=latency_ms,
             success=True,
         )
