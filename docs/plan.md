@@ -318,16 +318,22 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 15: Reliability, Recovery, and Observability
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement structured logging and trace IDs | Started (PST): | Completed (PST):
-[ ] Implement retry handling for Telegram delivery failures | Started (PST): | Completed (PST):
-[ ] Implement duplicate-delivery and replay protection | Started (PST): | Completed (PST):
-[ ] Implement model timeout and recovery behavior | Started (PST): | Completed (PST):
-[ ] Implement crash-safe turn recovery | Started (PST): | Completed (PST):
-[ ] Implement admin diagnostics for stuck turns and failed deliveries | Started (PST): | Completed (PST):
-[ ] Implement metrics for latency, routing, and failures | Started (PST): | Completed (PST):
-[ ] Add failure-path tests for retries, duplicates, and restart recovery | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 03:25 PM | Completed (PST): 2026-04-18 03:27 PM
+[#] Implement structured logging and trace IDs | Started (PST): 2026-04-18 03:27 PM | Completed (PST): 2026-04-18 03:32 PM
+[#] Implement retry handling for Telegram delivery failures | Started (PST): 2026-04-18 03:32 PM | Completed (PST): 2026-04-18 03:36 PM
+[#] Implement duplicate-delivery and replay protection | Started (PST): 2026-04-18 03:36 PM | Completed (PST): 2026-04-18 03:40 PM
+[#] Implement model timeout and recovery behavior | Started (PST): 2026-04-18 03:40 PM | Completed (PST): 2026-04-18 03:44 PM
+[#] Implement crash-safe turn recovery | Started (PST): 2026-04-18 03:44 PM | Completed (PST): 2026-04-18 03:50 PM
+[#] Implement admin diagnostics for stuck turns and failed deliveries | Started (PST): 2026-04-18 03:50 PM | Completed (PST): 2026-04-18 03:55 PM
+[#] Implement metrics for latency, routing, and failures | Started (PST): 2026-04-18 03:55 PM | Completed (PST): 2026-04-18 04:00 PM
+[#] Add failure-path tests for retries, duplicates, and restart recovery | Started (PST): 2026-04-18 04:00 PM | Completed (PST): 2026-04-18 04:10 PM
+[#] Phase End | Started (PST): 2026-04-18 04:10 PM | Completed (PST): 2026-04-18 04:15 PM
+
+### Phase 15 Summary
+
+- **Changes:** Created `server/observability/` package: `logging.py` (TraceContext with UUID trace_id and contextvar storage, StructuredJsonFormatter for JSON log output, TraceFilter for automatic trace field injection, configure_logging/get_logger helpers), `diagnostics.py` (DiagnosticsEngine: build_report and format_report for stuck turns, failed deliveries, model health, and player status), `metrics.py` (MetricsCollector: thread-safe counters and histograms with tag-based dimensional breakdown, percentile computation, snapshot export; pre-defined metric name constants). Created `server/reliability/` package: `telegram_retry.py` (RetryPolicy, DeliveryError, send_with_retry with exponential backoff and 429 Retry-After support), `idempotency.py` (IdempotencyStore with TTL and max-size eviction via OrderedDict; key generators for Telegram updates, turn actions, and deliveries), `model_recovery.py` (ModelTimeoutPolicy, call_with_timeout wrapping asyncio.wait_for with deterministic fallback on timeout or exception), `turn_recovery.py` (TurnRecoveryEngine: diagnose and recover interrupted turn windows — resume open turns with synthesized fallback actions, force-resolve locked/resolving turns, redeliver committed turns; find_stuck_turns for admin monitoring). Added `tests/fixtures/reliability_fixtures.py` (builders for stuck turns, failed deliveries, model call logs, crash recovery scenarios) and `tests/unit/test_reliability.py` (87 tests covering all modules). All 1078 tests pass, lint clean.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 15: Reliability, Recovery, and Observability`
 
 ## Phase 16: Internal Playtest Release
 

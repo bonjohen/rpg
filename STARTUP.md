@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 15 — Reliability, Recovery, and Observability** (not started). Phase 14 completed 2026-04-18 03:20 PM.
+Current phase: **Phase 16 — Internal Playtest Release** (not started). Phase 15 completed 2026-04-18 04:15 PM.
 
 Review docs\phases_13_15_guide.md for additional instructions.
 

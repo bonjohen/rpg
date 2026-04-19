@@ -19,7 +19,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 12 | Split Party and Multi-Scene Handling | Completed | 2026-04-19 12:55 AM | 56 new tests; server/scene/ package |
 | 13 | Scenario Authoring Format | Completed | 2026-04-18 02:05 PM | 89 new tests; scenarios/ package |
 | 14 | Prompt Contracts and Context Assembly | Completed | 2026-04-18 03:20 PM | 174 new tests; models/contracts/ package |
-| 15 | Reliability, Recovery, and Observability | Not Started | — | |
+| 15 | Reliability, Recovery, and Observability | Completed | 2026-04-18 04:15 PM | 87 new tests; server/observability/ + server/reliability/ packages |
 | 16 | Internal Playtest Release | Not Started | — | |
 | 17 | Mini App Foundation | Not Started | — | |
 | 18 | Mini App Gameplay Utilities | Not Started | — | |
@@ -101,6 +101,14 @@ Started: 2026-04-18
 Inputs: `models/fast/tasks.py`, `models/main/tasks.py`, `models/main/context.py`, `models/main/schemas.py`, `models/main/fallback.py`, `docs/model_routing.md`.
 
 Outputs: `models/contracts/` package -- `fast_contracts.py` (PromptContract dataclass, 7 fast-tier contracts registry, get_fast_contract), `main_contracts.py` (7 main-tier contracts registry, get_main_contract), `context_assembly.py` (ContextAssembler: scope-safe prompt rendering with ScopedFact filtering, scope violation detection, template rendering), `truncation.py` (TruncationPolicy: token estimation, history truncation oldest-first, fact truncation preserving critical facts, tier-aware limit checks), `output_repair.py` (RepairPipeline: validate-repair-fallback pipeline, schema validation against contract output_schema). Added `tests/fixtures/prompt_fixtures.py` (narration, NPC dialogue, combat, ruling, oversized history, broken/valid JSON builders) and `tests/unit/test_prompt_contracts.py` (174 tests). Total suite: 991 tests, all green.
+
+### Phase 15
+
+Started: 2026-04-18
+
+Inputs: `server/domain/entities.py` (TurnWindow, CommittedAction, Scene, Player), `server/domain/enums.py` (TurnWindowState), `server/engine/turn_engine.py` (turn lifecycle), `bot/outbound.py` (delivery functions), `models/fast/instrumentation.py` (ModelCallLog).
+
+Outputs: `server/observability/` package -- `logging.py` (TraceContext, StructuredJsonFormatter, TraceFilter, configure_logging, get_logger), `diagnostics.py` (DiagnosticsEngine: build_report, format_report), `metrics.py` (MetricsCollector: counters, histograms, percentiles, snapshots; pre-defined metric constants). `server/reliability/` package -- `telegram_retry.py` (RetryPolicy, DeliveryError, send_with_retry with exponential backoff and 429 Retry-After), `idempotency.py` (IdempotencyStore with TTL/max-size eviction; key generators), `model_recovery.py` (call_with_timeout with deterministic fallback), `turn_recovery.py` (TurnRecoveryEngine: diagnose, recover, find_stuck_turns). Added `tests/fixtures/reliability_fixtures.py` and `tests/unit/test_reliability.py` (87 tests). Total suite: 1078 tests, all green.
 
 ### Phase 2
 
