@@ -190,16 +190,22 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 8: Exploration Loop
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement room and scene transition rules | Started (PST): | Completed (PST):
-[ ] Implement move, inspect, search, and interact actions | Started (PST): | Completed (PST):
-[ ] Implement environmental triggers and simple traps | Started (PST): | Completed (PST):
-[ ] Implement hidden clue discovery and scoped delivery | Started (PST): | Completed (PST):
-[ ] Implement object-state change handling | Started (PST): | Completed (PST):
-[ ] Implement revisit memory and scene recall behavior | Started (PST): | Completed (PST):
-[ ] Add a small connected-room scenario slice | Started (PST): | Completed (PST):
-[ ] Add tests for movement, interaction, trigger resolution, and clue delivery | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 11:48 PM | Completed (PST): 2026-04-18 11:49 PM
+[#] Implement room and scene transition rules | Started (PST): 2026-04-18 11:49 PM | Completed (PST): 2026-04-18 11:50 PM
+[#] Implement move, inspect, search, and interact actions | Started (PST): 2026-04-18 11:50 PM | Completed (PST): 2026-04-18 11:52 PM
+[#] Implement environmental triggers and simple traps | Started (PST): 2026-04-18 11:52 PM | Completed (PST): 2026-04-18 11:54 PM
+[#] Implement hidden clue discovery and scoped delivery | Started (PST): 2026-04-18 11:54 PM | Completed (PST): 2026-04-18 11:56 PM
+[#] Implement object-state change handling | Started (PST): 2026-04-18 11:56 PM | Completed (PST): 2026-04-18 11:58 PM
+[#] Implement revisit memory and scene recall behavior | Started (PST): 2026-04-18 11:58 PM | Completed (PST): 2026-04-19 12:00 AM
+[#] Add a small connected-room scenario slice | Started (PST): 2026-04-19 12:00 AM | Completed (PST): 2026-04-19 12:02 AM
+[#] Add tests for movement, interaction, trigger resolution, and clue delivery | Started (PST): 2026-04-19 12:02 AM | Completed (PST): 2026-04-19 12:02 AM
+[#] Phase End | Started (PST): 2026-04-19 12:02 AM | Completed (PST): 2026-04-19 12:02 AM
+
+### Phase 8 Summary
+
+- **Changes:** Created `server/exploration/` package: `movement.py` (MovementEngine: check_move, move_character, list_exits — blocked exit support, character membership management), `actions.py` (ExplorationEngine: inspect, search, interact — KnowledgeFact creation, ObjectState model), `triggers.py` (TriggerEngine: evaluate, TriggerDefinition/TriggerKind/TriggerCondition/TriggerEffect dataclasses — on_enter, on_exit, on_search, on_inspect, on_interact, trap, on_any_action kinds), `clues.py` (ClueEngine: discover, share_clue, filter_discoverable — private/public/referee scope policies, discovery method gating), `objects.py` (ObjectStateEngine: apply_change, apply_batch, is_blocked_exit, derive_blocked_exits — predefined DOOR/CHEST/LEVER/PORTCULLIS_TRANSITIONS tables), `memory.py` (MemoryEngine: record_visit, recall_description, add_discovered_fact, has_character_visited, scenes_visited_by_character). Added `tests/fixtures/exploration_scenario.py` (three-room dungeon: Entrance Hall → Guard Room → Treasure Vault; fixed IDs for scenes, characters, items, objects, clues, triggers, scopes). Added `tests/unit/test_exploration.py` (97 tests across MovementEngine, ExplorationEngine, ObjectStateEngine, TriggerEngine, ClueEngine, MemoryEngine, and integration scenario). Total suite: 435 tests, all green.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 8: Exploration Loop`
 
 ## Phase 9: NPC Social Loop
 
