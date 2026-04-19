@@ -16,7 +16,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 9 | NPC Social Loop | Completed | 2026-04-19 12:12 AM | 90 new tests; server/npc/ package |
 | 10 | Combat Loop | Completed | 2026-04-18 02:00 AM | 89 new tests; server/combat/ package |
 | 11 | Side-Channels and Private Coordination | Completed | 2026-04-18 02:35 AM | 58 new tests; server/scope/ extensions + side_channel_engine + side_channel_audit |
-| 12 | Split Party and Multi-Scene Handling | Not Started | — | |
+| 12 | Split Party and Multi-Scene Handling | Completed | 2026-04-19 12:55 AM | 56 new tests; server/scene/ package |
 | 13 | Scenario Authoring Format | Not Started | — | |
 | 14 | Prompt Contracts and Context Assembly | Not Started | — | |
 | 15 | Reliability, Recovery, and Observability | Not Started | — | |
@@ -77,6 +77,14 @@ Started: 2026-04-18
 Inputs: `server/domain/entities.py` (Character, MonsterGroup, Scene, InventoryItem), `server/domain/enums.py` (AwarenessState, BehaviorMode, ActionType).
 
 Outputs: `server/combat/` package — `conditions.py` (CombatConditionEngine), `actions.py` (CombatActionEngine: 6 action types), `monsters.py` (MonsterBehaviorEngine + MoraleEngine), `resolution.py` (CombatResolutionEngine: damage/armor/status/defeat), `visibility.py` (CombatVisibilityEngine: awareness state machine), `summaries.py` (BattlefieldSummaryBuilder). `tests/fixtures/combat_scenario.py` (forest clearing encounter). `tests/unit/test_combat.py` (89 tests, all passing). Total suite: 614 tests, all green.
+
+### Phase 12
+
+Started: 2026-04-19
+
+Inputs: `server/domain/entities.py` (Scene, Character, NPC, TurnWindow, CommittedAction, KnowledgeFact, MonsterGroup, ConversationScope), `server/domain/enums.py` (SceneState, ScopeType).
+
+Outputs: `server/scene/` package — `membership.py` (SceneMembershipEngine: add/remove characters and NPCs, transfer between scenes, get_scene_characters/npcs), `multi_scene.py` (MultiSceneEngine: active scene tracking with ActiveSceneSet, activate/deactivate), `scoped_prompts.py` (SubgroupPromptEngine: per-scene prompt context isolation with SubgroupPromptContext), `timing.py` (SplitPartyTimingPolicy: independent and synchronized resolution modes), `propagation.py` (InformationPropagationEngine: delayed cross-scene fact delivery with PropagationEvent). Added `tests/fixtures/split_party_scenario.py` (two-scene scenario: cave + village) and `tests/unit/test_split_party.py` (56 tests). Total suite: 728 tests, all green.
 
 ### Phase 11
 

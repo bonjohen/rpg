@@ -265,14 +265,20 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 12: Split Party and Multi-Scene Handling
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Implement explicit scene membership for players and NPCs | Started (PST): | Completed (PST):
-[ ] Implement multiple active scene contexts in a campaign | Started (PST): | Completed (PST):
-[ ] Implement scoped prompts by subgroup | Started (PST): | Completed (PST):
-[ ] Implement coordinated timing policy for split-party play | Started (PST): | Completed (PST):
-[ ] Implement delayed information propagation between subgroups | Started (PST): | Completed (PST):
-[ ] Add split-party scenario cases and tests | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-19 12:47 AM | Completed (PST): 2026-04-19 12:47 AM
+[#] Implement explicit scene membership for players and NPCs | Started (PST): 2026-04-19 12:47 AM | Completed (PST): 2026-04-19 12:49 AM
+[#] Implement multiple active scene contexts in a campaign | Started (PST): 2026-04-19 12:49 AM | Completed (PST): 2026-04-19 12:50 AM
+[#] Implement scoped prompts by subgroup | Started (PST): 2026-04-19 12:49 AM | Completed (PST): 2026-04-19 12:50 AM
+[#] Implement coordinated timing policy for split-party play | Started (PST): 2026-04-19 12:49 AM | Completed (PST): 2026-04-19 12:50 AM
+[#] Implement delayed information propagation between subgroups | Started (PST): 2026-04-19 12:49 AM | Completed (PST): 2026-04-19 12:50 AM
+[#] Add split-party scenario cases and tests | Started (PST): 2026-04-19 12:50 AM | Completed (PST): 2026-04-19 12:52 AM
+[#] Phase End | Started (PST): 2026-04-19 12:52 AM | Completed (PST): 2026-04-19 12:55 AM
+
+### Phase 12 Summary
+
+- **Changes:** Created `server/scene/` package: `membership.py` (SceneMembershipEngine: add_character, remove_character, add_npc, remove_npc, transfer_character, get_scene_characters, get_scene_npcs — all with MembershipChangeResult), `multi_scene.py` (MultiSceneEngine: get_active_scenes, build_active_set with ActiveSceneSet, activate_scene, deactivate_scene), `scoped_prompts.py` (SubgroupPromptEngine: assemble_subgroup_context with SubgroupPromptContext, filter_facts_for_scene — per-scene prompt isolation), `timing.py` (SplitPartyTimingPolicy: independent and synchronized modes, should_resolve_scene, all_scenes_ready), `propagation.py` (InformationPropagationEngine: queue_propagation, check_deliverable, deliver — delayed cross-scene fact propagation with PropagationEvent). Added `tests/fixtures/split_party_scenario.py` (two-scene scenario: Dark Cave with Alara+Bren vs bat swarm, Quiet Village with Corwin+merchant). Added `tests/unit/test_split_party.py` (56 tests covering membership, multi-scene, prompt isolation, independent/synchronized timing, propagation lifecycle, and full integration). Total suite: 728 tests, all green.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 12: Split Party and Multi-Scene Handling`
 
 ## Phase 13: Scenario Authoring Format
 

@@ -10,9 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 12 — Split Party and Multi-Scene Handling** (not started). Phase 11 completed 2026-04-18 02:35 AM.
-
-Additional planning information for phases 10-12 in docs\phases_10_12_guide.md
+Current phase: **Phase 13 — Scenario Authoring Format** (not started). Phase 12 completed 2026-04-19 12:55 AM.
 
 ## Key Design Decisions (do not revisit without cause)
 
