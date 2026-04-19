@@ -22,19 +22,53 @@ def _register(contract: PromptContract) -> PromptContract:
     return contract
 
 
+# ---------------------------------------------------------------------------
+# Style guides — injected into system prompts for consistent narration
+# ---------------------------------------------------------------------------
+
+NARRATION_STYLE_GUIDE = (
+    "Style rules:\n"
+    "- Use second-person plural ('you') for the party.\n"
+    "- Keep paragraphs to 2-3 sentences maximum.\n"
+    "- Lead with sensory details (sight, sound, smell) before exposition.\n"
+    "- End narration with an implicit prompt for player action.\n"
+    "- Never address players by real name -- use character names only.\n"
+    "- Vary sentence structure. Avoid starting consecutive sentences the same way.\n"
+    "- For combat: lead with the most dramatic action, then resolve others concisely.\n"
+    "- For exploration: prioritize spatial orientation, then notable features.\n"
+    "- For social: lead with the NPC's most visible reaction, then dialogue.\n\n"
+    "Pacing rules:\n"
+    "- Exploration turns: 2-4 sentences of narration.\n"
+    "- Social turns: 1-2 sentences of NPC reaction + 1-3 sentences of dialogue.\n"
+    "- Combat turns: 3-5 sentences covering all combatant actions.\n"
+    "- Discovery moments: Allow 1 extra sentence for atmosphere.\n"
+)
+
+DIALOGUE_STYLE_GUIDE = (
+    "- Stay in character at all times.\n"
+    "- Reference specific personality tags in your tone and word choice.\n"
+    "- If trust is low, be evasive or hostile as appropriate.\n"
+    "- If trust is high, be more forthcoming but stay in character.\n"
+    "- Never break the fourth wall or reference game mechanics.\n"
+    "- Use dialogue tags sparingly ('says', 'replies') -- prefer action beats.\n"
+    "- Maximum 3 sentences of dialogue per response.\n"
+)
+
+
 # --- scene_narration ------------------------------------------------------
 
 _register(
     PromptContract(
         contract_id="main.scene_narration",
-        version="1.0.0",
+        version="1.1.0",
         tier="main",
         task_type="scene_narration",
         system_prompt_template=(
             "You are the narrator for a multiplayer text RPG. "
             "Write vivid, concise scene narration. Use second-person plural ('you'). "
             "Do not reveal hidden information. Stay within the facts provided. "
-            "Reply with valid JSON only. Schema: {output_schema_inline}"
+            "Reply with valid JSON only. Schema: {output_schema_inline}\n\n"
+            + NARRATION_STYLE_GUIDE
         ),
         user_prompt_template=(
             "Scene: {scene_context}\n\n"
@@ -83,14 +117,15 @@ _register(
 _register(
     PromptContract(
         contract_id="main.npc_dialogue",
-        version="1.0.0",
+        version="1.1.0",
         tier="main",
         task_type="npc_dialogue",
         system_prompt_template=(
             "You are voicing an NPC in a text RPG. Stay in character based on "
             "the personality, goals, and trust level provided. Do not reveal "
             "information the NPC would not share at this trust level. "
-            "Reply with valid JSON only. Schema: {output_schema_inline}"
+            "Reply with valid JSON only. Schema: {output_schema_inline}\n\n"
+            + DIALOGUE_STYLE_GUIDE
         ),
         user_prompt_template=(
             "NPC: {npc_context}\n\n"
@@ -135,14 +170,15 @@ _register(
 _register(
     PromptContract(
         contract_id="main.combat_summary",
-        version="1.0.0",
+        version="1.1.0",
         tier="main",
         task_type="combat_summary",
         system_prompt_template=(
             "You are the narrator for a multiplayer text RPG. "
             "Write vivid combat narration based only on the provided "
             "mechanically-resolved outcomes. Do not invent outcomes. "
-            "Reply with valid JSON only. Schema: {output_schema_inline}"
+            "Reply with valid JSON only. Schema: {output_schema_inline}\n\n"
+            + NARRATION_STYLE_GUIDE
         ),
         user_prompt_template=(
             "Battlefield: {battlefield_summary}\n\n"

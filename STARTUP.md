@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 19 — Content Expansion and Quality Pass** (not started). Phase 18 completed 2026-04-19 02:55 AM.
+Current phase: **Phase 20 — Pre-Release Stabilization** (not started). Phase 19 completed 2026-04-18 04:02 AM.
 
 Review docs\phases_16_20_guide.md for additional instructions.
 

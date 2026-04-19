@@ -1,0 +1,334 @@
+scenario_id: merchant_quarter
+title: "The Merchant Quarter"
+description: "A social-investigation scenario in a city's merchant quarter. A stolen necklace, multiple suspects, and several paths to resolution."
+version: "1.0.0"
+author: "rpg-system"
+starting_scene_id: market_square
+
+scenes:
+  - scene_id: market_square
+    name: "Market Square"
+    description: >
+      A bustling plaza lined with stalls selling spices, cloth, and
+      metalwork. The midday crowd mills about, haggling and gossiping.
+      A merchant's shop with a broken window stands at the square's edge.
+    referee_notes: "Elara's shop was robbed last night. The watch has posted a notice. Kel the fence was seen nearby."
+    exits:
+      - exit_id: square_to_shop
+        direction: "north (to the shop)"
+        target_scene_id: merchants_shop
+        description: "The door to Elara's shop hangs open."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: square_to_den
+        direction: "east (down the alley)"
+        target_scene_id: thieves_den
+        description: "A narrow alley between buildings, marked with a faded chalk sign."
+        is_hidden: true
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: square_to_watch
+        direction: "west (to the watch post)"
+        target_scene_id: watch_post
+        description: "The city watch post, identified by its hanging lantern."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [market_notice]
+    npc_ids: []
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [market_gossip]
+    tags: [outdoor, busy, urban, daytime]
+
+  - scene_id: merchants_shop
+    name: "Merchant Elara's Shop"
+    description: >
+      A ransacked shop. Display cases are smashed, and glass crunches
+      underfoot. A distraught woman in merchant's robes gestures at the
+      empty velvet stand where her prized necklace once sat.
+    referee_notes: "Elara suspects the fence Kel but has no proof. She can describe the necklace in detail."
+    exits:
+      - exit_id: shop_to_square
+        direction: south
+        target_scene_id: market_square
+        description: "Back to the market square."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [glass_shard, velvet_case]
+    npc_ids: [merchant_elara]
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [elara_plea]
+    tags: [indoor, ransacked, urban]
+
+  - scene_id: thieves_den
+    name: "Thieves' Den"
+    description: >
+      A cramped basement beneath a shuttered warehouse. Stolen goods
+      crowd makeshift shelves. A scarred man sits at a table counting
+      coins by candlelight.
+    referee_notes: "Kel has the necklace hidden in a lockbox. He will sell information or the necklace itself for the right price."
+    exits:
+      - exit_id: den_to_square
+        direction: "west (back to the alley)"
+        target_scene_id: market_square
+        description: "The alley back to the market square."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [lockbox, gold_coins]
+    npc_ids: [fence_kel]
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [kel_offer]
+    tags: [indoor, dim, criminal, underground]
+
+  - scene_id: watch_post
+    name: "City Watch Post"
+    description: >
+      A small stone building with a duty board and a barred holding cell.
+      A stern officer in polished armor reviews reports behind a heavy desk.
+      Wanted posters cover the walls.
+    referee_notes: "Captain Holt suspects the thieves' guild but needs evidence or a witness. He can authorize a raid."
+    exits:
+      - exit_id: watch_to_square
+        direction: east
+        target_scene_id: market_square
+        description: "Back to the market square."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [wanted_poster, arrest_warrant]
+    npc_ids: [captain_holt]
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [holt_suspicion]
+    tags: [indoor, official, urban]
+
+npcs:
+  - npc_id: merchant_elara
+    name: "Merchant Elara"
+    description: "A middle-aged woman in fine but disheveled robes, clearly distressed."
+    personality_tags: [grateful, honest, desperate, generous]
+    goals: ["recover the stolen necklace", "see the thief brought to justice"]
+    trust_initial: {}
+    faction: merchant_guild
+    scene_id: merchants_shop
+    inventory_item_ids: []
+    dialogue_hints: ["speaks rapidly", "offers rewards freely", "describes the necklace in loving detail"]
+    referee_notes: "Will pay 150 gold for the necklace's return. Suspects Kel but cannot prove it."
+    tells:
+      - tell_id: elara_tearful
+        trigger_type: action_type
+        trigger_value: "question"
+        behavior: "Elara's eyes fill with tears as she describes the necklace's sentimental value."
+        scope: public
+      - tell_id: elara_suspects_kel
+        trigger_type: trust_above
+        trigger_value: "20"
+        behavior: "Elara whispers that she saw Kel lurking near her shop the night before the theft."
+        scope: public
+
+  - npc_id: fence_kel
+    name: "Kel the Fence"
+    description: "A wiry man with a scarred jaw and quick, calculating eyes."
+    personality_tags: [cautious, greedy, deceptive, cunning]
+    goals: ["maximize profit", "avoid the watch"]
+    trust_initial: {}
+    faction: thieves_guild
+    scene_id: thieves_den
+    inventory_item_ids: [lockbox]
+    dialogue_hints: ["speaks evasively", "quotes prices for everything", "watches the entrance constantly"]
+    referee_notes: "Has the necklace. Will sell it for 100 gold, or trade for information about watch movements."
+    tells:
+      - tell_id: kel_eyes_exit
+        trigger_type: trust_below
+        trigger_value: "-20"
+        behavior: "Kel's hand moves toward a knife under the table."
+        scope: public
+      - tell_id: kel_has_necklace
+        trigger_type: action_type
+        trigger_value: "bargain"
+        behavior: "Kel has the stolen necklace and might sell it."
+        scope: referee_only
+      - tell_id: kel_nervousness
+        trigger_type: action_type
+        trigger_value: "threaten"
+        behavior: "Kel glances at the lockbox on the shelf behind him."
+        scope: public
+
+  - npc_id: captain_holt
+    name: "Captain Holt"
+    description: "A broad-shouldered officer with a stern face and immaculate uniform."
+    personality_tags: [dutiful, suspicious, fair, stubborn]
+    goals: ["uphold the law", "disrupt the thieves' guild"]
+    trust_initial: {}
+    faction: city_watch
+    scene_id: watch_post
+    inventory_item_ids: [arrest_warrant]
+    dialogue_hints: ["speaks formally", "demands evidence", "references regulations"]
+    referee_notes: "Will authorize a raid on the thieves' den if given credible evidence. Suspicious of adventurers offering help."
+    tells:
+      - tell_id: holt_skeptical
+        trigger_type: trust_below
+        trigger_value: "-10"
+        behavior: "Holt narrows his eyes and rests his hand on the desk."
+        scope: public
+      - tell_id: holt_considers_raid
+        trigger_type: trust_above
+        trigger_value: "40"
+        behavior: "Holt is willing to authorize a raid on the thieves' den."
+        scope: referee_only
+
+items:
+  - item_id: market_notice
+    name: "Robbery Notice"
+    description: "A posted notice from Merchant Elara offering a reward for her stolen necklace."
+    properties: {readable: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: market_square
+
+  - item_id: glass_shard
+    name: "Glass Shard"
+    description: "A shard from the broken display case, with a scrap of fabric caught on it."
+    properties: {evidence: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: merchants_shop
+
+  - item_id: velvet_case
+    name: "Empty Velvet Case"
+    description: "The display case where the necklace was kept, now empty."
+    properties: {}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: merchants_shop
+
+  - item_id: lockbox
+    name: "Iron Lockbox"
+    description: "A sturdy iron box with a combination lock."
+    properties: {}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: thieves_den
+
+  - item_id: gold_coins
+    name: "Gold Coins"
+    description: "A pile of assorted gold coins."
+    properties: {value: "50 gold"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: thieves_den
+
+  - item_id: wanted_poster
+    name: "Wanted Poster"
+    description: "A wanted poster depicting a scarred man matching Kel's description."
+    properties: {evidence: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: watch_post
+
+  - item_id: arrest_warrant
+    name: "Blank Arrest Warrant"
+    description: "An official city watch arrest warrant, unsigned."
+    properties: {official: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: ""
+
+  - item_id: stolen_necklace
+    name: "Elara's Necklace"
+    description: "A delicate gold chain set with a sapphire pendant."
+    properties: {quest_item: "true", value: "500 gold"}
+    is_hidden: true
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: thieves_den
+
+  - item_id: forged_documents
+    name: "Forged Documents"
+    description: "Convincing forgeries of merchant guild trade licenses."
+    properties: {deception_tool: "true"}
+    is_hidden: true
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: thieves_den
+
+puzzles: []
+
+quests:
+  - quest_id: find_necklace
+    title: "The Stolen Necklace"
+    description: "Merchant Elara's prized necklace has been stolen. Find it and return it."
+    objectives:
+      - "Investigate the robbery at Elara's shop"
+      - "Locate the stolen necklace"
+      - "Return the necklace to Elara"
+    completion_condition: "stolen_necklace returned to Elara"
+    reward_description: "Elara pays 150 gold and offers future trade discounts."
+    referee_notes: "Multiple paths: buy from Kel (100 gold), take by force, or get the watch to raid. Returning forged documents to Holt as evidence also works."
+
+triggers:
+  - trigger_id: market_gossip
+    kind: on_enter
+    scene_id: market_square
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "Market chatter fills your ears. 'Did you hear? Elara's shop was robbed! That necklace was worth a fortune...'"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Introduces the quest hook."
+
+  - trigger_id: elara_plea
+    kind: on_enter
+    scene_id: merchants_shop
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "The shopkeeper rushes toward you. 'Please, you must help me! My necklace -- my grandmother's necklace -- it's been stolen!'"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Introduces Elara and the quest."
+
+  - trigger_id: kel_offer
+    kind: on_enter
+    scene_id: thieves_den
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "The scarred man looks up from his coins. 'Well, well. Customers or trouble? In here, everything has a price.'"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Introduces Kel and signals that negotiation is possible."
+
+  - trigger_id: holt_suspicion
+    kind: on_enter
+    scene_id: watch_post
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "The officer's gaze sweeps over you. 'State your business. This isn't a social call.'"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Sets the tone -- Holt doesn't trust adventurers easily."

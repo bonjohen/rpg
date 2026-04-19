@@ -1,0 +1,274 @@
+scenario_id: forest_ambush
+title: "The Forest Ambush"
+description: "A combat-focused scenario. Bandits have captured a traveler on the forest road. The party must rescue them and recover stolen cargo."
+version: "1.0.0"
+author: "rpg-system"
+starting_scene_id: forest_trail
+
+scenes:
+  - scene_id: forest_trail
+    name: "Forest Trail"
+    description: >
+      A narrow dirt road winds between tall oaks. Wagon ruts cut deep into
+      the mud, and a broken wheel lies discarded at the trailside. Bird calls
+      have gone silent ahead.
+    referee_notes: "Bandit scouts are hidden in the trees. They will whistle a warning if spotted."
+    exits:
+      - exit_id: trail_to_clearing
+        direction: "north (toward the clearing)"
+        target_scene_id: bandit_camp
+        description: "The trail opens into a wide clearing ahead."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: trail_to_river
+        direction: "east (through the brush)"
+        target_scene_id: river_crossing
+        description: "A narrow path through dense undergrowth toward the sound of water."
+        is_hidden: true
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [broken_wheel, trail_rations]
+    npc_ids: []
+    monster_ids: [bandit_scouts]
+    puzzle_ids: []
+    trigger_ids: [scout_whistle]
+    tags: [outdoor, forest, daytime]
+
+  - scene_id: bandit_camp
+    name: "Bandit Camp Clearing"
+    description: >
+      A wide clearing where the bandits have made camp. Tents circle a fire pit,
+      and a crude wooden cage holds a bound traveler. Crates of stolen goods are
+      stacked near the largest tent.
+    referee_notes: "The bandit leader is in the largest tent. If scouts whistled, guards are alert. The traveler is Maren."
+    exits:
+      - exit_id: clearing_to_trail
+        direction: south
+        target_scene_id: forest_trail
+        description: "The trail back through the forest."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: clearing_to_river
+        direction: east
+        target_scene_id: river_crossing
+        description: "A muddy path leads down to the river."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [stolen_cargo, rope_bundle, healing_poultice]
+    npc_ids: [captured_traveler]
+    monster_ids: [bandit_main_force]
+    puzzle_ids: []
+    trigger_ids: [ambush_trigger]
+    tags: [outdoor, clearing, camp]
+
+  - scene_id: river_crossing
+    name: "River Crossing"
+    description: >
+      A shallow river churns over mossy rocks. A fallen log spans the
+      narrowest point, offering a precarious crossing. Wolf tracks mark
+      the muddy bank on both sides.
+    referee_notes: "Wolves are territorial here. They attack anyone crossing the log."
+    exits:
+      - exit_id: river_to_clearing
+        direction: west
+        target_scene_id: bandit_camp
+        description: "The path back to the bandit camp."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: river_to_trail
+        direction: "southwest (through the brush)"
+        target_scene_id: forest_trail
+        description: "A narrow path back toward the main trail."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [river_stones]
+    npc_ids: []
+    monster_ids: [wolf_pack]
+    puzzle_ids: []
+    trigger_ids: [wolf_howl]
+    tags: [outdoor, water, dangerous]
+
+npcs:
+  - npc_id: captured_traveler
+    name: "Maren the Traveler"
+    description: "A young woman in travel-stained clothes, bound with rope inside a crude cage."
+    personality_tags: [grateful, brave, resourceful]
+    goals: ["escape captivity", "recover stolen cargo"]
+    trust_initial: {}
+    faction: neutral
+    scene_id: bandit_camp
+    inventory_item_ids: []
+    dialogue_hints: ["speaks urgently", "offers tactical information if freed", "knows bandit patrol routes"]
+    referee_notes: "Once freed, Maren can reveal the hidden trail to the river crossing and the leader's weakness."
+    tells:
+      - tell_id: maren_whispers
+        trigger_type: action_type
+        trigger_value: "question"
+        behavior: "Maren glances at the guards and whispers her response."
+        scope: public
+      - tell_id: maren_info
+        trigger_type: trust_above
+        trigger_value: "30"
+        behavior: "Maren knows the bandit leader fears being outnumbered."
+        scope: referee_only
+
+monsters:
+  - monster_id: bandit_scouts
+    unit_type: bandit_scout
+    count: 2
+    behavior_mode: patrol
+    awareness_state: alert
+    stats: {attack: 4, defense: 1, hp_per_unit: 6}
+    special_rules: []
+    territory_id: forest_trail
+    scene_id: forest_trail
+    loot_item_ids: []
+    referee_notes: "Scouts whistle a warning to the camp if engaged."
+
+  - monster_id: bandit_main_force
+    unit_type: bandit
+    count: 5
+    behavior_mode: guard
+    awareness_state: unaware
+    stats: {attack: 5, defense: 2, hp_per_unit: 8}
+    special_rules: [leader_dead_routs]
+    territory_id: bandit_camp
+    scene_id: bandit_camp
+    loot_item_ids: [stolen_cargo]
+    referee_notes: "Will rout if the bandit leader is killed. Can be negotiated with if outnumbered."
+
+  - monster_id: wolf_pack
+    unit_type: wolf
+    count: 3
+    behavior_mode: pursue
+    awareness_state: aware
+    stats: {attack: 6, defense: 1, hp_per_unit: 6}
+    special_rules: []
+    territory_id: river_crossing
+    scene_id: river_crossing
+    loot_item_ids: []
+    referee_notes: "Territorial wolves. Will not pursue beyond the river banks."
+
+items:
+  - item_id: broken_wheel
+    name: "Broken Wagon Wheel"
+    description: "A shattered wheel from a merchant's wagon."
+    properties: {}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: forest_trail
+
+  - item_id: trail_rations
+    name: "Trail Rations"
+    description: "A small pouch of dried meat and hardtack, dropped by a traveler."
+    properties: {effect: "restores 2 hp"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: forest_trail
+
+  - item_id: stolen_cargo
+    name: "Stolen Cargo"
+    description: "Crates stamped with merchant guild seals, filled with trade goods."
+    properties: {quest_item: "true", value: "200 gold"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: bandit_camp
+
+  - item_id: rope_bundle
+    name: "Bundle of Rope"
+    description: "A coil of sturdy hemp rope."
+    properties: {utility: "binding, climbing"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: bandit_camp
+
+  - item_id: healing_poultice
+    name: "Healing Poultice"
+    description: "A crude but effective herbal poultice."
+    properties: {effect: "restores 5 hp"}
+    is_hidden: true
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 2
+    scene_id: bandit_camp
+
+  - item_id: river_stones
+    name: "Smooth River Stones"
+    description: "Flat, heavy stones from the riverbed. Good for throwing."
+    properties: {effect: "ranged attack, 2 damage"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 3
+    scene_id: river_crossing
+
+puzzles: []
+
+quests:
+  - quest_id: rescue_traveler
+    title: "Rescue the Traveler"
+    description: "Free Maren from the bandit camp before they move on."
+    objectives:
+      - "Reach the bandit camp"
+      - "Defeat or distract the guards"
+      - "Free Maren from the cage"
+    completion_condition: "Maren freed from cage"
+    reward_description: "Maren's gratitude, tactical information, and a share of the recovered cargo."
+    referee_notes: "Can be completed through combat, stealth, or negotiation."
+
+  - quest_id: recover_cargo
+    title: "Retrieve Stolen Cargo"
+    description: "Recover the stolen merchant cargo from the bandit camp."
+    objectives:
+      - "Locate the stolen cargo"
+      - "Retrieve the crates"
+    completion_condition: "stolen_cargo in party inventory"
+    reward_description: "The merchant guild offers 100 gold for the safe return of their goods."
+    referee_notes: "Secondary objective. Cargo is in the clearing, guarded by the main force."
+
+triggers:
+  - trigger_id: scout_whistle
+    kind: on_enter
+    scene_id: forest_trail
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "A sharp whistle cuts through the trees -- someone has spotted you!"
+    scope: public
+    is_repeatable: false
+    referee_notes: "Alerts the bandit main force in the clearing to 'alert' awareness."
+
+  - trigger_id: ambush_trigger
+    kind: on_enter
+    scene_id: bandit_camp
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "Bandits emerge from behind the tents, weapons drawn. 'Drop your gear,' their leader snarls."
+    scope: public
+    is_repeatable: false
+    referee_notes: "Initiates the combat encounter or negotiation."
+
+  - trigger_id: wolf_howl
+    kind: on_enter
+    scene_id: river_crossing
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "A long howl rises from the far bank. Yellow eyes gleam in the underbrush."
+    scope: public
+    is_repeatable: false
+    referee_notes: "Warns of the wolf encounter."

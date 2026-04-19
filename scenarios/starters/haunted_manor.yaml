@@ -1,0 +1,390 @@
+scenario_id: haunted_manor
+title: "The Haunted Manor"
+description: "A mystery-investigation scenario set in the abandoned Ashworth estate. Players must uncover the truth about Lady Ashworth's death and find her hidden will."
+version: "1.0.0"
+author: "rpg-system"
+starting_scene_id: manor_entrance
+
+scenes:
+  - scene_id: manor_entrance
+    name: "Manor Entrance"
+    description: >
+      Iron gates hang open on rusted hinges. A gravel path leads to the grand
+      front door of Ashworth Manor, its windows dark and shuttered. Ivy crawls
+      across the stone facade, and a cold draft seeps from under the door.
+    referee_notes: "Butler Graves watches from a second-floor window. He will meet the party inside."
+    exits:
+      - exit_id: entrance_to_grand_hall
+        direction: "through the front door"
+        target_scene_id: grand_hall
+        description: "The heavy oak door creaks but opens."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [rusty_lantern]
+    npc_ids: []
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [manor_chill]
+    tags: [outdoor, dark, eerie]
+
+  - scene_id: grand_hall
+    name: "Grand Hall"
+    description: >
+      A cavernous entrance hall with a sweeping staircase. Portraits of the
+      Ashworth family line the walls, their painted eyes seeming to follow you.
+      Dust covers every surface, and a grandfather clock stands frozen at midnight.
+    referee_notes: "The clock hands can be moved to reveal a compartment containing the cellar key."
+    exits:
+      - exit_id: hall_to_entrance
+        direction: south
+        target_scene_id: manor_entrance
+        description: "Back through the front door."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: hall_to_library
+        direction: east
+        target_scene_id: library
+        description: "Double doors open to a book-lined room."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: hall_to_cellar
+        direction: "down the stairs"
+        target_scene_id: cellar
+        description: "A narrow staircase descends into darkness."
+        is_hidden: false
+        is_locked: true
+        unlock_condition: "requires cellar_key"
+    item_ids: [cellar_key, old_painting]
+    npc_ids: [butler_graves]
+    monster_ids: []
+    puzzle_ids: [clock_puzzle]
+    trigger_ids: [portrait_whisper]
+    tags: [indoor, dark, dusty]
+
+  - scene_id: library
+    name: "Library"
+    description: >
+      Floor-to-ceiling bookshelves crowd every wall. A reading desk holds an
+      open journal. The air smells of old paper and candle wax. A faded carpet
+      covers most of the stone floor.
+    referee_notes: "The journal contains the first half of the bookshelf cipher. Ghost appears on first visit."
+    exits:
+      - exit_id: library_to_hall
+        direction: west
+        target_scene_id: grand_hall
+        description: "Back to the grand hall."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+      - exit_id: library_to_study
+        direction: "behind the bookshelf"
+        target_scene_id: hidden_study
+        description: "A section of bookshelf swings open to reveal a narrow passage."
+        is_hidden: true
+        is_locked: true
+        unlock_condition: "requires bookshelf_cipher solved"
+    item_ids: [ashworth_journal, cipher_fragment_a]
+    npc_ids: [ghost_lady_ashworth]
+    monster_ids: []
+    puzzle_ids: [bookshelf_cipher]
+    trigger_ids: [ghost_appears]
+    tags: [indoor, dim, scholarly]
+
+  - scene_id: cellar
+    name: "Cellar"
+    description: >
+      Damp stone walls drip with condensation. Wine racks line one side,
+      mostly empty. A workbench sits against the far wall, covered in old
+      tools and jars of preserves. The stairs creak underfoot.
+    referee_notes: "The second cipher fragment is hidden in an empty wine bottle. Trap on the stairs."
+    exits:
+      - exit_id: cellar_to_hall
+        direction: "up the stairs"
+        target_scene_id: grand_hall
+        description: "The narrow stairs back to the hall."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [cipher_fragment_b, dusty_wine_bottle]
+    npc_ids: []
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [cellar_stair_trap]
+    tags: [indoor, dark, damp]
+
+  - scene_id: hidden_study
+    name: "Hidden Study"
+    description: >
+      A small, windowless room behind the library wall. A writing desk holds
+      sealed documents, and a portrait of Lady Ashworth hangs above a cold
+      fireplace. The air is stale but undisturbed.
+    referee_notes: "The hidden will is in the desk drawer. This is the quest objective."
+    exits:
+      - exit_id: study_to_library
+        direction: "through the bookshelf passage"
+        target_scene_id: library
+        description: "Back through the hidden passage to the library."
+        is_hidden: false
+        is_locked: false
+        unlock_condition: ""
+    item_ids: [hidden_will, ashworth_seal]
+    npc_ids: []
+    monster_ids: []
+    puzzle_ids: []
+    trigger_ids: [study_discovery]
+    tags: [indoor, hidden, secret]
+
+npcs:
+  - npc_id: ghost_lady_ashworth
+    name: "The Ghost of Lady Ashworth"
+    description: "A translucent figure in a pale gown, her expression sorrowful but composed."
+    personality_tags: [cryptic, helpful, dignified, patient]
+    goals: ["reveal the truth about her death", "find the hidden will"]
+    trust_initial: {}
+    faction: ashworth_family
+    scene_id: library
+    inventory_item_ids: []
+    dialogue_hints: ["speaks in riddles", "references specific books and rooms", "grows more direct at high trust"]
+    referee_notes: "Was poisoned by Graves. Will hint at the cipher if trust is above 20. Will name Graves directly if trust is above 50."
+    tells:
+      - tell_id: ghost_sad_glance
+        trigger_type: trust_below
+        trigger_value: "-10"
+        behavior: "The ghost's form flickers and dims, as if disappointed."
+        scope: public
+      - tell_id: ghost_points_bookshelf
+        trigger_type: trust_above
+        trigger_value: "20"
+        behavior: "Lady Ashworth glances meaningfully at a specific section of the bookshelf."
+        scope: public
+      - tell_id: ghost_names_killer
+        trigger_type: trust_above
+        trigger_value: "50"
+        behavior: "Lady Ashworth knows Graves poisoned her wine."
+        scope: referee_only
+
+  - npc_id: butler_graves
+    name: "Butler Graves"
+    description: "A gaunt, elderly man in a threadbare suit, with nervous hands and darting eyes."
+    personality_tags: [suspicious, deceptive, nervous, formal]
+    goals: ["prevent discovery of the will", "maintain his innocence"]
+    trust_initial: {}
+    faction: neutral
+    scene_id: grand_hall
+    inventory_item_ids: []
+    dialogue_hints: ["speaks with forced calm", "deflects questions about Lady Ashworth's death", "offers to show rooms but avoids the library"]
+    referee_notes: "Poisoned Lady Ashworth to inherit the estate. Knows about the hidden study but pretends not to."
+    tells:
+      - tell_id: graves_fidgets
+        trigger_type: action_type
+        trigger_value: "question"
+        behavior: "Graves adjusts his collar and avoids eye contact."
+        scope: public
+      - tell_id: graves_deflects
+        trigger_type: trust_below
+        trigger_value: "-20"
+        behavior: "Graves reaches for the cellar key in his pocket."
+        scope: public
+      - tell_id: graves_knows_study
+        trigger_type: trust_below
+        trigger_value: "-40"
+        behavior: "Graves knows about the hidden study behind the bookshelf."
+        scope: referee_only
+
+items:
+  - item_id: rusty_lantern
+    name: "Rusty Lantern"
+    description: "An old lantern with a cracked glass pane, still functional."
+    properties: {effect: light, duration: "1 hour"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: manor_entrance
+
+  - item_id: cellar_key
+    name: "Cellar Key"
+    description: "A small brass key with an ornate handle."
+    properties: {}
+    is_hidden: true
+    is_key: true
+    unlocks_exit_ids: [hall_to_cellar]
+    quantity: 1
+    scene_id: grand_hall
+
+  - item_id: old_painting
+    name: "Family Painting"
+    description: "A large oil painting showing the Ashworth family in happier times."
+    properties: {}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: grand_hall
+
+  - item_id: ashworth_journal
+    name: "Lady Ashworth's Journal"
+    description: "A leather-bound journal filled with elegant handwriting."
+    properties: {readable: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: library
+
+  - item_id: cipher_fragment_a
+    name: "Cipher Fragment (Library)"
+    description: "A slip of paper with partial instructions for a sequence of book titles."
+    properties: {cipher_part: "A"}
+    is_hidden: true
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: library
+
+  - item_id: cipher_fragment_b
+    name: "Cipher Fragment (Cellar)"
+    description: "A slip of paper tucked inside an empty wine bottle, with partial instructions."
+    properties: {cipher_part: "B"}
+    is_hidden: true
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: cellar
+
+  - item_id: dusty_wine_bottle
+    name: "Dusty Wine Bottle"
+    description: "An empty wine bottle with a faded label, heavier than expected."
+    properties: {}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: cellar
+
+  - item_id: hidden_will
+    name: "Lady Ashworth's Will"
+    description: "A sealed document bearing the Ashworth family crest in wax."
+    properties: {quest_item: "true"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: hidden_study
+
+  - item_id: ashworth_seal
+    name: "Ashworth Seal Ring"
+    description: "A heavy gold ring bearing the family crest."
+    properties: {value: "200 gold"}
+    is_hidden: false
+    is_key: false
+    unlocks_exit_ids: []
+    quantity: 1
+    scene_id: hidden_study
+
+puzzles:
+  - puzzle_id: clock_puzzle
+    name: "Grandfather Clock"
+    description: "The grandfather clock's hands are frozen at midnight. The mechanism seems jammed."
+    solution_hint: "The portrait plaque reads 'Founded 1743'. Set the clock to 17:43."
+    solution_actions: ["set clock to 17:43", "move hands to 5:43"]
+    success_text: "A click sounds from inside the clock, and a small compartment opens revealing a brass key."
+    failure_text: "The hands resist. Nothing happens."
+    max_attempts: 0
+    effects_on_solve: ["reveal:cellar_key"]
+    scene_id: grand_hall
+    referee_notes: "Reveals the cellar key. The 1743 hint is on the painting plaque."
+
+  - puzzle_id: bookshelf_cipher
+    name: "Bookshelf Cipher"
+    description: "Certain books on the shelves have faint marks on their spines."
+    solution_hint: "Combine both cipher fragments to get the correct sequence of books to pull."
+    solution_actions: ["pull books in sequence", "use cipher fragments"]
+    success_text: "You pull the marked books in order. With a grinding sound, the bookshelf swings inward."
+    failure_text: "You pull several books but nothing happens. Perhaps you need more information."
+    max_attempts: 0
+    effects_on_solve: ["unlock:library_to_study"]
+    scene_id: library
+    referee_notes: "Requires both cipher fragments (A from library search, B from cellar). Opens the hidden study."
+
+quests:
+  - quest_id: discover_truth
+    title: "The Truth About Lady Ashworth"
+    description: "Investigate the mysterious death of Lady Ashworth and uncover what really happened."
+    objectives:
+      - "Explore the manor"
+      - "Speak with the ghost and Butler Graves"
+      - "Piece together the evidence"
+    completion_condition: "ghost_names_killer tell fired AND hidden_will in party inventory"
+    reward_description: "The truth is revealed and Lady Ashworth's spirit can rest."
+    referee_notes: "Completing this quest requires high trust with the ghost (above 50)."
+
+  - quest_id: find_will
+    title: "Find the Hidden Will"
+    description: "Lady Ashworth's will was hidden somewhere in the manor. Find it before Graves destroys the evidence."
+    objectives:
+      - "Find the cipher fragments"
+      - "Solve the bookshelf cipher"
+      - "Recover the will from the hidden study"
+    completion_condition: "hidden_will in party inventory"
+    reward_description: "The will reveals Graves's treachery and grants the rightful heirs their inheritance."
+    referee_notes: "The will is in the hidden study, accessible only through the bookshelf cipher."
+
+triggers:
+  - trigger_id: manor_chill
+    kind: on_enter
+    scene_id: manor_entrance
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "A bone-deep chill washes over you as you step onto the grounds. Somewhere inside, a floorboard creaks."
+    scope: public
+    is_repeatable: false
+    referee_notes: "Atmospheric trigger. Sets the tone."
+
+  - trigger_id: portrait_whisper
+    kind: on_inspect
+    scene_id: grand_hall
+    condition_type: always
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "As you study the portraits, you could swear one of the painted figures blinked."
+    scope: public
+    is_repeatable: false
+    referee_notes: "Atmospheric. Foreshadows the ghost."
+
+  - trigger_id: ghost_appears
+    kind: on_enter
+    scene_id: library
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "The temperature plummets. A translucent figure materializes beside the reading desk -- a woman in a pale gown, her eyes filled with silent pleading."
+    scope: public
+    is_repeatable: false
+    referee_notes: "Introduces the ghost of Lady Ashworth."
+
+  - trigger_id: cellar_stair_trap
+    kind: trap
+    scene_id: cellar
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: damage
+    effect_value: "2"
+    scope: public
+    is_repeatable: false
+    referee_notes: "A loose step gives way. Minor damage but signals danger."
+
+  - trigger_id: study_discovery
+    kind: on_enter
+    scene_id: hidden_study
+    condition_type: first_visit
+    condition_value: ""
+    effect_type: narrate
+    effect_value: "Dust motes swirl in the still air. This room has been sealed for years. On the desk, a document bears the Ashworth family seal, unbroken."
+    scope: public
+    is_repeatable: false
+    referee_notes: "Signals the presence of the will."

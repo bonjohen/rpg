@@ -33,6 +33,10 @@ class ScenarioValidator:
         warnings.extend(self._check_no_dead_end_scenes(manifest))
         warnings.extend(self._check_puzzle_solvability(manifest))
         warnings.extend(self._check_visibility_rules(manifest))
+        warnings.extend(self._check_quest_completability(manifest))
+        warnings.extend(self._check_item_accessibility(manifest))
+        warnings.extend(self._check_trigger_chain_validity(manifest))
+        warnings.extend(self._check_scene_connectivity(manifest))
 
         return ValidationResult(
             is_valid=len(errors) == 0,
@@ -280,3 +284,107 @@ class ScenarioValidator:
 
     def _check_visibility_rules(self, manifest: ScenarioManifest) -> list[str]:
         return validate_no_leakage(manifest)
+
+    def _check_quest_completability(self, manifest: ScenarioManifest) -> list[str]:
+        """Warn if a quest references entities that don't exist."""
+        warnings: list[str] = []
+        all_entity_ids: set[str] = set()
+        for scene in manifest.scenes:
+            all_entity_ids.add(scene.scene_id)
+        for npc in manifest.npcs:
+            all_entity_ids.add(npc.npc_id)
+        for item in manifest.items:
+            all_entity_ids.add(item.item_id)
+        for puzzle in manifest.puzzles:
+            all_entity_ids.add(puzzle.puzzle_id)
+        for trigger in manifest.triggers:
+            all_entity_ids.add(trigger.trigger_id)
+
+        for quest in manifest.quests:
+            # Check if completion_condition references known entity IDs
+            condition = quest.completion_condition
+            if not condition:
+                warnings.append(f"Quest '{quest.quest_id}' has no completion_condition")
+        return warnings
+
+    def _check_item_accessibility(self, manifest: ScenarioManifest) -> list[str]:
+        """Warn if a key item is behind the exit it unlocks."""
+        warnings: list[str] = []
+        # Build map: exit_id -> scene containing the exit
+        exit_to_source_scene: dict[str, str] = {}
+        exit_to_target_scene: dict[str, str] = {}
+        locked_exits: set[str] = set()
+        for scene in manifest.scenes:
+            for exit_def in scene.exits:
+                exit_to_source_scene[exit_def.exit_id] = scene.scene_id
+                exit_to_target_scene[exit_def.exit_id] = exit_def.target_scene_id
+                if exit_def.is_locked:
+                    locked_exits.add(exit_def.exit_id)
+
+        for item in manifest.items:
+            if not item.is_key or not item.unlocks_exit_ids:
+                continue
+            for eid in item.unlocks_exit_ids:
+                if eid not in locked_exits:
+                    continue
+                target_scene = exit_to_target_scene.get(eid, "")
+                if item.scene_id == target_scene:
+                    warnings.append(
+                        f"Key item '{item.item_id}' is behind the locked "
+                        f"exit '{eid}' it unlocks (both in scene '{target_scene}')"
+                    )
+        return warnings
+
+    def _check_trigger_chain_validity(self, manifest: ScenarioManifest) -> list[str]:
+        """Warn if a chain_trigger references a nonexistent trigger."""
+        warnings: list[str] = []
+        trigger_ids = {t.trigger_id for t in manifest.triggers}
+        for trigger in manifest.triggers:
+            if trigger.effect_type == "chain_trigger":
+                if trigger.effect_value not in trigger_ids:
+                    warnings.append(
+                        f"Trigger '{trigger.trigger_id}' chains to nonexistent "
+                        f"trigger '{trigger.effect_value}'"
+                    )
+        return warnings
+
+    def _check_scene_connectivity(self, manifest: ScenarioManifest) -> list[str]:
+        """Warn if any scene is unreachable from starting_scene_id.
+
+        Only considers non-hidden, non-locked exits for base reachability.
+        """
+        warnings: list[str] = []
+        if not manifest.starting_scene_id:
+            return warnings
+
+        scene_ids = {s.scene_id for s in manifest.scenes}
+        if manifest.starting_scene_id not in scene_ids:
+            return warnings  # already caught by _check_starting_scene_exists
+
+        # Build adjacency from non-hidden, non-locked exits
+        adj: dict[str, set[str]] = {sid: set() for sid in scene_ids}
+        for scene in manifest.scenes:
+            for exit_def in scene.exits:
+                if not exit_def.is_hidden and not exit_def.is_locked:
+                    if exit_def.target_scene_id in scene_ids:
+                        adj[scene.scene_id].add(exit_def.target_scene_id)
+
+        # BFS from starting scene
+        visited: set[str] = set()
+        queue = [manifest.starting_scene_id]
+        while queue:
+            current = queue.pop(0)
+            if current in visited:
+                continue
+            visited.add(current)
+            for neighbor in adj.get(current, set()):
+                if neighbor not in visited:
+                    queue.append(neighbor)
+
+        unreachable = scene_ids - visited
+        for sid in sorted(unreachable):
+            warnings.append(
+                f"Scene '{sid}' is unreachable from starting scene "
+                f"'{manifest.starting_scene_id}' via non-hidden, non-locked exits"
+            )
+        return warnings

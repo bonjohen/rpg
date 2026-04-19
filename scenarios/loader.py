@@ -464,6 +464,30 @@ class ScenarioLoader:
         elif defn.effect_type == "grant_fact":
             fact_type = KnowledgeFactType.lore
             effect.new_fact_payloads = [(fact_type, defn.effect_value)]
+        elif defn.effect_type == "spawn_monster":
+            effect.public_narrative = f"A new threat appears! ({defn.effect_value})"
+            effect.new_fact_payloads = [
+                (KnowledgeFactType.lore, f"[spawn_monster:{defn.effect_value}]")
+            ]
+        elif defn.effect_type == "reveal_exit":
+            effect.public_narrative = (
+                f"A hidden passage is revealed! ({defn.effect_value})"
+            )
+            effect.new_fact_payloads = [
+                (KnowledgeFactType.hidden_object, f"[reveal_exit:{defn.effect_value}]")
+            ]
+        elif defn.effect_type == "modify_npc":
+            effect.new_fact_payloads = [
+                (KnowledgeFactType.npc_tell, f"[modify_npc:{defn.effect_value}]")
+            ]
+        elif defn.effect_type == "advance_quest":
+            effect.new_fact_payloads = [
+                (KnowledgeFactType.lore, f"[advance_quest:{defn.effect_value}]")
+            ]
+        elif defn.effect_type == "chain_trigger":
+            effect.new_fact_payloads = [
+                (KnowledgeFactType.lore, f"[chain_trigger:{defn.effect_value}]")
+            ]
 
         public_scope_id = scene_scope_map.get(defn.scene_id, "")
         private_scope_id = referee_scope_id if defn.scope == "referee_only" else ""
