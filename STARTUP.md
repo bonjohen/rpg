@@ -10,7 +10,7 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 9 — NPC Social Loop** (not started). Phase 8 completed 2026-04-19 12:02 AM.
+Current phase: **Phase 10 — Combat Loop** (not started). Phase 9 completed 2026-04-19 12:12 AM.
 
 ## Key Design Decisions (do not revisit without cause)
 

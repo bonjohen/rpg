@@ -13,7 +13,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 6 | Fast Local Model Routing Layer | Completed | 2026-04-18 11:26 PM | |
 | 7 | Main Gameplay Model Integration | Completed | 2026-04-18 11:46 PM | Gemma inference adapter [!] disabled; all other deliverables complete |
 | 8 | Exploration Loop | Completed | 2026-04-19 12:02 AM | 97 new tests; server/exploration/ package |
-| 9 | NPC Social Loop | Not Started | — | |
+| 9 | NPC Social Loop | Completed | 2026-04-19 12:12 AM | 90 new tests; server/npc/ package |
 | 10 | Combat Loop | Not Started | — | |
 | 11 | Side-Channels and Private Coordination | Not Started | — | |
 | 12 | Split Party and Multi-Scene Handling | Not Started | — | |
@@ -53,6 +53,14 @@ Started: 2026-04-18
 Inputs: `models/fast/` (Phase 6), `docs/model_routing.md`.
 
 Outputs: `models/main/__init__.py`, `models/main/adapter.py` (OllamaMainAdapter: async Ollama HTTP wrapper for gemma3:27b, configurable model name), `models/main/router.py` (MainTaskType enum, is_main_tier, assert_main_tier), `models/main/schemas.py` (output dataclasses + validate_* functions for all 6 main-tier task types, SchemaValidationError, SCHEMA_DESCRIPTIONS registry), `models/main/context.py` (SceneContext, PlayerContext, NpcContext, ActionContext, RecentHistory; assemble_* prompt functions for all task types; token budget helpers), `models/main/fallback.py` (deterministic fallbacks for all task types, get_fallback registry), `models/main/tasks.py` (narrate_scene, generate_npc_dialogue, summarize_combat, propose_ruling, arbitrate_social, generate_puzzle_flavor — all with full 3-step failure pipeline: validate → repair → fallback). Added `tests/fixtures/main_model_fixtures.py` (representative game state fixtures) and `tests/unit/test_main_model.py` (103 tests, all passing). The OllamaMainAdapter [!] requires live gemma3:27b; all other code fully testable via mocks. Total tests: 338, all passing.
+
+### Phase 9
+
+Started: 2026-04-19
+
+Inputs: `server/domain/entities.py` (NPC entity with trust_by_player, stance_to_party, memory_tags), `server/exploration/` (pattern reference).
+
+Outputs: `server/npc/` package — `trust.py` (TrustEngine: per-player trust deltas, party stance derivation, cooperative/hostile helpers), `tells.py` (NpcTellEngine: behavioral tell evaluation, trust-status facts, private reaction facts), `dialogue.py` (DialogueContextBuilder: structured dialogue context for main model, public/referee dict split), `social.py` (SocialEngine: question/persuade/threaten/lie/bargain resolution, memory tag updates, referee fact generation). Added `tests/fixtures/npc_social_scenario.py` (Mira the Innkeeper + Theron the Gate Guard with full tell libraries) and `tests/unit/test_npc_social.py` (90 tests, all passing). Total suite: 525 tests, all green.
 
 ### Phase 8
 

@@ -209,16 +209,22 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 9: NPC Social Loop
 
-[X] Phase Startup | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST):
-[ ] Implement NPC hard-state usage in scene resolution | Started (PST): | Completed (PST):
-[ ] Implement trust-by-player and party-stance fields in logic | Started (PST): | Completed (PST):
-[ ] Implement NPC memory-tag updates after interactions | Started (PST): | Completed (PST):
-[ ] Implement social action types for question, persuade, threaten, lie, and bargain | Started (PST): | Completed (PST):
-[ ] Implement secret NPC tells and private reactions | Started (PST): | Completed (PST):
-[ ] Implement NPC dialogue generation tied to structured state | Started (PST): | Completed (PST):
-[ ] Add at least two meaningful NPC interactions to starter content | Started (PST): | Completed (PST):
-[ ] Add tests for trust change, stance change, and memory persistence | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:04 AM (PST)
+[#] Implement NPC hard-state usage in scene resolution | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:07 AM (PST)
+[#] Implement trust-by-player and party-stance fields in logic | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:07 AM (PST)
+[#] Implement NPC memory-tag updates after interactions | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:07 AM (PST)
+[#] Implement social action types for question, persuade, threaten, lie, and bargain | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:07 AM (PST)
+[#] Implement secret NPC tells and private reactions | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:07 AM (PST)
+[#] Implement NPC dialogue generation tied to structured state | Started (PST): 2026-04-19 12:04 AM (PST) | Completed (PST): 2026-04-19 12:07 AM (PST)
+[#] Add at least two meaningful NPC interactions to starter content | Started (PST): 2026-04-19 12:07 AM (PST) | Completed (PST): 2026-04-19 12:12 AM (PST)
+[#] Add tests for trust change, stance change, and memory persistence | Started (PST): 2026-04-19 12:07 AM (PST) | Completed (PST): 2026-04-19 12:12 AM (PST)
+[#] Phase End | Started (PST): 2026-04-19 12:12 AM (PST) | Completed (PST): 2026-04-19 12:12 AM (PST)
+
+### Phase 9 Summary
+
+- **Changes:** Created `server/npc/` package: `trust.py` (TrustEngine: per-player trust deltas in -100..100, party stance derivation from mean trust, cooperative/hostile/fearful helpers, personality-modifier scaling), `tells.py` (NpcTellEngine: behavioral tell evaluation against tag/stance/action triggers, referee-only KnowledgeFact generation for trust status and private reactions), `dialogue.py` (DialogueContextBuilder: assembles DialogueContext from NPC state + action details including will_resist/is_evasive/can_be_threatened flags; public vs. referee dict split for scope-safe context delivery), `social.py` (SocialEngine: stateless resolution of question/persuade/threaten/lie/bargain; server-authoritative outcomes; delegates to TrustEngine + NpcTellEngine; produces trust deltas, memory tag updates, referee facts, and dialogue context for main model narration). Added `tests/fixtures/npc_social_scenario.py` (two NPC interaction scenarios: Mira the Innkeeper with secrecy/deception tells, Theron the Gate Guard with bribe/escalation tells). Added `tests/unit/test_npc_social.py` (90 tests covering all engines, all five action types, memory persistence, stance transitions, tell firing, dialogue context, and two full scenario integration sequences). Total suite: 525 tests, all green.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 9: NPC Social Loop`
 
 ## Phase 10: Combat Loop
 
