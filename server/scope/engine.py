@@ -221,6 +221,32 @@ class ScopeEngine:
     # Scope-safe context assembly (LLM prompt safety)
     # ------------------------------------------------------------------
 
+    def assert_no_side_channel_leakage(
+        self,
+        facts: list[KnowledgeFact],
+        scopes_by_id: dict[str, ConversationScope],
+        target_player_id: str,
+        side_channels_by_id: dict[str, SideChannel],
+    ) -> None:
+        """Pre-flight check: ensure no side-channel fact leaks to a non-member.
+
+        Raises ScopeViolationError if any fact with scope_type==side_channel
+        would be delivered to a player who is NOT in that channel's member list.
+        """
+        for fact in facts:
+            scope = scopes_by_id.get(fact.owner_scope_id)
+            if scope is None:
+                continue
+            if scope.scope_type != ScopeType.side_channel:
+                continue
+            sc = side_channels_by_id.get(scope.side_channel_id or "")
+            if sc is None or target_player_id not in sc.member_player_ids:
+                raise ScopeViolationError(
+                    f"Side-channel fact {fact.fact_id!r} (channel "
+                    f"{scope.side_channel_id!r}) would leak to non-member "
+                    f"player {target_player_id!r}"
+                )
+
     def assemble_public_context(
         self,
         facts: list[KnowledgeFact],

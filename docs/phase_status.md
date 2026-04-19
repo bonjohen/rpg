@@ -15,7 +15,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 8 | Exploration Loop | Completed | 2026-04-19 12:02 AM | 97 new tests; server/exploration/ package |
 | 9 | NPC Social Loop | Completed | 2026-04-19 12:12 AM | 90 new tests; server/npc/ package |
 | 10 | Combat Loop | Completed | 2026-04-18 02:00 AM | 89 new tests; server/combat/ package |
-| 11 | Side-Channels and Private Coordination | Not Started | — | |
+| 11 | Side-Channels and Private Coordination | Completed | 2026-04-18 02:35 AM | 58 new tests; server/scope/ extensions + side_channel_engine + side_channel_audit |
 | 12 | Split Party and Multi-Scene Handling | Not Started | — | |
 | 13 | Scenario Authoring Format | Not Started | — | |
 | 14 | Prompt Contracts and Context Assembly | Not Started | — | |
@@ -77,6 +77,14 @@ Started: 2026-04-18
 Inputs: `server/domain/entities.py` (Character, MonsterGroup, Scene, InventoryItem), `server/domain/enums.py` (AwarenessState, BehaviorMode, ActionType).
 
 Outputs: `server/combat/` package — `conditions.py` (CombatConditionEngine), `actions.py` (CombatActionEngine: 6 action types), `monsters.py` (MonsterBehaviorEngine + MoraleEngine), `resolution.py` (CombatResolutionEngine: damage/armor/status/defeat), `visibility.py` (CombatVisibilityEngine: awareness state machine), `summaries.py` (BattlefieldSummaryBuilder). `tests/fixtures/combat_scenario.py` (forest clearing encounter). `tests/unit/test_combat.py` (89 tests, all passing). Total suite: 614 tests, all green.
+
+### Phase 11
+
+Started: 2026-04-18
+
+Inputs: `server/scope/side_channel.py` (SideChannelPolicy from Phase 4), `server/scope/engine.py` (ScopeEngine), `bot/outbound.py` (send_private_by_player_id), `server/domain/entities.py` (SideChannel, ConversationScope, KnowledgeFact).
+
+Outputs: Extended `server/scope/side_channel.py` (add_member, remove_member with auto-close, can_create with per-player limit). Created `server/scope/side_channel_engine.py` (SideChannelEngine: create_channel, close_channel with audit fact). Created `server/scope/side_channel_audit.py` (SideChannelAuditor: record_creation, record_message, record_closure — all referee-only). Extended `bot/outbound.py` (send_side_channel DM relay). Extended `server/scope/engine.py` (assert_no_side_channel_leakage). Added `tests/fixtures/side_channel_scenario.py` and `tests/unit/test_side_channels.py` (58 tests). Total suite: 672 tests, all green.
 
 ### Phase 2
 

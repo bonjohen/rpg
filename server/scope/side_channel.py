@@ -84,6 +84,74 @@ class SideChannelPolicy:
         channel.is_open = False
         return channel
 
+    def add_member(
+        self,
+        channel: SideChannel,
+        player_id: str,
+        all_campaign_player_ids: list[str],
+    ) -> SideChannel:
+        """Add a player to an open side-channel.
+
+        Validates that the player is in the campaign and not already a member.
+        Raises SideChannelError on violations.  Returns the mutated channel.
+        """
+        if not channel.is_open:
+            raise SideChannelError(
+                f"Cannot add member to closed channel {channel.side_channel_id!r}."
+            )
+        if player_id not in all_campaign_player_ids:
+            raise SideChannelError(f"Player {player_id!r} is not in this campaign.")
+        if player_id in channel.member_player_ids:
+            raise SideChannelError(
+                f"Player {player_id!r} is already a member of channel "
+                f"{channel.side_channel_id!r}."
+            )
+        channel.member_player_ids.append(player_id)
+        return channel
+
+    def remove_member(self, channel: SideChannel, player_id: str) -> SideChannel:
+        """Remove a player from an open side-channel.
+
+        If the remaining member count drops below MIN_MEMBERS, the channel is
+        automatically closed.  Raises SideChannelError if the player is not a
+        member or the channel is already closed.  Returns the mutated channel.
+        """
+        if not channel.is_open:
+            raise SideChannelError(
+                f"Cannot remove member from closed channel {channel.side_channel_id!r}."
+            )
+        if player_id not in channel.member_player_ids:
+            raise SideChannelError(
+                f"Player {player_id!r} is not a member of channel "
+                f"{channel.side_channel_id!r}."
+            )
+        channel.member_player_ids.remove(player_id)
+        if len(channel.member_player_ids) < self.MIN_MEMBERS:
+            channel.is_open = False
+        return channel
+
+    def can_create(
+        self,
+        creator_id: str,
+        campaign_player_ids: list[str],
+        existing_channels: list[SideChannel],
+        max_per_player: int = 5,
+    ) -> bool:
+        """Return True if ``creator_id`` is allowed to create another channel.
+
+        Checks:
+          - Creator is in the campaign.
+          - Creator has not exceeded max active channels.
+        """
+        if creator_id not in campaign_player_ids:
+            return False
+        active_count = sum(
+            1
+            for ch in existing_channels
+            if ch.is_open and ch.created_by_player_id == creator_id
+        )
+        return active_count < max_per_player
+
     def recipients(self, channel: SideChannel) -> list[str]:
         """Return the list of player_ids who should receive a side-channel message.
 

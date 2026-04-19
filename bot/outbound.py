@@ -18,6 +18,7 @@ from telegram.error import TelegramError
 
 from bot.config import BotConfig
 from bot.mapping import BotRegistry, UnknownUserError
+from server.domain.entities import SideChannel
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,44 @@ async def send_private(
     except TelegramError as exc:
         logger.error("send_private user=%s failed: %s", telegram_user_id, exc)
         raise
+
+
+async def send_side_channel(
+    bot: Bot,
+    registry: BotRegistry,
+    channel: SideChannel,
+    sender_player_id: str,
+    text: str,
+    sender_display_name: str = "",
+    parse_mode: str = ParseMode.HTML,
+) -> list[str]:
+    """Relay a side-channel message to all members except the sender.
+
+    Each recipient receives a DM formatted as:
+        [{channel.label}] {sender_display_name}: {text}
+
+    Returns the list of player_ids that received the message successfully.
+    Skips the sender and silently drops failures (logs them).
+    """
+    if not channel.is_open:
+        return []
+
+    label = channel.label or channel.side_channel_id
+    display = sender_display_name or sender_player_id
+    formatted = f"[{label}] {display}: {text}"
+
+    delivered: list[str] = []
+    for member_pid in channel.member_player_ids:
+        if member_pid == sender_player_id:
+            continue
+        try:
+            await send_private_by_player_id(
+                bot, registry, member_pid, formatted, parse_mode
+            )
+            delivered.append(member_pid)
+        except (UnknownUserError, TelegramError) as exc:
+            logger.warning("send_side_channel skip pid=%s: %s", member_pid, exc)
+    return delivered
 
 
 async def send_private_by_player_id(

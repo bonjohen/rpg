@@ -248,14 +248,20 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 11: Side-Channels and Private Coordination
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Define side-channel lifecycle and membership rules | Started (PST): | Completed (PST):
-[ ] Implement side-channel creation and closure | Started (PST): | Completed (PST):
-[ ] Implement DM-relay delivery for side-channel messages | Started (PST): | Completed (PST):
-[ ] Implement visibility isolation for side-channel content | Started (PST): | Completed (PST):
-[ ] Implement audit entries for side-channel activity | Started (PST): | Completed (PST):
-[ ] Add tests for side-channel secrecy and public prompt isolation | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 02:05 AM | Completed (PST): 2026-04-18 02:06 AM
+[#] Define side-channel lifecycle and membership rules | Started (PST): 2026-04-18 02:06 AM | Completed (PST): 2026-04-18 02:10 AM
+[#] Implement side-channel creation and closure | Started (PST): 2026-04-18 02:10 AM | Completed (PST): 2026-04-18 02:14 AM
+[#] Implement DM-relay delivery for side-channel messages | Started (PST): 2026-04-18 02:14 AM | Completed (PST): 2026-04-18 02:17 AM
+[#] Implement visibility isolation for side-channel content | Started (PST): 2026-04-18 02:17 AM | Completed (PST): 2026-04-18 02:20 AM
+[#] Implement audit entries for side-channel activity | Started (PST): 2026-04-18 02:20 AM | Completed (PST): 2026-04-18 02:23 AM
+[#] Add tests for side-channel secrecy and public prompt isolation | Started (PST): 2026-04-18 02:23 AM | Completed (PST): 2026-04-18 02:30 AM
+[#] Phase End | Started (PST): 2026-04-18 02:30 AM | Completed (PST): 2026-04-18 02:35 AM
+
+### Phase 11 Summary
+
+- **Changes:** Extended `server/scope/side_channel.py` (SideChannelPolicy: add_member, remove_member with auto-close below MIN_MEMBERS, can_create with per-player active channel limit). Created `server/scope/side_channel_engine.py` (SideChannelEngine: create_channel with validation + entity production, close_channel with referee-only audit fact). Created `server/scope/side_channel_audit.py` (SideChannelAuditor: record_creation, record_message, record_closure — all producing referee-only KnowledgeFacts with [side_channel_audit] prefix). Extended `bot/outbound.py` (send_side_channel: DM relay to all members except sender, formatted with channel label). Extended `server/scope/engine.py` (ScopeEngine: assert_no_side_channel_leakage pre-flight check for non-member fact delivery). Added `tests/fixtures/side_channel_scenario.py` (three-player campaign with fixed IDs: Alice+Bob channel, Carol as outsider). Added `tests/unit/test_side_channels.py` (58 tests covering policy lifecycle, engine creation/closure, DM relay, visibility isolation, audit facts, and full lifecycle integration). Total suite: 672 tests, all green.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 11: Side-Channels and Private Coordination`
 
 ## Phase 12: Split Party and Multi-Scene Handling
 
