@@ -1,10 +1,11 @@
-"""Slash command handlers: /start, /join, /help, /status.
+"""Slash command handlers: /start, /join, /help, /status, and game commands.
 
 Each handler is an async PTB callback.  They are registered onto the
 Application in handlers.py via CommandHandler.
 
 The registry is retrieved from application.bot_data["registry"]; the config
 from application.bot_data["config"].  Both are injected at startup.
+The orchestrator is from application.bot_data["orchestrator"] (Phase 16+).
 """
 
 from __future__ import annotations
@@ -21,10 +22,16 @@ logger = logging.getLogger(__name__)
 
 _HELP_TEXT = (
     "Available commands:\n"
-    "  /start   — Start a conversation with the bot\n"
-    "  /join    — Register as a player (send this in the group)\n"
-    "  /help    — Show this message\n"
-    "  /status  — Show your current game status\n"
+    "  /start       — Start a conversation with the bot\n"
+    "  /join        — Register as a player (send this in the group)\n"
+    "  /help        — Show this message\n"
+    "  /status      — Show your current game status\n"
+    "  /newgame     — Load a scenario (admin)\n"
+    "  /nextturn    — Open next turn (admin/debug)\n"
+    "  /forceresolve — Force-resolve current turn (admin/debug)\n"
+    "  /diagnostics — Show diagnostics report (admin)\n"
+    "  /scene       — Show current scene\n"
+    "  /who         — Show who is in which scene\n"
 )
 
 
@@ -101,7 +108,179 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         )
         return
 
-    # Full status assembly happens in later phases; return stub for now.
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text(
+            f"Player ID: {player_id}\nStatus: registered (no active game)"
+        )
+        return
+
+    scene = orchestrator.get_player_scene(player_id)
+    if scene is None:
+        await update.message.reply_text(
+            f"Player ID: {player_id}\nStatus: registered, not in a scene"
+        )
+        return
+
+    char = orchestrator._get_player_character(player_id)
+    char_info = f"Character: {char.name}" if char else ""
     await update.message.reply_text(
-        f"Player ID: {player_id}\nStatus: registered (full status available after character creation)"
+        f"Player ID: {player_id}\n{char_info}\nScene: {scene.name}\nState: {scene.state.value}"
     )
+
+
+def _orchestrator(context: ContextTypes.DEFAULT_TYPE):
+    """Get the GameOrchestrator from bot_data, or None."""
+    return context.application.bot_data.get("orchestrator")
+
+
+async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/newgame <scenario_path> — load a scenario and start a campaign."""
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text("No orchestrator configured.")
+        return
+
+    args = context.args
+    if not args:
+        await update.message.reply_text("Usage: /newgame <scenario_path>")
+        return
+
+    scenario_path = args[0]
+    success = orchestrator.load_scenario(scenario_path)
+    if success:
+        scene_count = len(orchestrator.scenes)
+        await update.message.reply_text(
+            f"Scenario loaded! {scene_count} scenes ready.\n"
+            "Players can now /join to enter the game."
+        )
+    else:
+        await update.message.reply_text("Failed to load scenario. Check the path.")
+
+
+async def cmd_nextturn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/nextturn — open the next turn (admin/debug)."""
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text("No orchestrator configured.")
+        return
+
+    registry = _registry(context)
+    user = update.effective_user
+    try:
+        player_id = registry.player_id_for(user.id)
+    except UnknownUserError:
+        await update.message.reply_text("You're not registered.")
+        return
+
+    scene = orchestrator.get_player_scene(player_id)
+    if scene is None:
+        await update.message.reply_text("You're not in a scene.")
+        return
+
+    tw = orchestrator.open_turn(scene.scene_id)
+    if tw:
+        await update.message.reply_text(
+            f"Turn {tw.turn_number} opened in {scene.name}. Submit your actions!"
+        )
+    else:
+        await update.message.reply_text("Could not open a new turn.")
+
+
+async def cmd_forceresolve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/forceresolve — force-resolve the current turn window (admin/debug)."""
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text("No orchestrator configured.")
+        return
+
+    registry = _registry(context)
+    user = update.effective_user
+    try:
+        player_id = registry.player_id_for(user.id)
+    except UnknownUserError:
+        await update.message.reply_text("You're not registered.")
+        return
+
+    scene = orchestrator.get_player_scene(player_id)
+    if scene is None or scene.active_turn_window_id is None:
+        await update.message.reply_text("No turn is currently in progress.")
+        return
+
+    log_entry = orchestrator.resolve_turn(scene.active_turn_window_id)
+    if log_entry:
+        await update.message.reply_text(
+            f"Turn {log_entry.turn_number} resolved.\n{log_entry.narration}"
+        )
+    else:
+        await update.message.reply_text("Failed to resolve the turn.")
+
+
+async def cmd_diagnostics(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/diagnostics — run diagnostics and DM the report (admin)."""
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text("No orchestrator configured.")
+        return
+
+    report = orchestrator.diagnostics_engine.build_report(
+        campaign_id=orchestrator.campaign.campaign_id if orchestrator.campaign else "",
+        turn_windows=list(orchestrator.turn_windows.values()),
+        scenes=list(orchestrator.scenes.values()),
+        players=list(orchestrator.players.values()),
+    )
+    text = orchestrator.diagnostics_engine.format_report(report)
+    await update.message.reply_text(text[:4096])
+
+
+async def cmd_scene(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/scene — show the current scene description and exits."""
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text("No active game.")
+        return
+
+    registry = _registry(context)
+    user = update.effective_user
+    try:
+        player_id = registry.player_id_for(user.id)
+    except UnknownUserError:
+        await update.message.reply_text(
+            "You haven't joined a game yet. Use /join in the campaign group."
+        )
+        return
+
+    scene = orchestrator.get_player_scene(player_id)
+    if scene is None:
+        await update.message.reply_text("You're not in a scene.")
+        return
+
+    exit_parts = []
+    for d, sid in scene.exits.items():
+        dest = orchestrator.scenes.get(sid)
+        dest_name = dest.name if dest else sid
+        exit_parts.append(f"{d} -> {dest_name}")
+    exits_text = ", ".join(exit_parts) or "None"
+
+    await update.message.reply_text(
+        f"📍 {scene.name}\n\n{scene.description}\n\nExits: {exits_text}"
+    )
+
+
+async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/who — show which players are in which scenes."""
+    orchestrator = _orchestrator(context)
+    if orchestrator is None:
+        await update.message.reply_text("No active game.")
+        return
+
+    lines = []
+    for scene in orchestrator.scenes.values():
+        players = orchestrator.get_scene_players(scene.scene_id)
+        player_names = [p.display_name for p in players]
+        if player_names:
+            lines.append(f"{scene.name}: {', '.join(player_names)}")
+        else:
+            lines.append(f"{scene.name}: (empty)")
+
+    await update.message.reply_text("\n".join(lines) if lines else "No scenes.")

@@ -25,15 +25,28 @@ The server owns: state storage, timer control, action validation, rules resoluti
 │  Maps Telegram user IDs → Player records                 │
 │  Maps Telegram chat IDs → Campaign records               │
 │  Routes to game server over internal API                 │
+│  Commands: /start /join /help /status /newgame /nextturn │
+│            /forceresolve /diagnostics /scene /who        │
 └────────────────────────┬────────────────────────────────┘
                          │ Internal API
 ┌────────────────────────▼────────────────────────────────┐
+│                   Game Orchestrator                       │
+│  server/orchestrator/game_loop.py                        │
+│  Wires: bot → turn engine → scope → timer → models      │
+│  load_scenario, add_player, open_turn, submit_action     │
+│  resolve_turn, handle_player_message, run_timer_tick     │
+│  In-memory state for playtest (production DB post-Ph.20) │
+├──────────────────────────────────────────────────────────┤
 │                     Game Server                          │
 │  Turn engine (open → lock → resolve → commit)            │
 │  Scope enforcement (public / private-ref / side-ch / ref)│
 │  Rules resolution (deterministic + dice)                 │
 │  Timer control (countdown, early-close, timeout)         │
 │  Append-only turn log                                    │
+│  Exploration, NPC Social, Combat loops                   │
+│  Split-party multi-scene handling                        │
+│  Reliability (retry, idempotency, recovery)              │
+│  Observability (structured logs, metrics, diagnostics)   │
 │  State storage (Campaign, Player, Character, Scene, …)   │
 │  LLM router (decides fast tier vs. Gemma tier)           │
 └────────┬───────────────────────────┬────────────────────┘

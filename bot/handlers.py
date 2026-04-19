@@ -13,7 +13,18 @@ from telegram.ext import (
     filters,
 )
 
-from bot.commands import cmd_help, cmd_join, cmd_start, cmd_status
+from bot.commands import (
+    cmd_diagnostics,
+    cmd_forceresolve,
+    cmd_help,
+    cmd_join,
+    cmd_newgame,
+    cmd_nextturn,
+    cmd_scene,
+    cmd_start,
+    cmd_status,
+    cmd_who,
+)
 from bot.mapping import BotRegistry
 from bot.onboarding import requires_onboarding, send_onboarding_prompt
 from bot.parsers import parse_group_message, parse_private_message
@@ -33,6 +44,12 @@ def register_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("join", cmd_join))
     app.add_handler(CommandHandler("help", cmd_help))
     app.add_handler(CommandHandler("status", cmd_status))
+    app.add_handler(CommandHandler("newgame", cmd_newgame))
+    app.add_handler(CommandHandler("nextturn", cmd_nextturn))
+    app.add_handler(CommandHandler("forceresolve", cmd_forceresolve))
+    app.add_handler(CommandHandler("diagnostics", cmd_diagnostics))
+    app.add_handler(CommandHandler("scene", cmd_scene))
+    app.add_handler(CommandHandler("who", cmd_who))
 
     # --- Group message handler ---
     app.add_handler(
