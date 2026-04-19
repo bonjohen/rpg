@@ -16,7 +16,7 @@ The server owns: state storage, timer control, action validation, rules resoluti
 │  Supergroup (public party chat + topics)                 │
 │  Private DMs (one per player)                            │
 │  Inline keyboards (Ready, Pass, Ask Ref, Submit, Revise) │
-│  [Later] Mini App (sheet, inventory, map, inbox)         │
+│  Mini App (sheet, inventory, map, inbox, action builder)  │
 └────────────────────────┬────────────────────────────────┘
                          │ Bot API (HTTP)
 ┌────────────────────────▼────────────────────────────────┐
@@ -179,9 +179,9 @@ Monsters are tactical actors, not conversational agents. A MonsterGroup tracks: 
 
 ---
 
-## Mini App (Phase 2, not MVP)
+## Mini App
 
-Character sheet, inventory, map, quest log, private inbox, side-channel management, draft action builder, turn recap. Launched from bot menu or inline buttons. Not required for first release.
+Character sheet, inventory, map, quest log, private inbox, side-channel management, draft action builder, turn recap. Launched from bot menu or inline buttons. Implemented in Phase 17-18 with FastAPI backend (`server/api/`) and HTML/JS/CSS frontend (`webapp/`). Auth via Telegram WebApp HMAC-SHA256 validation.
 
 ---
 
@@ -189,4 +189,4 @@ Character sheet, inventory, map, quest log, private inbox, side-channel manageme
 
 Included: one supergroup, one play topic, one DM per player, timer-driven turn loop, one committed action per player per turn, exploration loop, social loop, combat loop, basic NPC memory tags, grouped monster encounters, player-private clue delivery, append-only turn logging, split LLM routing (fast local + Gemma 4 26B A4B).
 
-Excluded from MVP: Mini App, advanced side-channel UI, live maps, scenario authoring suite, real-time combat.
+Excluded from MVP: live maps, scenario authoring suite, real-time combat, persistent storage (in-memory only for playtest).

@@ -16,7 +16,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.mapping import BotRegistry, UnknownUserError
-from bot.onboarding import ONBOARDING_PROMPT
+from bot.onboarding import ONBOARDING_MESSAGES, ONBOARDING_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +65,22 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     registry = _registry(context)
 
     if update.message.chat.type == "private":
-        await update.message.reply_text(
-            "Please send /join in the campaign group, not here."
-        )
+        await update.message.reply_text(ONBOARDING_MESSAGES["join_in_group"])
         return
 
     if registry.is_known_player(user.id):
+        orchestrator = _orchestrator(context)
+        if orchestrator:
+            player_id = registry.player_id_for(user.id)
+            char = orchestrator._get_player_character(player_id)
+            scene = orchestrator.get_player_scene(player_id)
+            if char and scene:
+                await update.message.reply_text(
+                    ONBOARDING_MESSAGES["already_joined"].format(
+                        name=char.name, scene=scene.name
+                    )
+                )
+                return
         await update.message.reply_text(
             f"You're already registered, {user.first_name}. Good to go!"
         )
@@ -103,9 +113,7 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     try:
         player_id = registry.player_id_for(user.id)
     except UnknownUserError:
-        await update.message.reply_text(
-            "You're not registered yet. Send /join in the campaign group to get started."
-        )
+        await update.message.reply_text(ONBOARDING_MESSAGES["not_joined"])
         return
 
     orchestrator = _orchestrator(context)
@@ -138,7 +146,7 @@ async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     """/newgame <scenario_path> — load a scenario and start a campaign."""
     orchestrator = _orchestrator(context)
     if orchestrator is None:
-        await update.message.reply_text("No orchestrator configured.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
         return
 
     args = context.args
@@ -162,7 +170,7 @@ async def cmd_nextturn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """/nextturn — open the next turn (admin/debug)."""
     orchestrator = _orchestrator(context)
     if orchestrator is None:
-        await update.message.reply_text("No orchestrator configured.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
         return
 
     registry = _registry(context)
@@ -170,7 +178,7 @@ async def cmd_nextturn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     try:
         player_id = registry.player_id_for(user.id)
     except UnknownUserError:
-        await update.message.reply_text("You're not registered.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["not_joined"])
         return
 
     scene = orchestrator.get_player_scene(player_id)
@@ -191,7 +199,7 @@ async def cmd_forceresolve(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     """/forceresolve — force-resolve the current turn window (admin/debug)."""
     orchestrator = _orchestrator(context)
     if orchestrator is None:
-        await update.message.reply_text("No orchestrator configured.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
         return
 
     registry = _registry(context)
@@ -199,12 +207,12 @@ async def cmd_forceresolve(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     try:
         player_id = registry.player_id_for(user.id)
     except UnknownUserError:
-        await update.message.reply_text("You're not registered.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["not_joined"])
         return
 
     scene = orchestrator.get_player_scene(player_id)
     if scene is None or scene.active_turn_window_id is None:
-        await update.message.reply_text("No turn is currently in progress.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_active_turn"])
         return
 
     log_entry = orchestrator.resolve_turn(scene.active_turn_window_id)
@@ -220,7 +228,7 @@ async def cmd_diagnostics(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """/diagnostics — run diagnostics and DM the report (admin)."""
     orchestrator = _orchestrator(context)
     if orchestrator is None:
-        await update.message.reply_text("No orchestrator configured.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
         return
 
     report = orchestrator.diagnostics_engine.build_report(
@@ -237,7 +245,7 @@ async def cmd_scene(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/scene — show the current scene description and exits."""
     orchestrator = _orchestrator(context)
     if orchestrator is None:
-        await update.message.reply_text("No active game.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_active_game"])
         return
 
     registry = _registry(context)
@@ -245,9 +253,7 @@ async def cmd_scene(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         player_id = registry.player_id_for(user.id)
     except UnknownUserError:
-        await update.message.reply_text(
-            "You haven't joined a game yet. Use /join in the campaign group."
-        )
+        await update.message.reply_text(ONBOARDING_MESSAGES["not_joined"])
         return
 
     scene = orchestrator.get_player_scene(player_id)
@@ -271,7 +277,7 @@ async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/who — show which players are in which scenes."""
     orchestrator = _orchestrator(context)
     if orchestrator is None:
-        await update.message.reply_text("No active game.")
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_active_game"])
         return
 
     lines = []

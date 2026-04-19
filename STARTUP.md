@@ -10,9 +10,9 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Phase 20 — Pre-Release Stabilization** (not started). Phase 19 completed 2026-04-18 04:02 AM.
+Current phase: **Phase 20 — Pre-Release Stabilization** (completing). Phase 19 completed 2026-04-18 04:02 AM.
 
-Review docs\phases_16_20_guide.md for additional instructions.
+All 20 phases complete. 1265 tests pass, lint clean. No P0/P1 bugs.
 
 ## Key Design Decisions (do not revisit without cause)
 
@@ -38,19 +38,40 @@ C:\Projects\rpg\
 │   ├── testing.md           # Test strategy
 │   ├── design.md            # Original design document
 │   └── pdr.md               # Product design requirements
-├── server/                  # Game server (Python, added in Phase 1+)
-│   ├── api/                 # REST API for Mini App (FastAPI, added in Phase 17)
-│   └── orchestrator/        # Top-level game loop (added in Phase 16)
-├── bot/                     # Telegram bot gateway (added in Phase 3+)
-├── models/                  # Inference adapters (added in Phase 6+)
-├── scenarios/               # Scenario content files (added in Phase 13+)
-├── webapp/                  # Mini App frontend (HTML/JS/CSS, added in Phase 17)
-└── prompts/                 # Prompt contracts (added in Phase 14+)
+├── server/                  # Game server (Python)
+│   ├── api/                 # REST API for Mini App (FastAPI)
+│   ├── orchestrator/        # Top-level game loop (GameOrchestrator)
+│   ├── scope/               # Scope engine, leakage guard, referee guard
+│   ├── engine/              # Turn engine
+│   ├── combat/              # Combat loop, conditions, dice
+│   ├── exploration/         # Movement, triggers, actions, clues, objects
+│   ├── npc/                 # NPC social engine, trust, memory
+│   ├── scene/               # Scene membership
+│   ├── timer/               # Timer controller
+│   ├── reliability/         # Idempotency, retry, recovery
+│   ├── observability/       # Diagnostics, metrics
+│   └── domain/              # Entities, enums (pure data, no I/O)
+├── bot/                     # Telegram bot gateway
+├── models/                  # Inference adapters (fast + main tier)
+│   ├── fast/                # Fast local model (qwen2.5:1.5b) adapter
+│   ├── main/                # Main model (Gemma 4 26B A4B) adapter
+│   └── contracts/           # Prompt contracts and context assembly
+├── scenarios/               # Scenario YAML files, loader, validator
+│   └── starters/            # 4 starter scenarios (goblin_caves, haunted_manor, forest_ambush, merchant_quarter)
+├── webapp/                  # Mini App frontend (HTML/JS/CSS)
+├── docs/                    # Design docs, plan, release readiness
+│   ├── release_readiness.md # Open bugs and release criteria
+│   └── feature_freeze.md   # Feature freeze notice
+└── tests/                   # 1265 tests (unit + integration)
 ```
 
 ## Known Defects / Open Issues
 
-None yet. (Update this section as issues are found during phase work.)
+See `docs/release_readiness.md` for the full bug table and release criteria.
+
+- BUG-001 (P2): Gemma inference adapter disabled; all narration uses deterministic fallback. Deferred (requires live model).
+- BUG-002 (P3): Narration fallback text is functional but repetitive across turns. Open.
+- BUG-003 (P3): No persistent storage; all state is in-memory (by design for playtest). Deferred.
 
 ## Phase Completion Log
 

@@ -407,12 +407,18 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 20: Pre-Release Stabilization
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Review open bugs and severity | Started (PST): | Completed (PST):
-[ ] Freeze nonessential feature work | Started (PST): | Completed (PST):
-[ ] Harden onboarding, diagnostics, and failure messages | Started (PST): | Completed (PST):
-[ ] Review privacy, visibility, and routing safety | Started (PST): | Completed (PST):
-[ ] Run extended campaigns and full regression suite | Started (PST): | Completed (PST):
-[ ] Patch release blockers | Started (PST): | Completed (PST):
-[ ] Update STARTUP.md and core docs to match the actual system | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-19 02:52 AM | Completed (PST): 2026-04-19 02:53 AM
+[#] Review open bugs and severity | Started (PST): 2026-04-19 02:53 AM | Completed (PST): 2026-04-19 02:54 AM
+[#] Freeze nonessential feature work | Started (PST): 2026-04-19 02:54 AM | Completed (PST): 2026-04-19 02:54 AM
+[#] Harden onboarding, diagnostics, and failure messages | Started (PST): 2026-04-19 02:54 AM | Completed (PST): 2026-04-19 02:58 AM
+[#] Review privacy, visibility, and routing safety | Started (PST): 2026-04-19 02:58 AM | Completed (PST): 2026-04-19 03:00 AM
+[#] Run extended campaigns and full regression suite | Started (PST): 2026-04-19 03:00 AM | Completed (PST): 2026-04-19 03:02 AM
+[#] Patch release blockers | Started (PST): 2026-04-19 03:02 AM | Completed (PST): 2026-04-19 03:02 AM
+[#] Update STARTUP.md and core docs to match the actual system | Started (PST): 2026-04-19 03:02 AM | Completed (PST): 2026-04-19 03:03 AM
+[#] Phase End | Started (PST): 2026-04-19 03:03 AM | Completed (PST): 2026-04-19 03:05 AM
+
+### Phase 20 Summary
+
+- **Changes:** Created `docs/release_readiness.md` (bug table, severity definitions, release criteria checklist). Created `docs/feature_freeze.md` (freeze rules effective 2026-04-19). Extended `bot/onboarding.py` (ONBOARDING_MESSAGES dict with 11 message constants). Hardened `bot/commands.py` (all 10 command handlers now use ONBOARDING_MESSAGES constants instead of inline strings). Created `tests/unit/test_privacy_audit.py` (33 tests: scope boundary enforcement, context assembly safety, side-channel leakage prevention, referee guard audit, model routing safety, edge cases). Created `tests/integration/test_extended_session.py` (8 tests: 20-turn goblin_caves, 10-turn haunted_manor, 10-turn forest_ambush, player disconnect/rejoin, split party, all-scenarios smoke test). No P0/P1 release blockers found. Updated `STARTUP.md` (repo layout, known defects, current phase). Updated `docs/architecture.md` (Mini App implemented, MVP scope updated). Updated `docs/phase_status.md` (Phase 20 completed). Total suite: 1265 tests, all green; lint clean.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 20: Pre-Release Stabilization`

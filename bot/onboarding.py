@@ -19,6 +19,31 @@ ONBOARDING_PROMPT = (
     "Once you're registered you can DM me freely."
 )
 
+# Structured message constants for consistent user-facing text
+ONBOARDING_MESSAGES = {
+    "welcome": (
+        "Welcome to the RPG! To join a game, go to the campaign group and type /join."
+    ),
+    "already_joined": (
+        "You're already in the game! Your character is {name} in {scene}."
+    ),
+    "join_success": (
+        "You've joined the campaign! Your character will be created shortly."
+    ),
+    "dm_required": (
+        "Please start a private chat with me first by sending /start in DM."
+    ),
+    "no_game": ("No game is running in this group yet. Ask the GM to set one up."),
+    "join_in_group": (
+        "Please send /join in the campaign group, not in a private message."
+    ),
+    "no_active_game": ("No active game. Ask the GM to start one with /newgame."),
+    "not_joined": ("You haven't joined a game yet. Use /join in the campaign group."),
+    "admin_only": ("This command is admin-only."),
+    "no_active_turn": ("No turn is currently in progress."),
+    "no_orchestrator": ("No game server is configured. Contact the administrator."),
+}
+
 
 def requires_onboarding(registry: BotRegistry, telegram_user_id: int) -> bool:
     """Return True if the user has NOT completed onboarding.
