@@ -228,17 +228,23 @@ On 3, 6, 9, 12, etc (phases evenly divisible by 3) do the additional step.
 
 ## Phase 10: Combat Loop
 
-[ ] Phase Startup | Started (PST): | Completed (PST):
-[ ] Define combat entry and exit conditions | Started (PST): | Completed (PST):
-[ ] Implement attack, move, defend, assist, use item, and ability actions | Started (PST): | Completed (PST):
-[ ] Implement grouped monster encounter behavior | Started (PST): | Completed (PST):
-[ ] Implement damage, armor, status effects, and defeat states | Started (PST): | Completed (PST):
-[ ] Implement morale and flee behavior | Started (PST): | Completed (PST):
-[ ] Implement combat visibility and awareness rules | Started (PST): | Completed (PST):
-[ ] Implement battlefield summaries for public turn posts | Started (PST): | Completed (PST):
-[ ] Add at least one combat encounter to starter content | Started (PST): | Completed (PST):
-[ ] Add tests for hit resolution, morale, grouped enemies, and end conditions | Started (PST): | Completed (PST):
-[ ] Phase End | Started (PST): | Completed (PST):
+[#] Phase Startup | Started (PST): 2026-04-18 01:00 AM | Completed (PST): 2026-04-18 01:05 AM
+[#] Define combat entry and exit conditions | Started (PST): 2026-04-18 01:05 AM | Completed (PST): 2026-04-18 01:10 AM
+[#] Implement attack, move, defend, assist, use item, and ability actions | Started (PST): 2026-04-18 01:10 AM | Completed (PST): 2026-04-18 01:18 AM
+[#] Implement grouped monster encounter behavior | Started (PST): 2026-04-18 01:18 AM | Completed (PST): 2026-04-18 01:25 AM
+[#] Implement damage, armor, status effects, and defeat states | Started (PST): 2026-04-18 01:25 AM | Completed (PST): 2026-04-18 01:32 AM
+[#] Implement morale and flee behavior | Started (PST): 2026-04-18 01:32 AM | Completed (PST): 2026-04-18 01:36 AM
+[#] Implement combat visibility and awareness rules | Started (PST): 2026-04-18 01:36 AM | Completed (PST): 2026-04-18 01:42 AM
+[#] Implement battlefield summaries for public turn posts | Started (PST): 2026-04-18 01:42 AM | Completed (PST): 2026-04-18 01:46 AM
+[#] Add at least one combat encounter to starter content | Started (PST): 2026-04-18 01:46 AM | Completed (PST): 2026-04-18 01:50 AM
+[#] Add tests for hit resolution, morale, grouped enemies, and end conditions | Started (PST): 2026-04-18 01:50 AM | Completed (PST): 2026-04-18 01:55 AM
+[#] Phase End | Started (PST): 2026-04-18 01:55 AM | Completed (PST): 2026-04-18 02:00 AM
+
+### Phase 10 Summary
+
+- **Changes:** Created `server/combat/` package: `conditions.py` (CombatConditionEngine: entry/exit evaluation — engaged groups trigger combat; victory/annihilation/flee exit types), `actions.py` (CombatActionEngine: resolve_attack, resolve_defend, resolve_assist, resolve_use_item, resolve_use_ability, resolve_combat_move — all deterministic, status-effect-aware), `monsters.py` (MonsterBehaviorEngine: AI decision-making by behavior_mode with threat-table targeting; MoraleEngine: steady→shaken→routed transitions with leader_dead override, flee application), `resolution.py` (CombatResolutionEngine: character/group damage with armor, status effect management, poison ticks, defeat checks), `visibility.py` (CombatVisibilityEngine: awareness state machine with 8 transitions, visibility derived from awareness), `summaries.py` (BattlefieldSummaryBuilder: text assembly for public turn posts). Added `tests/fixtures/combat_scenario.py` (forest clearing: Kira + Dain vs goblin patrol + wolf pack). Added `tests/unit/test_combat.py` (89 tests covering all engines, full scenario integration). Total suite: 614 tests, all green.
+- **Changes hosted at:** local only
+- **Commit:** `Phase 10: Combat Loop`
 
 ## Phase 11: Side-Channels and Private Coordination
 

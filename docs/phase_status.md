@@ -14,7 +14,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 7 | Main Gameplay Model Integration | Completed | 2026-04-18 11:46 PM | Gemma inference adapter [!] disabled; all other deliverables complete |
 | 8 | Exploration Loop | Completed | 2026-04-19 12:02 AM | 97 new tests; server/exploration/ package |
 | 9 | NPC Social Loop | Completed | 2026-04-19 12:12 AM | 90 new tests; server/npc/ package |
-| 10 | Combat Loop | Not Started | — | |
+| 10 | Combat Loop | Completed | 2026-04-18 02:00 AM | 89 new tests; server/combat/ package |
 | 11 | Side-Channels and Private Coordination | Not Started | — | |
 | 12 | Split Party and Multi-Scene Handling | Not Started | — | |
 | 13 | Scenario Authoring Format | Not Started | — | |
@@ -69,6 +69,14 @@ Started: 2026-04-19
 Inputs: `server/domain/entities.py`, `server/domain/enums.py`, `server/scope/` (all from prior phases).
 
 Outputs: `server/exploration/` package (movement.py, actions.py, triggers.py, clues.py, objects.py, memory.py), `tests/fixtures/exploration_scenario.py` (three-room dungeon fixture), `tests/unit/test_exploration.py` (97 tests, all passing). Total suite: 435 tests, all green.
+
+### Phase 10
+
+Started: 2026-04-18
+
+Inputs: `server/domain/entities.py` (Character, MonsterGroup, Scene, InventoryItem), `server/domain/enums.py` (AwarenessState, BehaviorMode, ActionType).
+
+Outputs: `server/combat/` package — `conditions.py` (CombatConditionEngine), `actions.py` (CombatActionEngine: 6 action types), `monsters.py` (MonsterBehaviorEngine + MoraleEngine), `resolution.py` (CombatResolutionEngine: damage/armor/status/defeat), `visibility.py` (CombatVisibilityEngine: awareness state machine), `summaries.py` (BattlefieldSummaryBuilder). `tests/fixtures/combat_scenario.py` (forest clearing encounter). `tests/unit/test_combat.py` (89 tests, all passing). Total suite: 614 tests, all green.
 
 ### Phase 2
 
