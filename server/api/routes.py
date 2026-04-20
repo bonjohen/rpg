@@ -92,7 +92,7 @@ async def get_player(player_id: str) -> dict:
         raise HTTPException(status_code=404, detail="Player not found.")
 
     # Find the player's character
-    character = orch._get_player_character(player_id)
+    character = orch.get_player_character(player_id)
     char_id = character.character_id if character else ""
     scene_id = character.scene_id or "" if character else ""
 
@@ -679,7 +679,7 @@ async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
         raise HTTPException(status_code=404, detail="Campaign not found.")
 
     # Determine which scenes the player has visited
-    char = orch._get_player_character(player_id) if player_id else None
+    char = orch.get_player_character(player_id) if player_id else None
     current_scene_id = char.scene_id or "" if char else ""
 
     # For simplicity, treat any scene that has or had the player's character

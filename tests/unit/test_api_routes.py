@@ -122,7 +122,7 @@ class TestCharacterSheet:
     def test_get_character_returns_full_state(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        char = orch._get_player_character(pids[0])
+        char = orch.get_player_character(pids[0])
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}")
         assert resp.status_code == 200
@@ -140,7 +140,7 @@ class TestCharacterSheet:
     def test_get_character_includes_status_effects(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        char = orch._get_player_character(pids[0])
+        char = orch.get_player_character(pids[0])
         char.status_effects = ["poisoned", "stunned"]
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}")
@@ -151,7 +151,7 @@ class TestCharacterSheet:
     def test_get_character_shows_scene_id(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        char = orch._get_player_character(pids[0])
+        char = orch.get_player_character(pids[0])
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}")
         data = resp.json()
@@ -167,7 +167,7 @@ class TestInventory:
     def test_get_inventory_returns_items(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        char = orch._get_player_character(pids[0])
+        char = orch.get_player_character(pids[0])
         # Give the character an item
         from server.domain.entities import InventoryItem
         from datetime import datetime, timezone
@@ -194,7 +194,7 @@ class TestInventory:
     def test_get_inventory_empty_returns_empty_list(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        char = orch._get_player_character(pids[0])
+        char = orch.get_player_character(pids[0])
         # Remove any default items owned by this character
         orch.items = {
             k: v
@@ -209,7 +209,7 @@ class TestInventory:
     def test_get_inventory_includes_properties(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        char = orch._get_player_character(pids[0])
+        char = orch.get_player_character(pids[0])
         from server.domain.entities import InventoryItem
         from datetime import datetime, timezone
 

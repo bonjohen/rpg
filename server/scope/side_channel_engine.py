@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from datetime import datetime, timezone
+
 from server.domain.entities import ConversationScope, KnowledgeFact, SideChannel
 from server.domain.enums import KnowledgeFactType, ScopeType
 from server.scope.side_channel import SideChannelError, SideChannelPolicy
@@ -74,8 +76,6 @@ class SideChannelEngine:
         Returns:
             SideChannelCreateResult with the new channel and scope on success.
         """
-        from datetime import datetime, timezone
-
         try:
             self._policy.validate_creation(
                 creator_player_id, member_player_ids, all_campaign_player_ids
@@ -127,8 +127,6 @@ class SideChannelEngine:
         Returns:
             SideChannelCloseResult with the closed channel and audit fact.
         """
-        from datetime import datetime, timezone
-
         if not self._policy.is_member(channel, closing_player_id):
             return SideChannelCloseResult(
                 success=False,

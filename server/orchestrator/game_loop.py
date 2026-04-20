@@ -16,7 +16,7 @@ from models.contracts.context_assembly import ContextAssembler
 from models.contracts.output_repair import RepairPipeline
 from models.fast.adapter import OllamaFastAdapter
 from models.fast.tasks import classify_intent, extract_action_packet
-from models.main.adapter import OpenAIMainAdapter
+from models.protocol import MainAdapter
 from scenarios.loader import ScenarioLoader
 from server.combat.conditions import CombatConditionEngine
 from server.domain.entities import (
@@ -88,7 +88,7 @@ class GameOrchestrator:
     def __init__(
         self,
         fast_adapter: OllamaFastAdapter | None = None,
-        main_adapter: OpenAIMainAdapter | None = None,
+        main_adapter: MainAdapter | None = None,
         bot_registry: BotRegistry | None = None,
         config: BotConfig | None = None,
     ) -> None:
@@ -307,7 +307,7 @@ class GameOrchestrator:
         item_ids: list[str] | None = None,
     ) -> CommittedAction | None:
         """Submit an action for a player in their current scene's turn window."""
-        character = self._get_player_character(player_id)
+        character = self.get_player_character(player_id)
         if character is None or character.scene_id is None:
             return None
 
@@ -387,7 +387,7 @@ class GameOrchestrator:
         expected_player_ids = self._get_scene_player_ids(scene)
         chars_by_player = {}
         for pid in expected_player_ids:
-            char = self._get_player_character(pid)
+            char = self.get_player_character(pid)
             if char:
                 chars_by_player[pid] = char.character_id
 
@@ -397,7 +397,7 @@ class GameOrchestrator:
             pid for pid in expected_player_ids if pid not in submitted_players
         ]
         for pid in timeout_players:
-            char = self._get_player_character(pid)
+            char = self.get_player_character(pid)
             if char is None:
                 continue
             fallback = CommittedAction(
@@ -531,7 +531,7 @@ class GameOrchestrator:
         """Extract action packet and submit."""
         result = DispatchResult()
 
-        character = self._get_player_character(player_id)
+        character = self.get_player_character(player_id)
         if character is None:
             result.error = "No character found."
             return result
@@ -580,7 +580,7 @@ class GameOrchestrator:
 
     def get_player_scene(self, player_id: str) -> Scene | None:
         """Look up which scene a player's character is in."""
-        char = self._get_player_character(player_id)
+        char = self.get_player_character(player_id)
         if char is None or char.scene_id is None:
             return None
         return self.scenes.get(char.scene_id)
@@ -612,7 +612,7 @@ class GameOrchestrator:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _get_player_character(self, player_id: str) -> Character | None:
+    def get_player_character(self, player_id: str) -> Character | None:
         for char in self.characters.values():
             if char.player_id == player_id:
                 return char

@@ -72,7 +72,7 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         orchestrator = _orchestrator(context)
         if orchestrator:
             player_id = registry.player_id_for(user.id)
-            char = orchestrator._get_player_character(player_id)
+            char = orchestrator.get_player_character(player_id)
             scene = orchestrator.get_player_scene(player_id)
             if char and scene:
                 await update.message.reply_text(
@@ -130,7 +130,7 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         )
         return
 
-    char = orchestrator._get_player_character(player_id)
+    char = orchestrator.get_player_character(player_id)
     char_info = f"Character: {char.name}" if char else ""
     await update.message.reply_text(
         f"Player ID: {player_id}\n{char_info}\nScene: {scene.name}\nState: {scene.state.value}"

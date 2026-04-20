@@ -190,7 +190,7 @@ class TestPlayerDisconnectRejoin:
 
         # Remove p3 from scene membership
         scene = orch.scenes[starting]
-        char_p3 = orch._get_player_character("p3")
+        char_p3 = orch.get_player_character("p3")
         if char_p3 and char_p3.character_id in scene.character_ids:
             scene.character_ids.remove(char_p3.character_id)
 
