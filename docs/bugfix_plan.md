@@ -106,17 +106,17 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 5.1 | Open | | | BUG-010: Raise ValueError on None expires_at in `server/timer/controller.py` check_expiry |
-| 5.2 | Open | | | BUG-011: Add paused→early_closed to transition table in `server/timer/controller.py` |
-| 5.3 | Open | | | BUG-012: Replace `hash(text)` with `hashlib.sha256` in `server/orchestrator/game_loop.py` |
-| 5.4 | Open | | | BUG-013: Include scene_id in public scope lookup in `server/orchestrator/game_loop.py` and extend `ConversationScopeRepo` |
-| 5.5 | Open | | | Add tests for timer ValueError, transition, deterministic idem keys, per-scene scope |
-| 5.6 | Open | | | Update BUG-010, 011, 012, 013 status in `docs/bugs.md` |
-| 5.7 | Open | | | Run pytest + ruff, fix any failures |
+| 5.1 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-010: Raise ValueError on None expires_at in `server/timer/controller.py` check_expiry |
+| 5.2 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-011: Add paused→early_closed to transition table in `server/timer/controller.py` |
+| 5.3 | Completed | 2026-04-19 11:47 PM | 2026-04-19 11:48 PM | BUG-012: Replace `hash(text)` with `hashlib.sha256` in `server/orchestrator/game_loop.py` |
+| 5.4 | Completed | 2026-04-19 11:48 PM | 2026-04-19 11:52 PM | BUG-013: Include scene_id in public scope lookup in `server/orchestrator/game_loop.py` and extend `ConversationScopeRepo` |
+| 5.5 | Completed | 2026-04-19 11:52 PM | 2026-04-19 11:55 PM | Add tests for timer ValueError, transition, deterministic idem keys, per-scene scope |
+| 5.6 | Completed | 2026-04-19 11:55 PM | 2026-04-19 11:56 PM | Update BUG-010, 011, 012, 013 status in `docs/bugs.md` |
+| 5.7 | Completed | 2026-04-19 11:53 PM | 2026-04-19 11:56 PM | Run pytest + ruff, fix any failures |
 
 ### Phase 5 Summary
 
-- **Changes:** TBD
+- **Changes:** Timer check_expiry now raises ValueError when a running timer has expires_at=None. Added paused→early_closed to transition table. Replaced hash() with hashlib.sha256 for deterministic idempotency keys. Added scene_id to ConversationScope entity/DB model, added get_public_scope_for_scene repo method, updated orchestrator to create per-scene public scopes. 10 new tests, 1379 total passing.
 - **Commit:** `Bug-fix Phase 5: Timer state machine, deterministic idempotency, per-scene scope`
 
 ## Phase 6: NPC/Social + Scene

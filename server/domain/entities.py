@@ -108,6 +108,8 @@ class ConversationScope:
     player_id: Optional[str] = None
     # For side_channel: the set of players in the channel
     side_channel_id: Optional[str] = None
+    # For public scopes: the scene this scope is for (per-scene public scopes)
+    scene_id: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------

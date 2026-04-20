@@ -5,6 +5,7 @@ scope engine, timer, and all game loop subsystems into a single runnable loop.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -684,7 +685,7 @@ class GameOrchestrator:
         result = DispatchResult()
 
         # Check idempotency (keyed on player_id + text hash for simplicity)
-        idem_key = f"msg:{player_id}:{hash(text)}"
+        idem_key = f"msg:{player_id}:{hashlib.sha256(text.encode()).hexdigest()[:16]}"
         if not self.idempotency.mark_seen(idem_key):
             result.handled = True
             result.response_text = ""
@@ -965,15 +966,18 @@ class GameOrchestrator:
     def _get_or_create_public_scope_in_session(
         self, session: Session, scene_id: str
     ) -> str:
-        """Get or create a public scope within an existing session."""
+        """Get or create a per-scene public scope within an existing session."""
         campaign_id = self.campaign_id or ""
-        scope = ConversationScopeRepo(session).get_public_scope(campaign_id)
+        scope = ConversationScopeRepo(session).get_public_scope_for_scene(
+            campaign_id, scene_id
+        )
         if scope:
             return scope.scope_id
         new_scope = ConversationScope(
             scope_id=new_id(),
             campaign_id=campaign_id,
             scope_type=ScopeType.public,
+            scene_id=scene_id,
         )
         ConversationScopeRepo(session).save(new_scope)
         return new_scope.scope_id

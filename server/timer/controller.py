@@ -53,7 +53,11 @@ _VALID_TIMER_TRANSITIONS: dict[TimerState, set[TimerState]] = {
         TimerState.early_closed,
         TimerState.stopped,
     },
-    TimerState.paused: {TimerState.running, TimerState.stopped},
+    TimerState.paused: {
+        TimerState.running,
+        TimerState.early_closed,
+        TimerState.stopped,
+    },
     TimerState.expired: set(),
     TimerState.early_closed: set(),
     TimerState.stopped: set(),
@@ -205,8 +209,12 @@ class TimerController:
             )
 
         t = now or _now_utc()
-        if timer.expires_at is None or t < timer.expires_at:
-            delta = (timer.expires_at - t).total_seconds() if timer.expires_at else 0
+        if timer.expires_at is None:
+            raise ValueError(
+                f"Timer {timer.timer_id!r} is running but expires_at is None."
+            )
+        if t < timer.expires_at:
+            delta = (timer.expires_at - t).total_seconds()
             return ExpiryCheckResult(
                 has_expired=False,
                 timer=timer,

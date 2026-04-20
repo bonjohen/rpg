@@ -132,6 +132,7 @@ def _scope_from_row(r: ConversationScopeRow) -> ConversationScope:
         scope_type=ScopeType(r.scope_type),
         player_id=r.player_id,
         side_channel_id=r.side_channel_id,
+        scene_id=r.scene_id,
     )
 
 
@@ -477,6 +478,7 @@ class ConversationScopeRepo:
         row.scope_type = sc.scope_type.value
         row.player_id = sc.player_id
         row.side_channel_id = sc.side_channel_id
+        row.scene_id = sc.scene_id
         self._s.flush()
 
     def get(self, scope_id: str) -> ConversationScope | None:
@@ -487,6 +489,20 @@ class ConversationScopeRepo:
         row = (
             self._s.query(ConversationScopeRow)
             .filter_by(campaign_id=campaign_id, scope_type=ScopeType.public.value)
+            .first()
+        )
+        return _scope_from_row(row) if row else None
+
+    def get_public_scope_for_scene(
+        self, campaign_id: str, scene_id: str
+    ) -> ConversationScope | None:
+        row = (
+            self._s.query(ConversationScopeRow)
+            .filter_by(
+                campaign_id=campaign_id,
+                scope_type=ScopeType.public.value,
+                scene_id=scene_id,
+            )
             .first()
         )
         return _scope_from_row(row) if row else None

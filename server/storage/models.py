@@ -87,6 +87,9 @@ class ConversationScopeRow(Base):
     side_channel_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("side_channels.side_channel_id"), nullable=True
     )
+    scene_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("scenes.scene_id"), nullable=True
+    )
 
 
 class SideChannelRow(Base):

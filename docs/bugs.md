@@ -23,10 +23,10 @@
 | BUG20260419-007 | P1 | Correctness | "defended" status effect never removed at end of turn — permanent +3 armor | `server/combat/resolution.py:29` | **Fixed** |
 | BUG20260419-008 | P1 | Correctness | NPC mutation in social engine has no rollback — failed outcomes still permanently reduce trust | `server/npc/social.py:106` | Open |
 | BUG20260419-009 | P1 | Correctness | transfer_character claims atomicity but rollback can silently fail | `server/scene/membership.py:106` | Open |
-| BUG20260419-010 | P1 | Correctness | Running timer with expires_at=None returns "not expired, 0 remaining" instead of error | `server/timer/controller.py:208` | Open |
-| BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine — paused-to-early_closed not in transition table | `server/timer/controller.py:232` | Open |
-| BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() which is randomized per process — breaks across restarts | `server/orchestrator/game_loop.py:493` | Open |
-| BUG20260419-013 | P1 | Correctness | All scenes share one public scope — multi-scene scope separation broken | `server/orchestrator/game_loop.py:638` | Open |
+| BUG20260419-010 | P1 | Correctness | Running timer with expires_at=None returns "not expired, 0 remaining" instead of error | `server/timer/controller.py:208` | **Fixed** |
+| BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine — paused-to-early_closed not in transition table | `server/timer/controller.py:232` | **Fixed** |
+| BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() which is randomized per process — breaks across restarts | `server/orchestrator/game_loop.py:493` | **Fixed** |
+| BUG20260419-013 | P1 | Correctness | All scenes share one public scope — multi-scene scope separation broken | `server/orchestrator/game_loop.py:638` | **Fixed** |
 | BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | Improved (DB migration: recovery now gets players from CharacterRepo via `get_scene_players()`) |
 | BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict when async fallback silently discarded | `server/reliability/model_recovery.py:117` | Open |
 | BUG20260419-016 | P1 | Correctness | Unguarded update.effective_user None access in all bot command handlers | `bot/commands.py:47` | **Fixed** |
