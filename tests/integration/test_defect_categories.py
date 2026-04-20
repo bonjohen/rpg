@@ -36,11 +36,8 @@ class TestTimingDefects:
         # p2 doesn't submit
         entry = orch.resolve_turn(tw.turn_window_id)
         assert entry is not None
-        fallbacks = [
-            a
-            for a in orch.committed_actions.values()
-            if a.turn_window_id == tw.turn_window_id and a.is_timeout_fallback
-        ]
+        all_actions = orch.get_committed_actions_for_window(tw.turn_window_id)
+        fallbacks = [a for a in all_actions if a.is_timeout_fallback]
         assert len(fallbacks) == 1
 
     def test_early_close_triggers_when_all_ready(self):
@@ -50,7 +47,7 @@ class TestTimingDefects:
         orch.submit_action("p1", ActionType.hold)
         orch.submit_action("p2", ActionType.hold)
         # After both submit, the window should transition toward all_ready
-        updated_tw = orch.turn_windows[tw.turn_window_id]
+        updated_tw = orch.get_turn_window(tw.turn_window_id)
         assert updated_tw.state in (
             TurnWindowState.open,
             TurnWindowState.all_ready,

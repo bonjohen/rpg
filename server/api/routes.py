@@ -282,7 +282,7 @@ async def submit_action(req: ActionSubmissionRequest) -> dict:
     orch = _orch()
 
     # Validate turn window
-    tw = orch.turn_windows.get(req.turn_window_id)
+    tw = orch.get_turn_window(req.turn_window_id)
     if tw is None:
         return asdict(
             ActionSubmitResponse(
@@ -370,7 +370,8 @@ async def get_recap(
         raise HTTPException(status_code=404, detail="Campaign not found.")
 
     # Get log entries sorted by turn number descending
-    entries = sorted(orch.turn_log, key=lambda e: e.turn_number, reverse=True)[:limit]
+    all_entries = orch.get_turn_log(limit=limit)
+    entries = sorted(all_entries, key=lambda e: e.turn_number, reverse=True)[:limit]
 
     recap_entries: list[RecapEntry] = []
     for entry in entries:

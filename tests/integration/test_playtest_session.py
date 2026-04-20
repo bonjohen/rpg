@@ -200,11 +200,8 @@ class TestTimerFallback:
         entry = orch.resolve_turn(tw.turn_window_id)
         assert entry is not None
         # p2 should have a timeout fallback
-        fallback_actions = [
-            a
-            for a in orch.committed_actions.values()
-            if a.turn_window_id == tw.turn_window_id and a.is_timeout_fallback
-        ]
+        all_actions = orch.get_committed_actions_for_window(tw.turn_window_id)
+        fallback_actions = [a for a in all_actions if a.is_timeout_fallback]
         assert len(fallback_actions) == 1
         assert fallback_actions[0].player_id == "p2"
 
@@ -216,11 +213,8 @@ class TestTimerFallback:
         orch.submit_action("p2", ActionType.hold)
         entry = orch.resolve_turn(tw.turn_window_id)
         assert entry is not None
-        fallback_actions = [
-            a
-            for a in orch.committed_actions.values()
-            if a.turn_window_id == tw.turn_window_id and a.is_timeout_fallback
-        ]
+        all_actions = orch.get_committed_actions_for_window(tw.turn_window_id)
+        fallback_actions = [a for a in all_actions if a.is_timeout_fallback]
         assert len(fallback_actions) == 0
 
 
@@ -278,26 +272,29 @@ class TestTurnLog:
         starting = orch._find_starting_scene_id()
         for _ in range(3):
             _play_turn(orch, starting, {"p1": (ActionType.hold, "")})
-        assert len(orch.turn_log) == 3
-        for i, entry in enumerate(orch.turn_log):
+        entries = orch.get_turn_log_for_scene(starting)
+        assert len(entries) == 3
+        for i, entry in enumerate(entries):
             assert entry.turn_number == i + 1
 
     def test_turn_log_has_narration(self):
         orch = _setup_game(1)
         starting = orch._find_starting_scene_id()
         _play_turn(orch, starting, {"p1": (ActionType.hold, "")})
-        assert orch.turn_log[0].narration != ""
+        entries = orch.get_turn_log_for_scene(starting)
+        assert entries[0].narration != ""
 
     def test_turn_log_has_state_snapshot(self):
         orch = _setup_game(1)
         starting = orch._find_starting_scene_id()
         _play_turn(orch, starting, {"p1": (ActionType.hold, "")})
-        assert orch.turn_log[0].state_snapshot is not None
-        assert "scene_id" in orch.turn_log[0].state_snapshot
+        entries = orch.get_turn_log_for_scene(starting)
+        assert entries[0].state_snapshot is not None
+        assert "scene_id" in entries[0].state_snapshot
 
     def test_turn_log_committed_actions(self):
         orch = _setup_game(1)
         starting = orch._find_starting_scene_id()
         _play_turn(orch, starting, {"p1": (ActionType.hold, "")})
-        entry = orch.turn_log[0]
-        assert len(entry.action_ids) >= 1
+        entries = orch.get_turn_log_for_scene(starting)
+        assert len(entries[0].action_ids) >= 1

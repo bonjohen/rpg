@@ -67,6 +67,7 @@ from server.scope.engine import ScopeEngine
 from server.storage.repository import (
     CampaignRepo,
     CharacterRepo,
+    CommittedActionRepo,
     ConversationScopeRepo,
     InventoryItemRepo,
     KnowledgeFactRepo,
@@ -76,6 +77,8 @@ from server.storage.repository import (
     PuzzleStateRepo,
     QuestStateRepo,
     SceneRepo,
+    TurnLogRepo,
+    TurnWindowRepo,
 )
 from server.timer.controller import TimerController
 
@@ -94,9 +97,7 @@ class DispatchResult:
 class GameOrchestrator:
     """Wires all subsystems into a runnable game loop.
 
-    Entity state (campaigns, scenes, characters, players, NPCs, etc.) is
-    persisted via the repository layer. Turn-lifecycle state (turn_windows,
-    committed_actions, turn_log) remains in-memory until Phase 4.
+    All entity and turn-lifecycle state is persisted via the repository layer.
     """
 
     def __init__(
@@ -118,11 +119,6 @@ class GameOrchestrator:
 
         # Triggers loaded from scenario (not persisted)
         self.triggers: list = []
-
-        # Turn-lifecycle state (in-memory, migrated in Phase 4)
-        self.turn_windows: dict[str, TurnWindow] = {}
-        self.committed_actions: dict[str, CommittedAction] = {}
-        self.turn_log: list[TurnLogEntry] = []
 
         # Phase 18: in-memory draft and inbox-read tracking
         self.drafts: dict[str, dict] = {}  # player_id -> draft dict
@@ -310,7 +306,7 @@ class GameOrchestrator:
     # ------------------------------------------------------------------
 
     def open_turn(self, scene_id: str, duration_seconds: int = 90) -> TurnWindow | None:
-        """Create a new TurnWindow for a scene."""
+        """Create a new TurnWindow for a scene and persist it."""
         if self.campaign_id is None:
             return None
 
@@ -324,9 +320,8 @@ class GameOrchestrator:
                 session, scene_id
             )
 
-            # Determine turn number
-            scene_turns = [e for e in self.turn_log if e.scene_id == scene_id]
-            turn_number = len(scene_turns) + 1
+            # Determine turn number from persisted log
+            turn_number = TurnLogRepo(session).count_for_scene(scene_id) + 1
 
             now = utc_now()
             tw = TurnWindow(
@@ -341,7 +336,7 @@ class GameOrchestrator:
                 state=TurnWindowState.open,
                 turn_number=turn_number,
             )
-            self.turn_windows[tw.turn_window_id] = tw
+            TurnWindowRepo(session).save(tw)
 
             # Update scene
             scene.active_turn_window_id = tw.turn_window_id
@@ -374,85 +369,97 @@ class GameOrchestrator:
 
         with self._session_scope() as session:
             scene = SceneRepo(session).get(character.scene_id)
-        if scene is None or scene.active_turn_window_id is None:
-            return None
+            if scene is None or scene.active_turn_window_id is None:
+                return None
 
-        tw = self.turn_windows.get(scene.active_turn_window_id)
-        if tw is None or tw.state != TurnWindowState.open:
-            return None
+            tw = TurnWindowRepo(session).get(scene.active_turn_window_id)
+            if tw is None or tw.state != TurnWindowState.open:
+                return None
 
-        # Find player's private scope
-        private_scope_id = self._get_private_scope_id(player_id)
+            # Find player's private scope
+            private_scope_id = self._get_private_scope_id(player_id)
 
-        action = CommittedAction(
-            action_id=new_id(),
-            turn_window_id=tw.turn_window_id,
-            player_id=player_id,
-            character_id=character.character_id,
-            scope_id=private_scope_id or "",
-            declared_action_type=action_type,
-            public_text=public_text,
-            private_ref_text=private_ref_text,
-            target_ids=target_ids or [],
-            movement_target=movement_target,
-            item_ids=item_ids or [],
-            ready_state=ReadyState.ready,
-            submitted_at=utc_now(),
-            state=ActionState.submitted,
-            validation_status=ValidationStatus.valid,
-        )
+            action = CommittedAction(
+                action_id=new_id(),
+                turn_window_id=tw.turn_window_id,
+                player_id=player_id,
+                character_id=character.character_id,
+                scope_id=private_scope_id or "",
+                declared_action_type=action_type,
+                public_text=public_text,
+                private_ref_text=private_ref_text,
+                target_ids=target_ids or [],
+                movement_target=movement_target,
+                item_ids=item_ids or [],
+                ready_state=ReadyState.ready,
+                submitted_at=utc_now(),
+                state=ActionState.submitted,
+                validation_status=ValidationStatus.valid,
+            )
 
-        # Get existing actions for this turn
-        existing = [
-            a
-            for a in self.committed_actions.values()
-            if a.turn_window_id == tw.turn_window_id
-        ]
-        result = self.turn_engine.submit_action(tw, action, existing)
-        if not result.accepted:
-            return None
+            # Get existing actions for this turn from DB
+            existing = CommittedActionRepo(session).list_for_window(tw.turn_window_id)
+            result = self.turn_engine.submit_action(tw, action, existing)
+            if not result.accepted:
+                return None
 
-        self.committed_actions[action.action_id] = action
+            CommittedActionRepo(session).save(action)
 
-        # Check if all players ready
-        expected_player_ids = self._get_scene_player_ids(scene)
-        all_actions = [
-            a
-            for a in self.committed_actions.values()
-            if a.turn_window_id == tw.turn_window_id
-        ]
-        updated_tw = self.turn_engine.check_all_ready(
-            self.turn_windows[tw.turn_window_id], all_actions, expected_player_ids
-        )
-        self.turn_windows[tw.turn_window_id] = updated_tw
+            # Check if all players ready
+            expected_player_ids = self._get_scene_player_ids(scene)
+            all_actions = existing + [action]
+            updated_tw = self.turn_engine.check_all_ready(
+                tw, all_actions, expected_player_ids
+            )
+            TurnWindowRepo(session).save(updated_tw)
 
         return action
 
     def resolve_turn(self, turn_window_id: str) -> TurnLogEntry | None:
-        """Lock, resolve actions, generate narration, and commit a turn."""
-        tw = self.turn_windows.get(turn_window_id)
-        if tw is None:
-            return None
+        """Lock, resolve actions, generate narration, and commit a turn.
 
+        Uses the split-session pattern:
+        - Session 1: load TurnWindow (with version), actions, scene, characters,
+          NPCs, monster groups, destination scenes into a working set.
+        - Compute: engine logic + narration on the working set (no session).
+        - Session 2: version-checked commit of TurnWindow, save all mutated
+          entities, append TurnLogEntry.
+        """
+        from server.storage.errors import StaleStateError
+
+        # --- Session 1: Load working set ---
         with self._session_scope() as session:
+            tw = TurnWindowRepo(session).get(turn_window_id)
+            if tw is None:
+                return None
+            tw_version = tw.version
+
             scene = SceneRepo(session).get(tw.scene_id)
-        if scene is None:
-            return None
+            if scene is None:
+                return None
 
-        # Gather actions
-        actions = [
-            a
-            for a in self.committed_actions.values()
-            if a.turn_window_id == turn_window_id
-        ]
+            actions = CommittedActionRepo(session).list_for_window(turn_window_id)
 
-        # Build characters_by_player map
-        expected_player_ids = self._get_scene_player_ids(scene)
-        chars_by_player = {}
-        for pid in expected_player_ids:
-            char = self.get_player_character(pid)
-            if char:
-                chars_by_player[pid] = char.character_id
+            # Characters in scene
+            chars = CharacterRepo(session).list_for_scene(scene.scene_id)
+            chars_by_id: dict[str, Character] = {c.character_id: c for c in chars}
+            expected_player_ids = [c.player_id for c in chars if c.is_alive]
+            chars_by_player = {c.player_id: c.character_id for c in chars if c.is_alive}
+
+            # NPCs and monster groups for narration
+            npcs = NPCRepo(session).list_for_scene(scene.scene_id)
+            npcs_by_id: dict[str, NPC] = {n.npc_id: n for n in npcs}
+            mgs = MonsterGroupRepo(session).list_for_scene(scene.scene_id)
+            mgs_by_id: dict[str, MonsterGroup] = {m.monster_group_id: m for m in mgs}
+
+            # Destination scenes for movement
+            scenes_ws: dict[str, Scene] = {scene.scene_id: scene}
+            for dest_id in scene.exits.values():
+                dest = SceneRepo(session).get(dest_id)
+                if dest:
+                    scenes_ws[dest_id] = dest
+
+        # --- Compute phase (no session) ---
 
         # Synthesize fallback actions for missing players
         submitted_players = {a.player_id for a in actions}
@@ -460,7 +467,8 @@ class GameOrchestrator:
             pid for pid in expected_player_ids if pid not in submitted_players
         ]
         for pid in timeout_players:
-            char = self.get_player_character(pid)
+            char_id = chars_by_player.get(pid)
+            char = chars_by_id.get(char_id) if char_id else None
             if char is None:
                 continue
             fallback = CommittedAction(
@@ -478,16 +486,14 @@ class GameOrchestrator:
                 validation_status=ValidationStatus.valid,
                 is_timeout_fallback=True,
             )
-            self.committed_actions[fallback.action_id] = fallback
             actions.append(fallback)
 
         # Lock
-        if tw.state == TurnWindowState.open or tw.state == TurnWindowState.all_ready:
+        if tw.state in (TurnWindowState.open, TurnWindowState.all_ready):
             lock_result = self.turn_engine.lock_window(tw)
             if not lock_result.locked:
                 return None
             tw = lock_result.window
-            self.turn_windows[turn_window_id] = tw
 
         # Resolve
         resolve_result = self.turn_engine.resolve_window(
@@ -496,17 +502,18 @@ class GameOrchestrator:
         if not resolve_result.resolved:
             return None
         tw = resolve_result.window
-        self.turn_windows[turn_window_id] = tw
 
         # Apply action effects and collect narration fragments
         narration_parts = [f"In {scene.name}:"]
         for action in resolve_result.ordered_actions:
-            char = self._get_character(action.character_id)
+            char = chars_by_id.get(action.character_id)
             char_name = char.name if char else "Unknown"
             if action.is_timeout_fallback:
                 narration_parts.append(f"{char_name} hesitates, unsure what to do.")
             else:
-                effect_text = self._apply_action_effects(action, scene)
+                effect_text = self._apply_action_effects_ws(
+                    action, scene, chars_by_id, scenes_ws, npcs_by_id, mgs_by_id
+                )
                 if effect_text:
                     narration_parts.append(effect_text)
                 else:
@@ -522,7 +529,7 @@ class GameOrchestrator:
             "action_count": len(actions),
         }
 
-        # Commit
+        # Commit via engine
         commit_result = self.turn_engine.commit_window(
             tw, resolve_result.ordered_actions, narration, state_snapshot
         )
@@ -530,18 +537,40 @@ class GameOrchestrator:
             return None
 
         tw = commit_result.window
-        self.turn_windows[turn_window_id] = tw
         log_entry = commit_result.log_entry
-        if log_entry:
-            self.turn_log.append(log_entry)
 
-        # Clean up scene state
-        with self._session_scope() as session:
-            scene_fresh = SceneRepo(session).get(scene.scene_id)
-            if scene_fresh:
+        # --- Session 2: Version-checked persist ---
+        try:
+            with self._session_scope() as session:
+                TurnWindowRepo(session).save_with_version_check(tw, tw_version)
+
+                # Save all actions (including fallbacks)
+                action_repo = CommittedActionRepo(session)
+                for action in resolve_result.ordered_actions:
+                    action_repo.save(action)
+
+                # Append turn log entry
+                if log_entry:
+                    TurnLogRepo(session).append(log_entry)
+
+                # Save mutated characters (movement may have changed scene_id)
+                char_repo = CharacterRepo(session)
+                for char in chars_by_id.values():
+                    char_repo.save(char)
+
+                # Save mutated scenes
+                scene_repo = SceneRepo(session)
+                for s in scenes_ws.values():
+                    scene_repo.save(s)
+
+                # Clean up scene state
+                scene_fresh = scenes_ws.get(scene.scene_id, scene)
                 scene_fresh.active_turn_window_id = None
                 scene_fresh.state = SceneState.narrated
-                SceneRepo(session).save(scene_fresh)
+                scene_repo.save(scene_fresh)
+        except StaleStateError:
+            # Concurrent modification — retry once from scratch
+            return self.resolve_turn(turn_window_id)
 
         return log_entry
 
@@ -773,11 +802,29 @@ class GameOrchestrator:
         with self._session_scope() as session:
             KnowledgeFactRepo(session).save(fact)
 
+    def get_turn_window(self, turn_window_id: str) -> TurnWindow | None:
+        """Load a TurnWindow from the database."""
+        with self._session_scope() as session:
+            return TurnWindowRepo(session).get(turn_window_id)
+
+    def get_committed_actions_for_window(
+        self, turn_window_id: str
+    ) -> list[CommittedAction]:
+        """Load all committed actions for a turn window from the database."""
+        with self._session_scope() as session:
+            return CommittedActionRepo(session).list_for_window(turn_window_id)
+
+    def get_turn_log(self, limit: int = 100) -> list[TurnLogEntry]:
+        """Load turn log entries for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return TurnLogRepo(session).list_for_campaign(self.campaign_id, limit)
+
     def get_turn_log_for_scene(self, scene_id: str) -> list[TurnLogEntry]:
         """Get all turn log entries for a scene, ordered by turn number."""
-        entries = [e for e in self.turn_log if e.scene_id == scene_id]
-        entries.sort(key=lambda e: e.turn_number)
-        return entries
+        with self._session_scope() as session:
+            return TurnLogRepo(session).list_for_scene(scene_id)
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -825,22 +872,35 @@ class GameOrchestrator:
         ConversationScopeRepo(session).save(new_scope)
         return new_scope.scope_id
 
-    def _apply_action_effects(self, action: CommittedAction, scene: Scene) -> str:
-        """Apply resolved action effects to game state. Returns effect text."""
-        character = self._get_character(action.character_id)
+    def _apply_action_effects_ws(
+        self,
+        action: CommittedAction,
+        scene: Scene,
+        chars_by_id: dict[str, Character],
+        scenes_ws: dict[str, Scene],
+        npcs_by_id: dict[str, NPC],
+        mgs_by_id: dict[str, MonsterGroup],
+    ) -> str:
+        """Apply resolved action effects using the working set. Returns effect text.
+
+        All entity lookups use the pre-loaded dicts. Mutations (e.g. movement)
+        update the working set in place; the caller persists in Session 2.
+        """
+        character = chars_by_id.get(action.character_id)
         if character is None:
             return ""
 
         action_type = action.declared_action_type
 
         if action_type == ActionType.move:
-            return self._apply_move(character, scene, action)
+            return self._apply_move_ws(character, scene, action, scenes_ws, chars_by_id)
         elif action_type == ActionType.inspect:
-            return self._apply_inspect(character, scene, action)
+            target = action.public_text or "surroundings"
+            return f"{character.name} inspects {target}."
         elif action_type == ActionType.search:
-            return self._apply_search(character, scene, action)
+            return f"{character.name} searches the area."
         elif action_type == ActionType.attack:
-            return self._apply_attack(character, scene, action)
+            return self._apply_attack_ws(character, action, npcs_by_id, mgs_by_id)
         elif action_type in (
             ActionType.question,
             ActionType.persuade,
@@ -848,14 +908,19 @@ class GameOrchestrator:
             ActionType.lie,
             ActionType.bargain,
         ):
-            return self._apply_social(character, scene, action)
+            return self._apply_social_ws(character, action, npcs_by_id)
         elif action_type in (ActionType.hold, ActionType.pass_turn):
             return f"{character.name} holds position."
         else:
             return f"{character.name} performs {action_type.value}."
 
-    def _apply_move(
-        self, character: Character, scene: Scene, action: CommittedAction
+    def _apply_move_ws(
+        self,
+        character: Character,
+        scene: Scene,
+        action: CommittedAction,
+        scenes_ws: dict[str, Scene],
+        chars_by_id: dict[str, Character],
     ) -> str:
         direction = action.movement_target or ""
         if not direction and action.target_ids:
@@ -867,52 +932,43 @@ class GameOrchestrator:
         if dest_scene_id is None:
             return f"{character.name} cannot go {direction}."
 
-        with self._session_scope() as session:
-            dest_scene = SceneRepo(session).get(dest_scene_id)
-            if dest_scene is None:
-                return f"{character.name} cannot go {direction} — unknown area."
+        dest_scene = scenes_ws.get(dest_scene_id)
+        if dest_scene is None:
+            return f"{character.name} cannot go {direction} — unknown area."
 
-            result = self.membership_engine.transfer_character(
-                scene, dest_scene, character
-            )
-            if result.success:
-                SceneRepo(session).save(scene)
-                SceneRepo(session).save(result.scene)
-                character.scene_id = dest_scene_id
-                CharacterRepo(session).save(character)
-                return f"{character.name} moves {direction} to {dest_scene.name}."
+        result = self.membership_engine.transfer_character(scene, dest_scene, character)
+        if result.success:
+            scenes_ws[dest_scene_id] = result.scene
+            character.scene_id = dest_scene_id
+            return f"{character.name} moves {direction} to {dest_scene.name}."
         return f"{character.name} cannot move {direction}."
 
-    def _apply_inspect(
-        self, character: Character, scene: Scene, action: CommittedAction
-    ) -> str:
-        target = action.public_text or "surroundings"
-        return f"{character.name} inspects {target}."
-
-    def _apply_search(
-        self, character: Character, scene: Scene, action: CommittedAction
-    ) -> str:
-        return f"{character.name} searches the area."
-
-    def _apply_attack(
-        self, character: Character, scene: Scene, action: CommittedAction
+    def _apply_attack_ws(
+        self,
+        character: Character,
+        action: CommittedAction,
+        npcs_by_id: dict[str, NPC],
+        mgs_by_id: dict[str, MonsterGroup],
     ) -> str:
         if action.target_ids:
             target_id = action.target_ids[0]
-            mg = self.get_monster_group(target_id)
+            mg = mgs_by_id.get(target_id)
             if mg:
                 return f"{character.name} attacks the {mg.unit_type}!"
-            npc = self.get_npc(target_id)
+            npc = npcs_by_id.get(target_id)
             if npc:
                 return f"{character.name} attacks {npc.name}!"
         return f"{character.name} attacks!"
 
-    def _apply_social(
-        self, character: Character, scene: Scene, action: CommittedAction
+    def _apply_social_ws(
+        self,
+        character: Character,
+        action: CommittedAction,
+        npcs_by_id: dict[str, NPC],
     ) -> str:
         action_name = action.declared_action_type.value
         if action.target_ids:
-            npc = self.get_npc(action.target_ids[0])
+            npc = npcs_by_id.get(action.target_ids[0])
             if npc:
                 return f"{character.name} attempts to {action_name} {npc.name}."
         return f"{character.name} attempts to {action_name}."

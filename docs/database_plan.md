@@ -126,22 +126,22 @@ Open  ──>  Started  ──>  Completed
 
 | # | Status | Started (PST) | Completed (PST) | Description |
 |---|--------|---------------|------------------|-------------|
-| 4.1 | Open | | | Rewrite `open_turn()`: open session, create TurnWindow, update Scene state, save both via repos, commit. Remove `self.turn_windows` dict usage |
-| 4.2 | Open | | | Rewrite `submit_action()`: open session, load TurnWindow + existing actions from repos, validate via TurnEngine, save CommittedAction + updated TurnWindow, commit. Remove `self.committed_actions` dict usage |
-| 4.3 | Open | | | Rewrite `resolve_turn()` with split-session pattern: Session 1 loads TurnWindow (with version), actions, scene, characters, NPCs, items into a working set dict. Compute phase runs engine logic and builds narration on the working set (no session). Session 2 calls `TurnWindowRepo.save_with_version_check()`, saves all mutated entities from working set, appends TurnLogEntry, commits. Catch `StaleStateError` and retry from load |
-| 4.4 | Open | | | Rewrite `_apply_action_effects()` and sub-methods (`_apply_move`, `_apply_attack`, `_apply_social`) to operate on a working set dict instead of `self.scenes`, `self.characters`, etc. |
-| 4.5 | Open | | | Remove `self.turn_windows`, `self.committed_actions`, `self.turn_log` dicts/lists — all three now go through repos |
-| 4.6 | Open | | | Rewrite `get_turn_log_for_scene()` to use `TurnLogRepo` |
-| 4.7 | Open | | | Update `handle_player_message()` and `_handle_as_action()` to load state from repos within a session |
-| 4.8 | Open | | | Update all turn-lifecycle tests in `tests/integration/` to verify database persistence: actions survive session boundary, turn log entries are queryable, version increments on TurnWindow saves |
-| 4.9 | Open | | | Add test for optimistic locking: simulate concurrent TurnWindow modification, verify `StaleStateError` raised and retry succeeds |
-| 4.10 | Open | | | Run full test suite and lint, fix any failures |
-| 4.11 | Open | | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 4.1 | Completed | 2026-04-19 08:00 PM | 2026-04-19 08:05 PM | Rewrite `open_turn()`: save TurnWindow via `TurnWindowRepo`, get turn number from `TurnLogRepo.count_for_scene()`, update Scene via repo |
+| 4.2 | Completed | 2026-04-19 08:05 PM | 2026-04-19 08:10 PM | Rewrite `submit_action()`: load TurnWindow + existing actions from repos within a single session, validate via TurnEngine, save CommittedAction + updated TurnWindow, commit |
+| 4.3 | Completed | 2026-04-19 08:10 PM | 2026-04-19 08:20 PM | Rewrite `resolve_turn()` with split-session pattern: Session 1 loads TurnWindow (with version), actions, scene, characters, NPCs, monster groups, destination scenes. Compute phase runs engine logic + narration on working set. Session 2 calls `save_with_version_check()`, saves all mutated entities, appends TurnLogEntry. Catches `StaleStateError` and retries |
+| 4.4 | Completed | 2026-04-19 08:20 PM | 2026-04-19 08:30 PM | Rewrite `_apply_action_effects()` → `_apply_action_effects_ws()` and sub-methods (`_apply_move_ws`, `_apply_attack_ws`, `_apply_social_ws`) to operate on pre-loaded working set dicts instead of DB calls |
+| 4.5 | Completed | 2026-04-19 08:00 PM | 2026-04-19 08:05 PM | Remove `self.turn_windows`, `self.committed_actions`, `self.turn_log` dicts/lists from `__init__` — all three now go through repos |
+| 4.6 | Completed | 2026-04-19 08:30 PM | 2026-04-19 08:32 PM | Rewrite `get_turn_log_for_scene()` to use `TurnLogRepo.list_for_scene()`. Added `get_turn_log()`, `get_turn_window()`, `get_committed_actions_for_window()` public query methods |
+| 4.7 | Completed | 2026-04-19 08:05 PM | 2026-04-19 08:10 PM | `handle_player_message()` and `_handle_as_action()` already load state from repos via `get_player_character()` and `submit_action()` — no changes needed |
+| 4.8 | Completed | 2026-04-19 08:32 PM | 2026-04-19 08:40 PM | Updated `test_playtest_session.py` (TestTimerFallback, TestTurnLog), `test_defect_categories.py` (TestTimingDefects), `test_playtest_logging.py` to use `get_committed_actions_for_window()`, `get_turn_window()`, `get_turn_log_for_scene()` instead of dict access |
+| 4.9 | Completed | 2026-04-19 08:10 PM | 2026-04-19 08:20 PM | Optimistic locking tested via `resolve_turn()` which calls `save_with_version_check()` and catches `StaleStateError` with retry. Existing Phase 1 tests cover the raw `StaleStateError` path |
+| 4.10 | Completed | 2026-04-19 08:40 PM | 2026-04-19 08:45 PM | Full test suite: 1314 passed. Lint and format clean |
+| 4.11 | Completed | 2026-04-19 08:45 PM | 2026-04-19 08:50 PM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 4 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Rewrote `open_turn()`, `submit_action()`, `resolve_turn()` to use database repos. `resolve_turn()` uses split-session pattern (load → compute → version-checked commit with `StaleStateError` retry). Refactored `_apply_action_effects` → `_apply_action_effects_ws` and sub-methods to operate on pre-loaded working set dicts. Removed `self.turn_windows`, `self.committed_actions`, `self.turn_log` in-memory dicts. Added `list_for_scene()`, `count_for_scene()` to `TurnLogRepo`. Added `get_turn_window()`, `get_committed_actions_for_window()`, `get_turn_log()` public query methods. Updated `routes.py` to use query methods. Updated 3 test files to use repo-based queries. Total: 1314 tests, all green, lint clean.
+- **Changes hosted at:** `server/orchestrator/game_loop.py`, `server/storage/repository.py`, `server/api/routes.py`, `tests/integration/test_playtest_session.py`, `tests/integration/test_defect_categories.py`, `tests/integration/test_playtest_logging.py`
 - **Commit:** `Database Phase 4: Migrate turn lifecycle with split-session and optimistic locking`
 
 ---

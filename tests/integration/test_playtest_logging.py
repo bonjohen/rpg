@@ -39,7 +39,8 @@ def test_all_turns_logged():
     starting = orch._find_starting_scene_id()
     for _ in range(3):
         _play_turn(orch, starting, {"p1": (ActionType.hold, "")})
-    assert len(orch.turn_log) == 3
+    entries = orch.get_turn_log_for_scene(starting)
+    assert len(entries) == 3
 
 
 def test_turn_log_complete_no_gaps():
@@ -47,7 +48,8 @@ def test_turn_log_complete_no_gaps():
     starting = orch._find_starting_scene_id()
     for _ in range(5):
         _play_turn(orch, starting, {"p1": (ActionType.hold, "")})
-    numbers = [e.turn_number for e in orch.turn_log]
+    entries = orch.get_turn_log_for_scene(starting)
+    numbers = [e.turn_number for e in entries]
     assert numbers == [1, 2, 3, 4, 5]
 
 

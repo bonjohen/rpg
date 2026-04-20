@@ -698,6 +698,18 @@ class TurnLogRepo:
         row = self._s.get(TurnLogEntryRow, log_entry_id)
         return _turn_log_entry_from_row(row) if row else None
 
+    def list_for_scene(self, scene_id: str) -> list[TurnLogEntry]:
+        rows = (
+            self._s.query(TurnLogEntryRow)
+            .filter_by(scene_id=scene_id)
+            .order_by(TurnLogEntryRow.turn_number)
+            .all()
+        )
+        return [_turn_log_entry_from_row(r) for r in rows]
+
+    def count_for_scene(self, scene_id: str) -> int:
+        return self._s.query(TurnLogEntryRow).filter_by(scene_id=scene_id).count()
+
     def list_for_campaign(
         self, campaign_id: str, limit: int = 100
     ) -> list[TurnLogEntry]:
