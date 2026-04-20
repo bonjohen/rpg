@@ -24,9 +24,11 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
+
+from server.domain.helpers import utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +131,7 @@ class TimerError(Exception):
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return utc_now()
 
 
 def _assert_timer_transition(timer: TimerRecord, target: TimerState) -> None:

@@ -276,11 +276,10 @@ class TurnRecoveryEngine:
                 continue
             # Use opened_at as the reference time
             opened = tw.opened_at
-            if opened.tzinfo is None:
-                # Assume UTC for naive datetimes
-                age_seconds = (now.replace(tzinfo=None) - opened).total_seconds()
-            else:
-                age_seconds = (now - opened).total_seconds()
+            # Both now and opened should be naive UTC (via utc_now())
+            now_naive = now.replace(tzinfo=None) if now.tzinfo else now
+            opened_naive = opened.replace(tzinfo=None) if opened.tzinfo else opened
+            age_seconds = (now_naive - opened_naive).total_seconds()
             age_minutes = age_seconds / 60.0
             if age_minutes > max_age_minutes:
                 stuck.append(tw)

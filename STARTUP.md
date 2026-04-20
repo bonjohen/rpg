@@ -10,17 +10,12 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Bug-fix plan complete.** All P0+P1 bugs closed. Active plan: `docs/bugfix_plan.md`.
+Current phase: **All bug-fix plans complete.** All P0+P1+P2 bugs closed. Plans: `docs/bugfix_plan.md` (P0/P1), `docs/p2_bugfix_plan.md` (P2).
 
-All 20 original phases, 7 database integration phases, and 7 bug-fix phases are complete:
+All 20 original phases, 7 database integration phases, 7 P0/P1 bug-fix phases, and 7 P2 bug-fix phases are complete:
 - **DB Phase 1-7**: Full database integration (SQLite/PostgreSQL via SQLAlchemy, repositories, optimistic locking). 1327 tests.
-- **Bug-fix Phase 1 (P0)**: Auth bypass, path traversal, scope leakage — all 3 P0 security bugs closed.
-- **Bug-fix Phase 2**: Bot handler None guards and registry fallback.
-- **Bug-fix Phase 3**: Combat HP clamp, damage delegation, status cleanup, morale enum.
-- **Bug-fix Phase 4**: Prompt contract alignment with schema validators.
-- **Bug-fix Phase 5**: Timer state machine, deterministic idempotency keys, per-scene public scopes.
-- **Bug-fix Phase 6**: NPC trust rollback on failure, scene transfer atomicity with logging.
-- **Bug-fix Phase 7**: Model adapter failure reporting (async fallback, empty choices). 1396 tests pass.
+- **Bug-fix Phase 1-7 (P0/P1)**: 24 bugs fixed across security, bot handlers, combat, contracts, timer, NPC, reliability. 1396 tests pass.
+- **P2 Bug-fix Phase 1-7**: 42 P2 bugs fixed across API auth, timer arithmetic, combat scaling, exploration state, NPC types, model contracts, API routes, bot safety, scenario errors, connection reuse, datetime hardening, replay warnings. 1479 tests pass.
 
 ## Key Design Decisions (do not revisit without cause)
 

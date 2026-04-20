@@ -14,7 +14,7 @@ This module provides:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from server.domain.entities import (
     ConversationScope,
@@ -22,6 +22,7 @@ from server.domain.entities import (
     VisibilityGrant,
 )
 from server.domain.enums import KnowledgeFactType, ScopeType
+from server.domain.helpers import utc_now
 from server.scope.engine import ScopeViolationError
 
 
@@ -92,7 +93,7 @@ class FactOwnershipPolicy:
             owner_scope_id=owner_scope.scope_id,
             fact_type=fact_type,
             payload=payload,
-            revealed_at=now or datetime.now(timezone.utc).replace(tzinfo=None),
+            revealed_at=now or utc_now(),
             source_event_id=source_event_id,
         )
 
@@ -123,6 +124,6 @@ class FactOwnershipPolicy:
             fact_id=fact.fact_id,
             campaign_id=fact.campaign_id,
             granted_to_scope_id=grant_to_scope.scope_id,
-            granted_at=now or datetime.now(timezone.utc).replace(tzinfo=None),
+            granted_at=now or utc_now(),
             granted_by_player_id=granting_player_id,
         )

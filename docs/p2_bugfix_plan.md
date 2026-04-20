@@ -162,14 +162,14 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 7.1 | Open | | | BUG-027: Audit all `replace(tzinfo=None)` calls; use `utc_now()` from helpers consistently |
-| 7.2 | Open | | | BUG-028: Log warning on missing action IDs in replay_turn in `server/engine/turn_engine.py` |
-| 7.3 | Open | | | Add tests for datetime consistency and replay warning |
-| 7.4 | Open | | | Update bug statuses in `docs/bugs.md` |
-| 7.5 | Open | | | Update `docs/phase_status.md` and `STARTUP.md` with P2 bug-fix summary |
-| 7.6 | Open | | | Run pytest + ruff, fix any failures |
+| 7.1 | Completed | 2026-04-20 1:45 AM | 2026-04-20 1:55 AM | BUG-027: Audit all `replace(tzinfo=None)` calls; use `utc_now()` from helpers consistently |
+| 7.2 | Completed | 2026-04-20 1:55 AM | 2026-04-20 1:58 AM | BUG-028: Log warning on missing action IDs in replay_turn in `server/engine/turn_engine.py` |
+| 7.3 | Completed | 2026-04-20 1:58 AM | 2026-04-20 2:05 AM | Add tests for datetime consistency and replay warning |
+| 7.4 | Completed | 2026-04-20 2:05 AM | 2026-04-20 2:06 AM | Update bug statuses in `docs/bugs.md` |
+| 7.5 | Completed | 2026-04-20 2:06 AM | 2026-04-20 2:10 AM | Update `docs/phase_status.md` and `STARTUP.md` with P2 bug-fix summary |
+| 7.6 | Completed | 2026-04-20 1:58 AM | 2026-04-20 2:10 AM | Run pytest + ruff, fix any failures |
 
 ### Phase 7 Summary
 
-- **Changes:** TBD
+- **Changes:** Fixed 2 bugs. BUG-027: Replaced all `datetime.now(timezone.utc).replace(tzinfo=None)` with `utc_now()` in 6 source files (timer/controller, scope/facts, scope/side_channel_engine, scene/propagation). Simplified timezone-aware comparison in diagnostics and turn_recovery to normalize both sides to naive. Removed unused `timezone` imports. BUG-028: `replay_turn()` logs warning with count and IDs when action_ids from log entry are missing from the provided actions list. 8 new tests, 1479 total passing.
 - **Commit:** `P2 bug-fix Phase 7: Datetime hardening, replay warning, docs update`

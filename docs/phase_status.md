@@ -39,6 +39,13 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | BF-5 | Timer + Orchestrator | Completed | 2026-04-19 11:56 PM | 4 bugs fixed (timer ValueError, transition table, SHA-256 idempotency, per-scene scope); 10 new tests; 1379 total |
 | BF-6 | NPC/Social + Scene | Completed | 2026-04-20 12:06 AM | 2 bugs fixed (trust rollback, transfer logging); 8 new tests; 1387 total |
 | BF-7 | Reliability + Model | Completed | 2026-04-20 12:17 AM | 3 bugs fixed (async fallback, empty choices, recovery verified); 9 new tests; 1396 total |
+| P2-1 | Security & Bot Safety | Completed | 2026-04-19 11:44 PM | 3 P2 bugs fixed (API auth, action ownership, UUID masking); 12 new tests; 1408 total |
+| P2-2 | Timer, Orchestrator & Diagnostics | Completed | 2026-04-19 11:56 PM | 9 P2 bugs fixed (timer arithmetic, diagnostics accuracy, 3 verified-by-DB-migration); 8 new tests; 1416 total |
+| P2-3 | Combat & Exploration | Completed | 2026-04-20 12:25 AM | 8 P2 bugs fixed (damage scaling, direction validation, clue idempotency, puzzle safety); 12 new tests; 1428 total |
+| P2-4 | NPC/Social, Scene & Side Channels | Completed | 2026-04-20 12:45 AM | 6 P2 bugs fixed (SocialOutcome enum, trust zones, scene membership, channel uniqueness); 11 new tests; 1439 total |
+| P2-5 | Model Contracts & Error Handling | Completed | 2026-04-20 1:10 AM | 7 P2 bugs fixed (bool/int ordering, unknown task rejection, metrics cap, error logging); 12 new tests; 1451 total |
+| P2-6 | API Routes, Bot & Scenarios | Completed | 2026-04-20 1:42 AM | 6 P2 bugs fixed (leave_channel routing, map adjacency, narration truncation, YAML errors, safe casts, shared clients); 20 new tests; 1471 total |
+| P2-7 | Datetime Hardening & Final Sweep | Completed | 2026-04-20 2:10 AM | 2 P2 bugs fixed (utc_now() consistency, replay_turn warning); 8 new tests; 1479 total |
 
 ## Phase Notes
 

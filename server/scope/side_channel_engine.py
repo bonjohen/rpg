@@ -10,11 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from datetime import datetime, timezone
-
 from server.domain.entities import ConversationScope, KnowledgeFact, SideChannel
 from server.domain.enums import KnowledgeFactType, ScopeType
-from server.domain.helpers import new_id
+from server.domain.helpers import new_id, utc_now
 from server.scope.side_channel import SideChannelError, SideChannelPolicy
 
 
@@ -91,7 +89,7 @@ class SideChannelEngine:
         except SideChannelError as exc:
             return SideChannelCreateResult(success=False, rejection_reason=str(exc))
 
-        ts = created_at or datetime.now(timezone.utc).replace(tzinfo=None)
+        ts = created_at or utc_now()
 
         channel = SideChannel(
             side_channel_id=channel_id or f"sc-{campaign_id}-{label}-{new_id()[:8]}",
@@ -147,7 +145,7 @@ class SideChannelEngine:
         except SideChannelError as exc:
             return SideChannelCloseResult(success=False, reason=str(exc))
 
-        ts = datetime.now(timezone.utc).replace(tzinfo=None)
+        ts = utc_now()
 
         audit_fact = KnowledgeFact(
             fact_id=fact_id or f"fact-sc-close-{channel.side_channel_id}",

@@ -34,6 +34,10 @@ from server.domain.enums import (
 )
 from server.domain.helpers import new_id, utc_now
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # ---------------------------------------------------------------------------
 # Result / Error types
@@ -474,6 +478,15 @@ class TurnEngine:
         is mutated.
         """
         action_map = {a.action_id: a for a in actions}
+
+        missing = [aid for aid in log_entry.action_ids if aid not in action_map]
+        if missing:
+            logger.warning(
+                "replay_turn: %d action IDs from log entry missing: %s",
+                len(missing),
+                missing,
+            )
+
         # Reconstruct using log_entry.action_ids to respect original set,
         # then sort for determinism.
         committed = [

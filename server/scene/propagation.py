@@ -7,9 +7,8 @@ to another with a configurable turn delay.  Stateless, no I/O.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
-
 from server.domain.entities import KnowledgeFact
+from server.domain.helpers import utc_now
 
 
 @dataclass
@@ -102,7 +101,7 @@ class InformationPropagationEngine:
             owner_scope_id=target_scope_id,
             fact_type=event.fact.fact_type,
             payload=f"[delayed] {event.fact.payload}",
-            revealed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            revealed_at=utc_now(),
             source_event_id=event.event_id,
         )
 
