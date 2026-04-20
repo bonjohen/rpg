@@ -7,6 +7,7 @@ Thread-safe via simple locking. All stdlib.
 from __future__ import annotations
 
 import math
+import random
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -72,13 +73,18 @@ def _make_key(name: str, tags: dict[str, str] | None) -> str:
 # ---------------------------------------------------------------------------
 
 
+_HISTOGRAM_MAX_SIZE: int = 10_000
+
+
 class MetricsCollector:
     """In-memory metrics aggregator with counters and histograms."""
 
-    def __init__(self) -> None:
+    def __init__(self, histogram_max_size: int = _HISTOGRAM_MAX_SIZE) -> None:
         self._lock = threading.Lock()
         self._counters: dict[str, int] = {}
         self._histograms: dict[str, list[float]] = {}
+        self._histogram_counts: dict[str, int] = {}
+        self._histogram_max_size = histogram_max_size
 
     # --- Counters ---
 
@@ -101,12 +107,26 @@ class MetricsCollector:
     def record(
         self, name: str, value: float, tags: dict[str, str] | None = None
     ) -> None:
-        """Record a value in a named histogram."""
+        """Record a value in a named histogram.
+
+        Uses reservoir sampling to cap memory at ``histogram_max_size``
+        entries per key while maintaining a statistically representative sample.
+        """
         key = _make_key(name, tags)
         with self._lock:
             if key not in self._histograms:
                 self._histograms[key] = []
-            self._histograms[key].append(value)
+                self._histogram_counts[key] = 0
+            self._histogram_counts[key] += 1
+            n = self._histogram_counts[key]
+            buf = self._histograms[key]
+            if len(buf) < self._histogram_max_size:
+                buf.append(value)
+            else:
+                # Reservoir sampling (Algorithm R)
+                j = random.randint(0, n - 1)
+                if j < self._histogram_max_size:
+                    buf[j] = value
 
     def get_percentile(
         self, name: str, percentile: float, tags: dict[str, str] | None = None

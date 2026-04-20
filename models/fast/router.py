@@ -42,8 +42,19 @@ _FAST_TIER_TASKS: frozenset[str] = frozenset(t.value for t in TaskType)
 
 
 def is_fast_tier(task_type: str) -> bool:
-    """Return True if the task should be routed to the fast local model."""
-    return task_type not in _MAIN_TIER_ONLY
+    """Return True if the task should be routed to the fast local model.
+
+    Raises ValueError for unknown task types that are neither in the fast-tier
+    set nor the main-tier-only set.
+    """
+    if task_type in _MAIN_TIER_ONLY:
+        return False
+    if task_type in _FAST_TIER_TASKS:
+        return True
+    raise ValueError(
+        f"Unknown task type {task_type!r}. "
+        f"Must be one of {sorted(_FAST_TIER_TASKS | _MAIN_TIER_ONLY)}."
+    )
 
 
 def is_main_tier_only(task_type: str) -> bool:

@@ -10,12 +10,16 @@ contract-driven pipeline.
 
 from __future__ import annotations
 
+import json
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
 from models.contracts.fast_contracts import PromptContract, FAST_CONTRACTS
 from models.contracts.main_contracts import MAIN_CONTRACTS
 from models.contracts.truncation import TruncationPolicy
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -259,7 +263,7 @@ class ContextAssembler:
             "action_results": action_results,
             "tone_hint": tone_hint,
             "history_block": history_block,
-            "output_schema_inline": str(contract.output_schema),
+            "output_schema_inline": json.dumps(contract.output_schema),
         }
         if extra_fields:
             fields.update(extra_fields)
@@ -269,14 +273,24 @@ class ContextAssembler:
             system_prompt = contract.system_prompt_template.format_map(
                 _SafeFormatDict(fields)
             )
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as exc:
+            logger.warning(
+                "System prompt template rendering failed for contract %r: %s",
+                contract_id,
+                exc,
+            )
             system_prompt = contract.system_prompt_template
 
         try:
             user_prompt = contract.user_prompt_template.format_map(
                 _SafeFormatDict(fields)
             )
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as exc:
+            logger.warning(
+                "User prompt template rendering failed for contract %r: %s",
+                contract_id,
+                exc,
+            )
             user_prompt = contract.user_prompt_template
 
         # --- Append facts block if not already in template ---

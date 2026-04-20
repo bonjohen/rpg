@@ -72,13 +72,13 @@ def _check_required_fields(data: dict, schema: dict) -> list[str]:
             errors.append(
                 f"Field '{field_name}' must be a string, got {type(value).__name__}"
             )
-        elif expected_type == "integer" and not isinstance(value, int):
-            errors.append(
-                f"Field '{field_name}' must be an integer, got {type(value).__name__}"
-            )
         elif expected_type == "boolean" and not isinstance(value, bool):
             errors.append(
                 f"Field '{field_name}' must be a boolean, got {type(value).__name__}"
+            )
+        elif expected_type == "integer" and not isinstance(value, int):
+            errors.append(
+                f"Field '{field_name}' must be an integer, got {type(value).__name__}"
             )
         elif expected_type == "array" and not isinstance(value, list):
             errors.append(

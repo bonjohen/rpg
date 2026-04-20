@@ -154,8 +154,9 @@ class TestRouter:
             assert is_fast_tier(task_type) is False
             assert is_main_tier_only(task_type) is True
 
-    def test_unknown_task_defaults_to_fast(self):
-        assert is_fast_tier("some_new_task") is True
+    def test_unknown_task_raises_valueerror(self):
+        with pytest.raises(ValueError, match="Unknown task type"):
+            is_fast_tier("some_new_task")
 
     def test_assert_fast_tier_raises_for_main_tier_task(self):
         with pytest.raises(ValueError, match="not eligible"):

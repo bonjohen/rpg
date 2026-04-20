@@ -12,6 +12,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+
+import httpx
 from dataclasses import dataclass
 from typing import Callable
 
@@ -95,7 +97,7 @@ async def call_with_timeout(
             duration_ms=elapsed,
             trace_id=trace_id,
         )
-    except Exception as exc:
+    except (httpx.HTTPError, RuntimeError, ValueError, KeyError) as exc:
         elapsed = (time.monotonic() - start) * 1000
         logger.error(
             "Model call failed with %s: %s [trace=%s]",

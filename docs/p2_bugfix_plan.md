@@ -117,20 +117,20 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 5.1 | Open | | | BUG-048: Check bool before int in `models/contracts/output_repair.py` |
-| 5.2 | Open | | | BUG-050: Reject unknown task types in `models/fast/router.py` |
-| 5.3 | Open | | | BUG-051: Use json.dumps() for inline schema in `models/main/context.py` |
-| 5.4 | Open | | | BUG-062: Log SchemaValidationError reason in `models/main/tasks.py` |
-| 5.5 | Open | | | BUG-063: Log warning on template rendering failure in `models/contracts/context_assembly.py` |
-| 5.6 | Open | | | BUG-064: Narrow except scope in `server/reliability/model_recovery.py` |
-| 5.7 | Open | | | BUG-061: Cap histogram list in `server/observability/metrics.py` |
-| 5.8 | Open | | | Add tests for all 7 fixes |
-| 5.9 | Open | | | Update bug statuses in `docs/bugs.md` |
-| 5.10 | Open | | | Run pytest + ruff, fix any failures |
+| 5.1 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-048: Check bool before int in `models/contracts/output_repair.py` |
+| 5.2 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-050: Reject unknown task types in `models/fast/router.py` |
+| 5.3 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-051: Use json.dumps() for inline schema in `models/contracts/context_assembly.py` |
+| 5.4 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-062: Log SchemaValidationError reason in `models/main/tasks.py` |
+| 5.5 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-063: Log warning on template rendering failure in `models/contracts/context_assembly.py` |
+| 5.6 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-064: Narrow except scope in `server/reliability/model_recovery.py` |
+| 5.7 | Completed | 2026-04-20 12:50 AM | 2026-04-20 1:00 AM | BUG-061: Cap histogram list in `server/observability/metrics.py` |
+| 5.8 | Completed | 2026-04-20 1:00 AM | 2026-04-20 1:10 AM | Add tests for all 7 fixes |
+| 5.9 | Completed | 2026-04-20 1:10 AM | 2026-04-20 1:10 AM | Update bug statuses in `docs/bugs.md` |
+| 5.10 | Completed | 2026-04-20 1:00 AM | 2026-04-20 1:10 AM | Run pytest + ruff, fix any failures |
 
 ### Phase 5 Summary
 
-- **Changes:** TBD
+- **Changes:** Fixed 7 bugs. BUG-048: Boolean checked before integer in type validation. BUG-050: Unknown task types raise ValueError. BUG-051: `json.dumps()` for inline schema. BUG-062: SchemaValidationError logged with reason. BUG-063: Template rendering failures logged. BUG-064: Narrowed except to `(httpx.HTTPError, RuntimeError, ValueError, KeyError)`. BUG-061: Histogram capped with reservoir sampling. Updated 1 existing test. 12 new tests, 1451 total passing.
 - **Commit:** `P2 bug-fix Phase 5: Model pipeline error handling, type safety, metrics cap`
 
 ## Phase 6: API Routes, Bot & Scenarios

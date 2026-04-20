@@ -23,6 +23,7 @@ Per model_routing.md instrumentation requirements, every call logs:
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 from models.fast.adapter import OllamaFastAdapter
@@ -68,6 +69,8 @@ from models.main.schemas import (
 )
 from models.fast.instrumentation import ModelCallLog
 
+logger = logging.getLogger(__name__)
+
 
 # ---------------------------------------------------------------------------
 # Scene Narration
@@ -109,8 +112,8 @@ async def narrate_scene(
         try:
             output = validate_narration(result.text)
             return output, log
-        except SchemaValidationError:
-            pass
+        except SchemaValidationError as exc:
+            logger.warning("Schema validation failed: %s [trace=%s]", exc, trace_id)
 
     # --- Repair attempt ---
     if result.success and fast_adapter is not None:
@@ -176,8 +179,8 @@ async def generate_npc_dialogue(
         try:
             output = validate_npc_dialogue(result.text)
             return output, log
-        except SchemaValidationError:
-            pass
+        except SchemaValidationError as exc:
+            logger.warning("Schema validation failed: %s [trace=%s]", exc, trace_id)
 
     if result.success and fast_adapter is not None:
         repaired, _ = await repair_schema(
@@ -240,8 +243,8 @@ async def summarize_combat(
         try:
             output = validate_combat_summary(result.text)
             return output, log
-        except SchemaValidationError:
-            pass
+        except SchemaValidationError as exc:
+            logger.warning("Schema validation failed: %s [trace=%s]", exc, trace_id)
 
     if result.success and fast_adapter is not None:
         repaired, _ = await repair_schema(
@@ -309,8 +312,8 @@ async def propose_ruling(
         try:
             output = validate_ruling_proposal(result.text)
             return output, log
-        except SchemaValidationError:
-            pass
+        except SchemaValidationError as exc:
+            logger.warning("Schema validation failed: %s [trace=%s]", exc, trace_id)
 
     if result.success and fast_adapter is not None:
         repaired, _ = await repair_schema(
@@ -374,8 +377,8 @@ async def arbitrate_social(
         try:
             output = validate_social_arbitration(result.text)
             return output, log
-        except SchemaValidationError:
-            pass
+        except SchemaValidationError as exc:
+            logger.warning("Schema validation failed: %s [trace=%s]", exc, trace_id)
 
     if result.success and fast_adapter is not None:
         repaired, _ = await repair_schema(
@@ -439,8 +442,8 @@ async def generate_puzzle_flavor(
         try:
             output = validate_puzzle_flavor(result.text)
             return output, log
-        except SchemaValidationError:
-            pass
+        except SchemaValidationError as exc:
+            logger.warning("Schema validation failed: %s [trace=%s]", exc, trace_id)
 
     if result.success and fast_adapter is not None:
         repaired, _ = await repair_schema(

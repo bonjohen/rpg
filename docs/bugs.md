@@ -61,10 +61,10 @@
 | BUG20260419-045 | P2 | Correctness | fast_model_responsive threshold too permissive — 1 success masks 9 failures | `server/observability/diagnostics.py:221` | **Fixed** |
 | BUG20260419-046 | P2 | Correctness | leave_channel mutates entity directly, bypassing SideChannelEngine | `server/api/routes.py:588` | Open |
 | BUG20260419-047 | P2 | Correctness | Map discovered logic wrong — adjacent scenes shown as undiscovered | `server/api/routes.py:686` | Open |
-| BUG20260419-048 | P2 | Correctness | output_repair bool/int type confusion — isinstance(True, int) passes | `models/contracts/output_repair.py:75` | Open |
+| BUG20260419-048 | P2 | Correctness | output_repair bool/int type confusion — isinstance(True, int) passes | `models/contracts/output_repair.py:75` | Fixed |
 | BUG20260419-049 | P2 | Correctness | combat_summary contract fallback has invalid tone "medium" | `models/contracts/main_contracts.py:206` | **Fixed** |
-| BUG20260419-050 | P2 | Correctness | is_fast_tier admits unknown tasks — typos route to fast tier silently | `models/fast/router.py:44` | Open |
-| BUG20260419-051 | P2 | Correctness | Narration system prompt uses Python single quotes instead of JSON double quotes | `models/main/context.py:144` | Open |
+| BUG20260419-050 | P2 | Correctness | is_fast_tier admits unknown tasks — typos route to fast tier silently | `models/fast/router.py:44` | Fixed |
+| BUG20260419-051 | P2 | Correctness | Narration system prompt uses Python single quotes instead of JSON double quotes | `models/main/context.py:144` | Fixed |
 | BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost — user gets generic "Failed" | `scenarios/loader.py:199` | Open |
 | BUG20260419-053 | P2 | Correctness | puzzle_patterns.create_puzzle mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Fixed |
 | BUG20260419-054 | P2 | Correctness | scenarios/archetypes.py unsafe casts from object overrides with type: ignore | `scenarios/archetypes.py:38` | Open |
@@ -74,10 +74,10 @@
 | BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log — O(n) on every open_turn | `server/orchestrator/game_loop.py:268` | **Fixed** (DB migration: uses TurnLogRepo.count_for_scene()) |
 | BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id — repeated O(n) | `server/orchestrator/game_loop.py:344` | **Fixed** (DB migration: uses CommittedActionRepo.list_for_window()) |
 | BUG20260419-060 | P2 | Performance | _get_player_character linear scan on every call — O(characters) | `server/orchestrator/game_loop.py:615` | **Fixed** (DB migration: uses CharacterRepo.get_for_player()) |
-| BUG20260419-061 | P2 | Performance | Histogram values unbounded list — percentile sort is O(n log n) per query | `server/observability/metrics.py:101` | Open |
-| BUG20260419-062 | P2 | Error Handling | SchemaValidationError reason silently discarded in all task functions | `models/main/tasks.py:107` | Open |
-| BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly — placeholders sent to LLM | `models/contracts/context_assembly.py:269` | Open |
-| BUG20260419-064 | P2 | Error Handling | model_recovery broad except Exception catches programming errors as fallback | `server/reliability/model_recovery.py:97` | Open |
+| BUG20260419-061 | P2 | Performance | Histogram values unbounded list — percentile sort is O(n log n) per query | `server/observability/metrics.py:101` | Fixed |
+| BUG20260419-062 | P2 | Error Handling | SchemaValidationError reason silently discarded in all task functions | `models/main/tasks.py:107` | Fixed |
+| BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly — placeholders sent to LLM | `models/contracts/context_assembly.py:269` | Fixed |
+| BUG20260419-064 | P2 | Error Handling | model_recovery broad except Exception catches programming errors as fallback | `server/reliability/model_recovery.py:97` | Fixed |
 | BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | **Fixed** |
 | BUG20260419-066 | P2 | Error Handling | AI-generated narration sent to Telegram without length check or sanitization | `bot/commands.py:221` | Open |
 | BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated identically in 5+ files | Multiple files | Fixed |
