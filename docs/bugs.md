@@ -29,10 +29,10 @@
 | BUG20260419-013 | P1 | Correctness | All scenes share one public scope — multi-scene scope separation broken | `server/orchestrator/game_loop.py:638` | Open |
 | BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | Improved (DB migration: recovery now gets players from CharacterRepo via `get_scene_players()`) |
 | BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict when async fallback silently discarded | `server/reliability/model_recovery.py:117` | Open |
-| BUG20260419-016 | P1 | Correctness | Unguarded update.effective_user None access in all bot command handlers | `bot/commands.py:47` | Open |
-| BUG20260419-017 | P1 | Correctness | Unguarded update.message None access in all bot command handlers | `bot/commands.py:48` | Open |
-| BUG20260419-018 | P1 | Correctness | Fresh empty BotRegistry created on every fallback lookup — players never found | `bot/commands.py:39` | Open |
-| BUG20260419-019 | P1 | Correctness | Unguarded message.from_user None access in handlers.py | `bot/handlers.py:107` | Open |
+| BUG20260419-016 | P1 | Correctness | Unguarded update.effective_user None access in all bot command handlers | `bot/commands.py:47` | **Fixed** |
+| BUG20260419-017 | P1 | Correctness | Unguarded update.message None access in all bot command handlers | `bot/commands.py:48` | **Fixed** |
+| BUG20260419-018 | P1 | Correctness | Fresh empty BotRegistry created on every fallback lookup — players never found | `bot/commands.py:39` | **Fixed** |
+| BUG20260419-019 | P1 | Correctness | Unguarded message.from_user None access in handlers.py | `bot/handlers.py:107` | **Fixed** |
 | BUG20260419-020 | P1 | Contract Drift | combat_summary contract requires "narration" but schemas.py expects "summary" | `models/contracts/main_contracts.py:196` | Open |
 | BUG20260419-021 | P1 | Contract Drift | ruling_proposal contract fields mismatch schemas.py (reason vs reasoning, etc.) | `models/contracts/main_contracts.py:238` | Open |
 | BUG20260419-022 | P1 | Contract Drift | npc_dialogue contract has internal_thought field that could leak NPC private state | `models/contracts/main_contracts.py:143` | Open |

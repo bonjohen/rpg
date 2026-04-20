@@ -48,16 +48,16 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 2.1 | Open | | | BUG-016/017: Add None guards for `effective_user` and `message` at top of all 10 cmd_* handlers in `bot/commands.py` |
-| 2.2 | Open | | | BUG-018: Fix `_registry()` in `bot/commands.py` — don't create empty BotRegistry on fallback |
-| 2.3 | Open | | | BUG-019: Add `from_user` None guard in `bot/handlers.py` message handler |
-| 2.4 | Open | | | Add tests for None guard behavior |
-| 2.5 | Open | | | Update BUG-016, 017, 018, 019 status in `docs/bugs.md` |
-| 2.6 | Open | | | Run pytest + ruff, fix any failures |
+| 2.1 | Completed | 2026-04-19 11:10 PM | 2026-04-19 11:15 PM | BUG-016/017: Add None guards for `effective_user` and `message` at top of all 10 cmd_* handlers in `bot/commands.py` |
+| 2.2 | Completed | 2026-04-19 11:10 PM | 2026-04-19 11:11 PM | BUG-018: Fix `_registry()` in `bot/commands.py` — don't create empty BotRegistry on fallback |
+| 2.3 | Completed | 2026-04-19 11:15 PM | 2026-04-19 11:16 PM | BUG-019: Add `from_user` None guard in `bot/handlers.py` message handler |
+| 2.4 | Completed | 2026-04-19 11:16 PM | 2026-04-19 11:18 PM | Add tests for None guard behavior |
+| 2.5 | Completed | 2026-04-19 11:18 PM | 2026-04-19 11:19 PM | Update BUG-016, 017, 018, 019 status in `docs/bugs.md` |
+| 2.6 | Completed | 2026-04-19 11:19 PM | 2026-04-19 11:20 PM | Run pytest + ruff, fix any failures |
 
 ### Phase 2 Summary
 
-- **Changes:** TBD
+- **Changes:** Added None guards for `effective_user`, `message`, and `from_user` to all 10 bot command handlers and the private message handler. Fixed `_registry()` to raise RuntimeError instead of creating empty BotRegistry. 20 new tests, 1358 total passing.
 - **Commit:** `Bug-fix Phase 2: Bot handler None guards and registry fallback`
 
 ## Phase 3: Combat Pipeline

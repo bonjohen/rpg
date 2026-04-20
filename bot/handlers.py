@@ -103,8 +103,11 @@ async def _handle_private_message(
     if message is None:
         return
 
+    if not message.from_user:
+        return
+
     registry: BotRegistry = context.application.bot_data.get("registry", BotRegistry())
-    user_id = message.from_user.id if message.from_user else 0
+    user_id = message.from_user.id
 
     if requires_onboarding(registry, user_id):
         await send_onboarding_prompt(message)

@@ -40,11 +40,17 @@ _HELP_TEXT = (
 
 
 def _registry(context: ContextTypes.DEFAULT_TYPE) -> BotRegistry:
-    return context.application.bot_data.get("registry", BotRegistry())
+    registry = context.application.bot_data.get("registry")
+    if registry is None:
+        logger.error("BotRegistry not found in bot_data — bot not properly initialized")
+        raise RuntimeError("BotRegistry not configured")
+    return registry
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/start — greet the user and prompt onboarding if needed."""
+    if not update.effective_user or not update.message:
+        return
     user = update.effective_user
     registry = _registry(context)
 
@@ -65,6 +71,8 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     Must be sent from the campaign supergroup; the chat_id is used to look
     up the campaign.  If the user is already registered, confirm idempotently.
     """
+    if not update.effective_user or not update.message:
+        return
     user = update.effective_user
     registry = _registry(context)
 
@@ -106,11 +114,15 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/help — show the command list."""
+    if not update.message:
+        return
     await update.message.reply_text(_HELP_TEXT)
 
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/status — show the player's current game state (stub)."""
+    if not update.effective_user or not update.message:
+        return
     user = update.effective_user
     registry = _registry(context)
 
@@ -148,6 +160,8 @@ def _orchestrator(context: ContextTypes.DEFAULT_TYPE):
 
 async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/newgame <scenario_path> — load a scenario and start a campaign."""
+    if not update.effective_user or not update.message:
+        return
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
@@ -190,6 +204,8 @@ async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 async def cmd_nextturn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/nextturn — open the next turn (admin/debug)."""
+    if not update.effective_user or not update.message:
+        return
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
@@ -219,6 +235,8 @@ async def cmd_nextturn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def cmd_forceresolve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/forceresolve — force-resolve the current turn window (admin/debug)."""
+    if not update.effective_user or not update.message:
+        return
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
@@ -248,6 +266,8 @@ async def cmd_forceresolve(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def cmd_diagnostics(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/diagnostics — run diagnostics and DM the report (admin)."""
+    if not update.message:
+        return
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
@@ -266,6 +286,8 @@ async def cmd_diagnostics(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def cmd_scene(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/scene — show the current scene description and exits."""
+    if not update.effective_user or not update.message:
+        return
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(ONBOARDING_MESSAGES["no_active_game"])
@@ -298,6 +320,8 @@ async def cmd_scene(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/who — show which players are in which scenes."""
+    if not update.message:
+        return
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(ONBOARDING_MESSAGES["no_active_game"])
