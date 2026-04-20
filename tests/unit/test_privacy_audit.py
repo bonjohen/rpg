@@ -427,17 +427,21 @@ class TestEdgeCases:
         player_a = "player-a"
         player_b = "player-b"
         priv_scope = _scope(ScopeType.private_referee, player_id=player_a)
+        pub_scope = _scope(ScopeType.public)
         fact = _fact(priv_scope.scope_id, payload="A discovers a clue")
         grant = VisibilityGrant(
             grant_id=_uid(),
             fact_id=fact.fact_id,
             campaign_id="c1",
-            granted_to_scope_id="any-scope",
+            granted_to_scope_id=pub_scope.scope_id,
             granted_at=_now(),
             granted_by_player_id=player_a,
         )
-        # With a grant, player_b can now see the fact
-        assert self.engine.can_player_see_fact(player_b, fact, priv_scope, [grant])
+        scopes = {priv_scope.scope_id: priv_scope, pub_scope.scope_id: pub_scope}
+        # With a grant to a public scope, player_b can now see the fact
+        assert self.engine.can_player_see_fact(
+            player_b, fact, priv_scope, [grant], scopes_by_id=scopes
+        )
 
     def test_without_grant_private_fact_stays_hidden(self):
         player_a = "player-a"

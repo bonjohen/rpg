@@ -40,7 +40,7 @@ def _make_orchestrator() -> GameOrchestrator:
 def _make_client(orch: GameOrchestrator | None = None) -> TestClient:
     if orch is None:
         orch = _make_orchestrator()
-    app = create_api_app(orch)
+    app = create_api_app(orch, bot_token=BOT_TOKEN)
     return TestClient(app)
 
 
@@ -106,7 +106,7 @@ class TestAuth:
         init_data = _build_init_data(12345, "Alice", BOT_TOKEN)
         resp = client.post(
             "/api/auth/validate",
-            json={"init_data": init_data, "bot_token": BOT_TOKEN},
+            json={"init_data": init_data},
         )
         assert resp.status_code == 200
         data = resp.json()

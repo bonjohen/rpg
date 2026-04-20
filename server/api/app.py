@@ -13,7 +13,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from server.api.routes import router, set_orchestrator, set_session_factory
+from server.api.routes import (
+    router,
+    set_bot_token,
+    set_orchestrator,
+    set_session_factory,
+)
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session, sessionmaker
@@ -27,6 +32,7 @@ _WEBAPP_DIR = Path(__file__).resolve().parent.parent.parent / "webapp"
 def create_api_app(
     orchestrator: GameOrchestrator,
     session_factory: sessionmaker[Session] | None = None,
+    bot_token: str | None = None,
 ) -> FastAPI:
     """Create and configure the FastAPI application.
 
@@ -34,6 +40,8 @@ def create_api_app(
         orchestrator: The game orchestrator holding all game state.
         session_factory: Optional SQLAlchemy session factory. When provided,
             it is stored on the orchestrator for database-backed persistence.
+        bot_token: Telegram bot token for auth validation. Falls back to
+            BOT_TOKEN env var if not provided.
 
     Returns:
         A fully configured FastAPI app ready to run.
@@ -41,6 +49,8 @@ def create_api_app(
     if session_factory is not None:
         orchestrator.session_factory = session_factory
         set_session_factory(session_factory)
+    if bot_token:
+        set_bot_token(bot_token)
     app = FastAPI(
         title="RPG Mini App API",
         description="REST API for the Telegram Mini App game client.",

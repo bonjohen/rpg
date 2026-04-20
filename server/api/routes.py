@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
@@ -57,6 +58,7 @@ router = APIRouter()
 # without state leakage.
 _orchestrator: GameOrchestrator | None = None
 _session_factory: sessionmaker[Session] | None = None
+_bot_token: str | None = None
 
 
 def set_orchestrator(orchestrator: GameOrchestrator) -> None:
@@ -69,6 +71,12 @@ def set_session_factory(sf: sessionmaker[Session]) -> None:
     """Inject the session factory for direct repo access in display routes."""
     global _session_factory  # noqa: PLW0603
     _session_factory = sf
+
+
+def set_bot_token(token: str) -> None:
+    """Inject the bot token for auth validation (read server-side, never from client)."""
+    global _bot_token  # noqa: PLW0603
+    _bot_token = token
 
 
 def _orch() -> GameOrchestrator:
@@ -84,12 +92,14 @@ def _orch() -> GameOrchestrator:
 
 class ValidateAuthRequest(BaseModel):
     init_data: str
-    bot_token: str
 
 
 @router.post("/api/auth/validate")
 async def validate_auth(req: ValidateAuthRequest) -> dict:
-    result = validate_init_data(req.init_data, req.bot_token)
+    token = _bot_token or os.environ.get("BOT_TOKEN", "")
+    if not token:
+        raise HTTPException(status_code=500, detail="Bot token not configured.")
+    result = validate_init_data(req.init_data, token)
     return asdict(result)
 
 

@@ -90,7 +90,13 @@ class LeakageGuard:
                 side_channel = side_channels_by_id.get(scope.side_channel_id)
             grants = grants_by_fact_id.get(fact.fact_id, [])
             if not self._engine.can_player_see_fact(
-                player_id, fact, scope, grants, side_channel
+                player_id,
+                fact,
+                scope,
+                grants,
+                side_channel,
+                scopes_by_id=scopes_by_id,
+                side_channels_by_id=side_channels_by_id,
             ):
                 raise ScopeViolationError(
                     f"Fact {fact.fact_id!r} (scope={scope.scope_type.value!r}) "

@@ -11,12 +11,16 @@ The orchestrator is from application.bot_data["orchestrator"] (Phase 16+).
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.mapping import BotRegistry, UnknownUserError
 from bot.onboarding import ONBOARDING_MESSAGES, ONBOARDING_PROMPT
+
+# Scenario files must resolve under this directory
+_SCENARIOS_ROOT = Path(__file__).resolve().parent.parent / "scenarios"
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +159,19 @@ async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     scenario_path = args[0]
+
+    # Prevent path traversal: resolve against scenarios root
+    try:
+        resolved = Path(scenario_path).resolve()
+        if not resolved.is_relative_to(_SCENARIOS_ROOT):
+            await update.message.reply_text(
+                "Invalid path. Scenarios must be under the scenarios/ directory."
+            )
+            return
+    except (ValueError, OSError):
+        await update.message.reply_text("Invalid scenario path.")
+        return
+
     chat_id = update.message.chat.id
     success = orchestrator.load_scenario(scenario_path, telegram_group_id=chat_id)
     if success:

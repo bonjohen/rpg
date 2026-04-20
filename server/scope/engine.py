@@ -135,6 +135,8 @@ class ScopeEngine:
         scope: ConversationScope,
         grants: list[VisibilityGrant],
         side_channel: SideChannel | None = None,
+        scopes_by_id: dict[str, ConversationScope] | None = None,
+        side_channels_by_id: dict[str, SideChannel] | None = None,
     ) -> bool:
         """Return True if ``player_id`` is allowed to see ``fact``.
 
@@ -142,11 +144,13 @@ class ScopeEngine:
         extend visibility to additional scopes.
 
         Args:
-            player_id:    The player whose visibility is being checked.
-            fact:         The KnowledgeFact to check.
-            scope:        The ConversationScope that owns the fact.
-            grants:       All VisibilityGrants for this fact.
-            side_channel: The SideChannel, if the owning scope is side_channel.
+            player_id:          The player whose visibility is being checked.
+            fact:               The KnowledgeFact to check.
+            scope:              The ConversationScope that owns the fact.
+            grants:             All VisibilityGrants for this fact.
+            side_channel:       The SideChannel, if the owning scope is side_channel.
+            scopes_by_id:       scope_id → ConversationScope mapping for grant checking.
+            side_channels_by_id: side_channel_id → SideChannel mapping for grant checking.
         """
         # referee_only is never visible to any player
         if scope.scope_type == ScopeType.referee_only:
@@ -172,16 +176,31 @@ class ScopeEngine:
         for grant in grants:
             if grant.fact_id != fact.fact_id:
                 continue
-            # A grant to a public scope means everyone can now see it
-            # (this handles "player announces their private discovery")
-            # We accept the grant as broadening access; the caller must pass
-            # the granted scope in future calls.  Here we just check if any
-            # grant covers this player by looking at the granted scope.
-            # Since we don't have the granted-scope object in this call, we
-            # treat the existence of a grant to ANY scope as sufficient.
-            # Callers that need strict grant-scope checking should pass
-            # the granted scopes and call can_player_see_fact recursively.
-            return True
+            # Look up the granted scope and verify the player belongs to it
+            if scopes_by_id is not None:
+                granted_scope = scopes_by_id.get(grant.granted_to_scope_id)
+                if granted_scope is None:
+                    continue
+                if granted_scope.scope_type == ScopeType.public:
+                    return True
+                if (
+                    granted_scope.scope_type == ScopeType.private_referee
+                    and granted_scope.player_id == player_id
+                ):
+                    return True
+                if (
+                    granted_scope.scope_type == ScopeType.side_channel
+                    and side_channels_by_id
+                    and granted_scope.side_channel_id
+                ):
+                    granted_ch = side_channels_by_id.get(granted_scope.side_channel_id)
+                    if granted_ch and player_id in granted_ch.member_player_ids:
+                        return True
+                # Grant exists but player doesn't belong to the granted scope
+                continue
+            # Legacy path: no scopes_by_id provided — deny by default
+            # (callers should pass scopes_by_id for proper grant checking)
+            continue
 
         return False
 
@@ -214,7 +233,15 @@ class ScopeEngine:
             if scope.scope_type == ScopeType.side_channel and scope.side_channel_id:
                 side_channel = side_channels_by_id.get(scope.side_channel_id)
             grants = grants_by_fact_id.get(fact.fact_id, [])
-            if self.can_player_see_fact(player_id, fact, scope, grants, side_channel):
+            if self.can_player_see_fact(
+                player_id,
+                fact,
+                scope,
+                grants,
+                side_channel,
+                scopes_by_id=scopes_by_id,
+                side_channels_by_id=side_channels_by_id,
+            ):
                 visible.append(fact)
         return visible
 

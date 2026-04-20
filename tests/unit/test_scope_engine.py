@@ -196,13 +196,67 @@ class TestCanPlayerSeeFact:
             granted_at=_now(),
             granted_by_player_id="p1",
         )
-        # p2 can now see via the grant
-        assert ENGINE.can_player_see_fact("p2", fact, priv_scope, [grant]) is True
+        scopes = {priv_scope.scope_id: priv_scope, pub_scope.scope_id: pub_scope}
+        # p2 can now see via the grant to a public scope
+        assert (
+            ENGINE.can_player_see_fact(
+                "p2", fact, priv_scope, [grant], scopes_by_id=scopes
+            )
+            is True
+        )
+
+    def test_grant_to_different_player_not_visible(self):
+        """Grant to player B's private scope should NOT be visible to player C."""
+        priv_scope_a = _scope(ScopeType.private_referee, player_id="p1")
+        priv_scope_b = _scope(ScopeType.private_referee, player_id="p2")
+        fact = _fact(priv_scope_a.scope_id)
+        grant = VisibilityGrant(
+            grant_id=_uid(),
+            fact_id=fact.fact_id,
+            campaign_id="c1",
+            granted_to_scope_id=priv_scope_b.scope_id,
+            granted_at=_now(),
+            granted_by_player_id="p1",
+        )
+        scopes = {
+            priv_scope_a.scope_id: priv_scope_a,
+            priv_scope_b.scope_id: priv_scope_b,
+        }
+        # p2 (the grantee) can see it
+        assert (
+            ENGINE.can_player_see_fact(
+                "p2", fact, priv_scope_a, [grant], scopes_by_id=scopes
+            )
+            is True
+        )
+        # p3 (not the grantee) cannot see it
+        assert (
+            ENGINE.can_player_see_fact(
+                "p3", fact, priv_scope_a, [grant], scopes_by_id=scopes
+            )
+            is False
+        )
 
     def test_no_grant_no_cross_player_visibility(self):
         priv_scope = _scope(ScopeType.private_referee, player_id="p1")
         fact = _fact(priv_scope.scope_id)
         assert ENGINE.can_player_see_fact("p2", fact, priv_scope, []) is False
+
+    def test_grant_without_scopes_by_id_denies(self):
+        """Legacy callers without scopes_by_id should deny grants by default."""
+        priv_scope = _scope(ScopeType.private_referee, player_id="p1")
+        pub_scope = _scope(ScopeType.public)
+        fact = _fact(priv_scope.scope_id)
+        grant = VisibilityGrant(
+            grant_id=_uid(),
+            fact_id=fact.fact_id,
+            campaign_id="c1",
+            granted_to_scope_id=pub_scope.scope_id,
+            granted_at=_now(),
+            granted_by_player_id="p1",
+        )
+        # Without scopes_by_id, grants are denied
+        assert ENGINE.can_player_see_fact("p2", fact, priv_scope, [grant]) is False
 
 
 # ---------------------------------------------------------------------------
