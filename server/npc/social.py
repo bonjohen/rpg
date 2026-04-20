@@ -29,27 +29,13 @@ No imports from server.storage.  No I/O.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-import uuid
 
 from server.domain.entities import KnowledgeFact, NPC
 from server.domain.enums import KnowledgeFactType
+from server.domain.helpers import new_id, utc_now
 from server.npc.dialogue import DialogueContext, DialogueContextBuilder
 from server.npc.tells import NpcTellEngine, TellDefinition, TellResult
 from server.npc.trust import TrustDeltaResult, TrustEngine
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
 
 
 # ---------------------------------------------------------------------------
@@ -388,13 +374,13 @@ class SocialEngine:
             )
             referee_facts.append(
                 KnowledgeFact(
-                    fact_id=_new_id(),
+                    fact_id=new_id(),
                     campaign_id=inp.campaign_id,
                     scene_id=inp.scene_id,
                     owner_scope_id=inp.referee_scope_id,
                     fact_type=KnowledgeFactType.npc_tell,
                     payload=f"[lie detection] {lie_note}",
-                    revealed_at=_now(),
+                    revealed_at=utc_now(),
                 )
             )
 

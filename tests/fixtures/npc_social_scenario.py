@@ -9,7 +9,7 @@ Fixed IDs are used so tests are deterministic and repeatable.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from server.domain.helpers import utc_now as _now
 
 from server.domain.entities import NPC
 from server.domain.enums import BehaviorMode
@@ -29,10 +29,6 @@ PLAYER_BRAND_ID = "player-brand-001"
 
 NPC_MIRA_ID = "npc-mira-001"
 NPC_THERON_ID = "npc-theron-001"
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ---------------------------------------------------------------------------

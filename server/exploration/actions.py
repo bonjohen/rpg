@@ -15,8 +15,6 @@ No imports from server.storage. Everything here is pure Python on domain types.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-import uuid
 
 from server.domain.entities import (
     Character,
@@ -27,19 +25,7 @@ from server.domain.entities import (
 from server.domain.enums import (
     KnowledgeFactType,
 )
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
+from server.domain.helpers import new_id, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -214,13 +200,13 @@ class ExplorationEngine:
             if private_desc and private_scope_id:
                 new_facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=scene.scene_id,
                         owner_scope_id=private_scope_id,
                         fact_type=KnowledgeFactType.clue,
                         payload=private_desc,
-                        revealed_at=_now(),
+                        revealed_at=utc_now(),
                     )
                 )
 
@@ -237,13 +223,13 @@ class ExplorationEngine:
             if scene.hidden_description and private_scope_id:
                 new_facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=scene.scene_id,
                         owner_scope_id=private_scope_id,
                         fact_type=KnowledgeFactType.lore,
                         payload=scene.hidden_description,
-                        revealed_at=_now(),
+                        revealed_at=utc_now(),
                     )
                 )
             return InspectResult(
@@ -308,13 +294,13 @@ class ExplorationEngine:
             if private_scope_id:
                 new_facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=scene.scene_id,
                         owner_scope_id=private_scope_id,
                         fact_type=KnowledgeFactType.hidden_object,
                         payload=fact_payload,
-                        revealed_at=_now(),
+                        revealed_at=utc_now(),
                     )
                 )
 
@@ -413,7 +399,7 @@ class ExplorationEngine:
         if public_scope_id:
             new_facts.append(
                 KnowledgeFact(
-                    fact_id=_new_id(),
+                    fact_id=new_id(),
                     campaign_id=campaign_id,
                     scene_id=scene.scene_id,
                     owner_scope_id=public_scope_id,
@@ -422,7 +408,7 @@ class ExplorationEngine:
                         f"The {obj.object_id} changed from {old_state} "
                         f"to {desired_state}."
                     ),
-                    revealed_at=_now(),
+                    revealed_at=utc_now(),
                 )
             )
 

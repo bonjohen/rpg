@@ -21,9 +21,7 @@ No imports from server.storage. Everything here is pure Python on domain types.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from enum import Enum
-import uuid
 
 from server.domain.entities import (
     Character,
@@ -34,20 +32,8 @@ from server.domain.enums import (
     ActionType,
     KnowledgeFactType,
 )
+from server.domain.helpers import new_id, utc_now
 from server.exploration.actions import ObjectState
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
 
 
 # ---------------------------------------------------------------------------
@@ -288,13 +274,13 @@ class TriggerEngine:
             if scope_id:
                 new_facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=trigger.campaign_id,
                         scene_id=trigger.scene_id,
                         owner_scope_id=scope_id,
                         fact_type=fact_type,
                         payload=payload,
-                        revealed_at=_now(),
+                        revealed_at=utc_now(),
                     )
                 )
 

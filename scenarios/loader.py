@@ -6,9 +6,9 @@ to domain entities ready for use.
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
+
 import yaml
 
 from server.domain.entities import (
@@ -48,14 +48,7 @@ from scenarios.schema import (
     TriggerDefinition,
 )
 from scenarios.validator import ScenarioValidator
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
+from server.domain.helpers import new_id, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -122,12 +115,12 @@ class ScenarioLoader:
             )
 
         # 4. Generate campaign ID
-        campaign_id = _new_id()
-        now = _now()
+        campaign_id = new_id()
+        now = utc_now()
 
         # 5. Create referee-only scope for the campaign
         referee_scope = ConversationScope(
-            scope_id=_new_id(),
+            scope_id=new_id(),
             campaign_id=campaign_id,
             scope_type=ScopeType.referee_only,
         )
@@ -140,7 +133,7 @@ class ScenarioLoader:
             scene = self._convert_scene(scene_def, campaign_id, now)
             scenes.append(scene)
             scope = ConversationScope(
-                scope_id=_new_id(),
+                scope_id=new_id(),
                 campaign_id=campaign_id,
                 scope_type=ScopeType.public,
             )
@@ -420,7 +413,7 @@ class ScenarioLoader:
         self, defn: PuzzleDefinition, campaign_id: str, now: datetime
     ) -> PuzzleState:
         return PuzzleState(
-            puzzle_state_id=_new_id(),
+            puzzle_state_id=new_id(),
             campaign_id=campaign_id,
             scene_id=defn.scene_id,
             puzzle_id=defn.puzzle_id,
@@ -430,7 +423,7 @@ class ScenarioLoader:
         self, defn: QuestDefinition, campaign_id: str, now: datetime
     ) -> QuestState:
         return QuestState(
-            quest_state_id=_new_id(),
+            quest_state_id=new_id(),
             campaign_id=campaign_id,
             quest_id=defn.quest_id,
         )
@@ -527,7 +520,7 @@ class ScenarioLoader:
             if scene.referee_notes:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=scene.scene_id,
                         owner_scope_id=referee_scope_id,
@@ -542,7 +535,7 @@ class ScenarioLoader:
             if npc.referee_notes:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=npc.scene_id or "",
                         owner_scope_id=referee_scope_id,
@@ -557,7 +550,7 @@ class ScenarioLoader:
             if monster.referee_notes:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=monster.scene_id or "",
                         owner_scope_id=referee_scope_id,
@@ -572,7 +565,7 @@ class ScenarioLoader:
             if puzzle.solution_hint:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=puzzle.scene_id or "",
                         owner_scope_id=referee_scope_id,
@@ -584,7 +577,7 @@ class ScenarioLoader:
             if puzzle.referee_notes:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=puzzle.scene_id or "",
                         owner_scope_id=referee_scope_id,
@@ -599,7 +592,7 @@ class ScenarioLoader:
             if quest.referee_notes:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id="",
                         owner_scope_id=referee_scope_id,
@@ -614,7 +607,7 @@ class ScenarioLoader:
             if trigger.referee_notes:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=trigger.scene_id or "",
                         owner_scope_id=referee_scope_id,
@@ -630,7 +623,7 @@ class ScenarioLoader:
                 if exit_def.is_hidden:
                     facts.append(
                         KnowledgeFact(
-                            fact_id=_new_id(),
+                            fact_id=new_id(),
                             campaign_id=campaign_id,
                             scene_id=scene.scene_id,
                             owner_scope_id=referee_scope_id,
@@ -648,7 +641,7 @@ class ScenarioLoader:
             if item.is_hidden:
                 facts.append(
                     KnowledgeFact(
-                        fact_id=_new_id(),
+                        fact_id=new_id(),
                         campaign_id=campaign_id,
                         scene_id=item.scene_id or "",
                         owner_scope_id=referee_scope_id,

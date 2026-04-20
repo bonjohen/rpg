@@ -26,9 +26,7 @@ No imports from server.storage. Everything here is pure Python on domain types.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from enum import Enum
-import uuid
 
 from server.domain.entities import (
     Character,
@@ -41,19 +39,7 @@ from server.domain.enums import (
     KnowledgeFactType,
     ScopeType,
 )
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
+from server.domain.helpers import new_id, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -269,13 +255,13 @@ class ClueEngine:
             )
 
         fact = KnowledgeFact(
-            fact_id=_new_id(),
+            fact_id=new_id(),
             campaign_id=clue.campaign_id,
             scene_id=scene.scene_id,
             owner_scope_id=scope_id,
             fact_type=clue.fact_type,
             payload=clue.payload,
-            revealed_at=_now(),
+            revealed_at=utc_now(),
         )
 
         # Mark discovered
@@ -309,11 +295,11 @@ class ClueEngine:
             )
 
         grant = VisibilityGrant(
-            grant_id=_new_id(),
+            grant_id=new_id(),
             fact_id=fact.fact_id,
             campaign_id=campaign_id,
             granted_to_scope_id=granted_to_scope_id,
-            granted_at=_now(),
+            granted_at=utc_now(),
             granted_by_player_id=granted_by_player_id,
         )
 

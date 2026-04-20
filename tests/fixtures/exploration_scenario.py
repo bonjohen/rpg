@@ -14,7 +14,7 @@ All IDs are fixed strings so tests can be written against them.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from server.domain.helpers import utc_now as _now
 
 from server.domain.entities import (
     Campaign,
@@ -88,10 +88,6 @@ TRIGGER_ENTER_VAULT_ID = "trigger-enter-vault"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ---------------------------------------------------------------------------

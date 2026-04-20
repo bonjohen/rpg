@@ -10,7 +10,9 @@ All IDs are fixed strings.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
+
+from server.domain.helpers import utc_now as _now
 
 from server.domain.entities import (
     Campaign,
@@ -66,10 +68,6 @@ MONSTER_BAT_SWARM_ID = "monster-bat-swarm"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ---------------------------------------------------------------------------

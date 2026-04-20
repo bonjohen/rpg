@@ -6,9 +6,6 @@ Override any field by passing kwargs.
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-
 from server.domain.entities import (
     Campaign,
     Character,
@@ -39,14 +36,7 @@ from server.domain.enums import (
     ScopeType,
     TurnWindowState,
 )
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)  # naive UTC for SQLite
-
-
-def _uuid() -> str:
-    return str(uuid.uuid4())
+from server.domain.helpers import new_id as _uuid, utc_now as _now
 
 
 def make_campaign(**kwargs) -> Campaign:

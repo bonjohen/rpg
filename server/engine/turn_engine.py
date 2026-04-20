@@ -17,9 +17,7 @@ No imports from server.storage. Everything here is pure Python on domain types.
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Optional
 
 from server.domain.entities import (
@@ -34,6 +32,7 @@ from server.domain.enums import (
     TurnWindowState,
     ValidationStatus,
 )
+from server.domain.helpers import new_id, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -135,14 +134,6 @@ _VALID_TRANSITIONS: dict[TurnWindowState, set[TurnWindowState]] = {
 }
 
 
-def _now_utc() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)  # naive UTC, matches storage
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
-
-
 def _assert_transition(window: TurnWindow, target: TurnWindowState) -> None:
     allowed = _VALID_TRANSITIONS.get(window.state, set())
     if target not in allowed:
@@ -216,7 +207,7 @@ class TurnEngine:
             )
         _assert_transition(window, TurnWindowState.locked)
         window.state = TurnWindowState.locked
-        window.locked_at = _now_utc()
+        window.locked_at = utc_now()
         return LockResult(locked=True, window=window)
 
     def resolve_window(
@@ -262,7 +253,7 @@ class TurnEngine:
             fallback_label = characters_by_player.get(player_id, window.timeout_policy)
             fallback_action_type = _label_to_action_type(fallback_label)
             fallback = CommittedAction(
-                action_id=_new_id(),
+                action_id=new_id(),
                 turn_window_id=window.turn_window_id,
                 player_id=player_id,
                 character_id="",  # caller may patch after the fact
@@ -271,7 +262,7 @@ class TurnEngine:
                 public_text=f"[timeout: {fallback_label}]",
                 private_ref_text="",
                 ready_state=ReadyState.passed,
-                submitted_at=_now_utc(),
+                submitted_at=utc_now(),
                 state=ActionState.submitted,
                 validation_status=ValidationStatus.valid,
                 is_timeout_fallback=True,
@@ -286,7 +277,7 @@ class TurnEngine:
         # Update window committed_action_ids
         window.committed_action_ids = [a.action_id for a in ordered]
         window.state = TurnWindowState.resolving
-        window.resolved_at = _now_utc()
+        window.resolved_at = utc_now()
 
         return ResolveResult(
             resolved=True,
@@ -317,7 +308,7 @@ class TurnEngine:
             )
         _assert_transition(window, TurnWindowState.committed)
 
-        now = _now_utc()
+        now = utc_now()
         window.state = TurnWindowState.committed
         window.committed_at = now
         window.committed_action_ids = [a.action_id for a in ordered_actions]
@@ -327,7 +318,7 @@ class TurnEngine:
             action.state = ActionState.resolved
 
         log_entry = TurnLogEntry(
-            log_entry_id=_new_id(),
+            log_entry_id=new_id(),
             campaign_id=window.campaign_id,
             scene_id=window.scene_id,
             turn_window_id=window.turn_window_id,
@@ -415,7 +406,7 @@ class TurnEngine:
         # --- Accept ---
         action.state = ActionState.submitted
         action.validation_status = ValidationStatus.pending
-        action.submitted_at = action.submitted_at or _now_utc()
+        action.submitted_at = action.submitted_at or utc_now()
         if action.ready_state == ReadyState.not_ready:
             action.ready_state = ReadyState.ready
 

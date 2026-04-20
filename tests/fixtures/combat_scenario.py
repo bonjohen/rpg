@@ -9,7 +9,7 @@ All IDs are fixed strings so tests can reference them by name.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from server.domain.helpers import utc_now as _now
 
 from server.domain.entities import (
     Campaign,
@@ -45,10 +45,6 @@ EMPTY_FLASK_ID = "item-empty-flask"
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ---------------------------------------------------------------------------

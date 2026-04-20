@@ -10,9 +10,6 @@ This audit covers:
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-
 import pytest
 
 from server.domain.entities import (
@@ -29,19 +26,12 @@ from server.scope.referee import RefereeGuard
 from server.scope.side_channel import SideChannelPolicy
 from models.fast.router import is_fast_tier, is_main_tier_only
 from models.main.router import is_main_tier
+from server.domain.helpers import new_id as _uid, utc_now as _now
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _uid() -> str:
-    return str(uuid.uuid4())
-
-
-def _now():
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _scope(

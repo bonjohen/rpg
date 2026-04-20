@@ -6,7 +6,7 @@ Pure data, no DB, no I/O.  All IDs are fixed strings.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from server.domain.helpers import utc_now as _now
 
 from server.domain.entities import (
     Campaign,
@@ -43,10 +43,6 @@ ALL_PLAYER_IDS = [PLAYER_ALICE_ID, PLAYER_BOB_ID, PLAYER_CAROL_ID]
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ---------------------------------------------------------------------------

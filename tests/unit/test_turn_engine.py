@@ -14,9 +14,6 @@ Tests cover:
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-
 import pytest
 
 from server.domain.enums import (
@@ -37,19 +34,12 @@ from tests.fixtures.builders import (
     make_turn_log_entry,
     make_turn_window,
 )
+from server.domain.helpers import new_id as _uid
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _uid() -> str:
-    return str(uuid.uuid4())
-
-
-def _now():
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _window(state: TurnWindowState = TurnWindowState.open, **kwargs):

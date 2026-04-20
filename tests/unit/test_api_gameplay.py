@@ -6,8 +6,6 @@ Tests action builder, inbox, channels, quests, clues, and map endpoints.
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
-
 from fastapi.testclient import TestClient
 
 from server.api.app import create_api_app
@@ -21,6 +19,7 @@ from server.domain.enums import (
     QuestStatus,
     ScopeType,
 )
+from server.domain.helpers import utc_now as _now
 from server.orchestrator.game_loop import GameOrchestrator
 
 GOBLIN_CAVES_PATH = os.path.join(
@@ -53,10 +52,6 @@ def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:
         orch.add_player(pid, f"Player {i}", telegram_user_id=1000 + i)
         ids.append(pid)
     return ids
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 def _add_private_fact(

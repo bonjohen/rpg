@@ -21,21 +21,9 @@ No imports from server.storage. Everything here is pure Python on domain types.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-import uuid
+from datetime import datetime
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
+from server.domain.helpers import new_id, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -136,12 +124,12 @@ class MemoryEngine:
         Returns:
             VisitResult.
         """
-        now = _now()
+        now = utc_now()
         observed_item_ids = observed_item_ids or []
 
         if existing_record is None:
             record = SceneVisitRecord(
-                record_id=_new_id(),
+                record_id=new_id(),
                 character_id=character_id,
                 player_id=player_id,
                 scene_id=scene_id,

@@ -16,24 +16,10 @@ Pure domain logic.  No I/O.  No storage imports.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-import uuid
 
 from server.domain.entities import KnowledgeFact, NPC
 from server.domain.enums import KnowledgeFactType
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-def _new_id() -> str:
-    return str(uuid.uuid4())
+from server.domain.helpers import new_id, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -126,13 +112,13 @@ class NpcTellEngine:
                 if tell.tell_text and referee_scope_id:
                     facts.append(
                         KnowledgeFact(
-                            fact_id=_new_id(),
+                            fact_id=new_id(),
                             campaign_id=campaign_id,
                             scene_id=scene_id,
                             owner_scope_id=referee_scope_id,
                             fact_type=KnowledgeFactType.npc_tell,
                             payload=f"[{npc.name} tell] {tell.tell_text}",
-                            revealed_at=_now(),
+                            revealed_at=utc_now(),
                         )
                     )
 
@@ -159,13 +145,13 @@ class NpcTellEngine:
             f"is now {trust_value:+d}. Stance: {npc.stance_to_party}."
         )
         return KnowledgeFact(
-            fact_id=_new_id(),
+            fact_id=new_id(),
             campaign_id=campaign_id,
             scene_id=scene_id,
             owner_scope_id=referee_scope_id,
             fact_type=KnowledgeFactType.npc_tell,
             payload=payload,
-            revealed_at=_now(),
+            revealed_at=utc_now(),
         )
 
     def make_private_reaction_fact(
@@ -187,13 +173,13 @@ class NpcTellEngine:
         if not referee_scope_id:
             return None
         return KnowledgeFact(
-            fact_id=_new_id(),
+            fact_id=new_id(),
             campaign_id=campaign_id,
             scene_id=scene_id,
             owner_scope_id=referee_scope_id,
             fact_type=KnowledgeFactType.npc_tell,
             payload=f"[{npc.name} private reaction] {reaction_text}",
-            revealed_at=_now(),
+            revealed_at=utc_now(),
         )
 
     # ------------------------------------------------------------------

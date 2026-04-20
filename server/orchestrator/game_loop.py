@@ -6,7 +6,6 @@ All state is in-memory for now (playtest). Production persistence is post-Phase 
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -55,16 +54,9 @@ from server.observability.diagnostics import DiagnosticsEngine
 from server.observability.metrics import MetricsCollector
 from server.reliability.idempotency import IdempotencyStore
 from server.scene.membership import SceneMembershipEngine
+from server.domain.helpers import new_id, utc_now
 from server.scope.engine import ScopeEngine
 from server.timer.controller import TimerController
-
-
-def _uid() -> str:
-    return str(uuid.uuid4())
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 @dataclass
@@ -157,7 +149,7 @@ class GameOrchestrator:
             name=campaign_name,
             telegram_group_id=0,
             main_topic_id=None,
-            created_at=_now(),
+            created_at=utc_now(),
         )
 
         for scene in result.scenes:
@@ -196,7 +188,7 @@ class GameOrchestrator:
             raise RuntimeError("No campaign loaded")
 
         campaign_id = self.campaign.campaign_id
-        now = _now()
+        now = utc_now()
 
         player = Player(
             player_id=player_id,
@@ -213,7 +205,7 @@ class GameOrchestrator:
         if starting_scene_id is None:
             starting_scene_id = self._find_starting_scene_id()
 
-        char_id = _uid()
+        char_id = new_id()
         character = Character(
             character_id=char_id,
             player_id=player_id,
@@ -234,7 +226,7 @@ class GameOrchestrator:
 
         # Create private-referee scope for this player
         private_scope = ConversationScope(
-            scope_id=_uid(),
+            scope_id=new_id(),
             campaign_id=campaign_id,
             scope_type=ScopeType.private_referee,
             player_id=player_id,
@@ -268,9 +260,9 @@ class GameOrchestrator:
         scene_turns = [e for e in self.turn_log if e.scene_id == scene_id]
         turn_number = len(scene_turns) + 1
 
-        now = _now()
+        now = utc_now()
         tw = TurnWindow(
-            turn_window_id=_uid(),
+            turn_window_id=new_id(),
             campaign_id=self.campaign.campaign_id,
             scene_id=scene_id,
             public_scope_id=public_scope_id,
@@ -323,7 +315,7 @@ class GameOrchestrator:
         private_scope_id = self._get_private_scope_id(player_id)
 
         action = CommittedAction(
-            action_id=_uid(),
+            action_id=new_id(),
             turn_window_id=tw.turn_window_id,
             player_id=player_id,
             character_id=character.character_id,
@@ -335,7 +327,7 @@ class GameOrchestrator:
             movement_target=movement_target,
             item_ids=item_ids or [],
             ready_state=ReadyState.ready,
-            submitted_at=_now(),
+            submitted_at=utc_now(),
             state=ActionState.submitted,
             validation_status=ValidationStatus.valid,
         )
@@ -401,7 +393,7 @@ class GameOrchestrator:
             if char is None:
                 continue
             fallback = CommittedAction(
-                action_id=_uid(),
+                action_id=new_id(),
                 turn_window_id=turn_window_id,
                 player_id=pid,
                 character_id=char.character_id,
@@ -410,7 +402,7 @@ class GameOrchestrator:
                 public_text="",
                 private_ref_text="",
                 ready_state=ReadyState.ready,
-                submitted_at=_now(),
+                submitted_at=utc_now(),
                 state=ActionState.submitted,
                 validation_status=ValidationStatus.valid,
                 is_timeout_fallback=True,
@@ -501,7 +493,7 @@ class GameOrchestrator:
 
         # Classify intent via fast model
         intent_result, _ = await classify_intent(
-            self.fast_adapter, text, trace_id=_uid()
+            self.fast_adapter, text, trace_id=new_id()
         )
 
         intent = intent_result.intent.lower()
@@ -540,7 +532,7 @@ class GameOrchestrator:
         available_types = [at.value for at in ActionType]
         if self.fast_adapter:
             packet, _ = await extract_action_packet(
-                self.fast_adapter, text, available_types, trace_id=_uid()
+                self.fast_adapter, text, available_types, trace_id=new_id()
             )
             try:
                 action_type = ActionType(packet.action_type)
@@ -595,7 +587,7 @@ class GameOrchestrator:
                     campaign_id="",
                     name="",
                     description="",
-                    created_at=_now(),
+                    created_at=utc_now(),
                     state=SceneState.idle,
                 ),
             )
@@ -641,7 +633,7 @@ class GameOrchestrator:
             if scope.scope_type == ScopeType.public:
                 return scope.scope_id
         scope = ConversationScope(
-            scope_id=_uid(),
+            scope_id=new_id(),
             campaign_id=self.campaign.campaign_id if self.campaign else "",
             scope_type=ScopeType.public,
         )
