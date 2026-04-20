@@ -11,7 +11,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 4 | Scope and Visibility Enforcement | Completed | 2026-04-18 11:58 PM | |
 | 5 | Countdown Timer and Readiness Control | Completed | 2026-04-19 12:22 AM | |
 | 6 | Fast Local Model Routing Layer | Completed | 2026-04-18 11:26 PM | |
-| 7 | Main Gameplay Model Integration | Completed | 2026-04-18 11:46 PM | Gemma inference adapter [!] disabled; all other deliverables complete |
+| 7 | Main Gameplay Model Integration | Completed | 2026-04-18 11:46 PM | Gemma adapter implemented 2026-04-19; all deliverables complete |
 | 8 | Exploration Loop | Completed | 2026-04-19 12:02 AM | 97 new tests; server/exploration/ package |
 | 9 | NPC Social Loop | Completed | 2026-04-19 12:12 AM | 90 new tests; server/npc/ package |
 | 10 | Combat Loop | Completed | 2026-04-18 02:00 AM | 89 new tests; server/combat/ package |
@@ -25,6 +25,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 18 | Mini App Gameplay Utilities | Completed | 2026-04-19 02:55 AM | 26 new tests; server/api/ + webapp/ extensions |
 | 19 | Content Expansion and Quality Pass | Completed | 2026-04-18 04:02 AM | 45 new tests; 3 new scenarios, puzzle_patterns.py, archetypes.py, extended validation, narration style guides |
 | 20 | Pre-Release Stabilization | Completed | 2026-04-19 03:04 AM | 41 new tests (33 privacy audit + 8 extended session); hardened bot messages; updated docs |
+| DB-1 | Database Foundation and SQLite Pragmas | Completed | 2026-04-19 11:12 AM | 14 new tests; SQLite pragmas, version column, optimistic locking, test fixtures |
 
 ## Phase Notes
 

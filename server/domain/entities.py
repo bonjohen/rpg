@@ -188,6 +188,7 @@ class TurnWindow:
     # Timeout policy label (e.g. "hold", "defend")
     timeout_policy: str = "hold"
     turn_number: int = 0
+    version: int = 1
 
 
 # ---------------------------------------------------------------------------

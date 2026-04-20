@@ -163,6 +163,7 @@ def _turn_window_from_row(r: TurnWindowRow) -> TurnWindow:
         control_message_id=r.control_message_id,
         timeout_policy=r.timeout_policy,
         turn_number=r.turn_number,
+        version=r.version,
     )
 
 
@@ -545,6 +546,45 @@ class TurnWindowRepo:
         row.control_message_id = tw.control_message_id
         row.timeout_policy = tw.timeout_policy
         row.turn_number = tw.turn_number
+        row.version = tw.version
+        self._s.flush()
+
+    def save_with_version_check(self, tw: TurnWindow, expected_version: int) -> None:
+        """Save a TurnWindow only if its version matches expected_version.
+
+        Increments the version on success. Raises StaleStateError if the
+        row has been modified by another session since it was loaded.
+        """
+        from server.storage.errors import StaleStateError
+
+        count = (
+            self._s.query(TurnWindowRow)
+            .filter_by(turn_window_id=tw.turn_window_id, version=expected_version)
+            .update(
+                {
+                    TurnWindowRow.campaign_id: tw.campaign_id,
+                    TurnWindowRow.scene_id: tw.scene_id,
+                    TurnWindowRow.public_scope_id: tw.public_scope_id,
+                    TurnWindowRow.opened_at: tw.opened_at,
+                    TurnWindowRow.expires_at: tw.expires_at,
+                    TurnWindowRow.state: tw.state.value,
+                    TurnWindowRow.locked_at: tw.locked_at,
+                    TurnWindowRow.resolved_at: tw.resolved_at,
+                    TurnWindowRow.committed_at: tw.committed_at,
+                    TurnWindowRow.committed_action_ids: tw.committed_action_ids,
+                    TurnWindowRow.control_message_id: tw.control_message_id,
+                    TurnWindowRow.timeout_policy: tw.timeout_policy,
+                    TurnWindowRow.turn_number: tw.turn_number,
+                    TurnWindowRow.version: expected_version + 1,
+                },
+                synchronize_session="fetch",
+            )
+        )
+        if count == 0:
+            raise StaleStateError(
+                f"TurnWindow {tw.turn_window_id} version mismatch: "
+                f"expected {expected_version}"
+            )
         self._s.flush()
 
     def get(self, turn_window_id: str) -> TurnWindow | None:
@@ -553,6 +593,19 @@ class TurnWindowRepo:
 
     def list_for_scene(self, scene_id: str) -> list[TurnWindow]:
         rows = self._s.query(TurnWindowRow).filter_by(scene_id=scene_id).all()
+        return [_turn_window_from_row(r) for r in rows]
+
+    def list_open(self) -> list[TurnWindow]:
+        """Return all TurnWindows not in a terminal state."""
+        terminal = {
+            TurnWindowState.committed.value,
+            TurnWindowState.aborted.value,
+        }
+        rows = (
+            self._s.query(TurnWindowRow)
+            .filter(TurnWindowRow.state.notin_(terminal))
+            .all()
+        )
         return [_turn_window_from_row(r) for r in rows]
 
 

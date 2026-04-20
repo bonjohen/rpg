@@ -151,6 +151,7 @@ class TurnWindowRow(Base):
         String(64), nullable=False, default="hold"
     )
     turn_number: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
 
 class CommittedActionRow(Base):
