@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
+from sqlalchemy.orm import Session, sessionmaker
+
 from server.api.auth import validate_init_data
 from server.api.responses import (
     ActionSubmitResponse,
@@ -54,12 +56,19 @@ router = APIRouter()
 # create_api_app(), so the module-level global is overwritten each time
 # without state leakage.
 _orchestrator: GameOrchestrator | None = None
+_session_factory: sessionmaker[Session] | None = None
 
 
 def set_orchestrator(orchestrator: GameOrchestrator) -> None:
     """Inject the orchestrator dependency for route handlers."""
     global _orchestrator  # noqa: PLW0603
     _orchestrator = orchestrator
+
+
+def set_session_factory(sf: sessionmaker[Session]) -> None:
+    """Inject the session factory for direct repo access in display routes."""
+    global _session_factory  # noqa: PLW0603
+    _session_factory = sf
 
 
 def _orch() -> GameOrchestrator:

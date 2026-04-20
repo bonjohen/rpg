@@ -807,6 +807,13 @@ class GameOrchestrator:
         with self._session_scope() as session:
             return TurnWindowRepo(session).get(turn_window_id)
 
+    def get_turn_windows(self) -> list[TurnWindow]:
+        """Load all turn windows for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return TurnWindowRepo(session).list_for_campaign(self.campaign_id)
+
     def get_committed_actions_for_window(
         self, turn_window_id: str
     ) -> list[CommittedAction]:

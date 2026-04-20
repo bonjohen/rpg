@@ -622,6 +622,10 @@ class TurnWindowRepo:
         )
         return [_turn_window_from_row(r) for r in rows]
 
+    def list_for_campaign(self, campaign_id: str) -> list[TurnWindow]:
+        rows = self._s.query(TurnWindowRow).filter_by(campaign_id=campaign_id).all()
+        return [_turn_window_from_row(r) for r in rows]
+
 
 class CommittedActionRepo:
     def __init__(self, session: Session) -> None:

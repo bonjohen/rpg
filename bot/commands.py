@@ -157,7 +157,7 @@ async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     scenario_path = args[0]
     success = orchestrator.load_scenario(scenario_path)
     if success:
-        scene_count = len(orchestrator.scenes)
+        scene_count = len(orchestrator.get_scenes())
         await update.message.reply_text(
             f"Scenario loaded! {scene_count} scenes ready.\n"
             "Players can now /join to enter the game."
@@ -231,11 +231,12 @@ async def cmd_diagnostics(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.message.reply_text(ONBOARDING_MESSAGES["no_orchestrator"])
         return
 
+    campaign = orchestrator.get_campaign()
     report = orchestrator.diagnostics_engine.build_report(
-        campaign_id=orchestrator.campaign.campaign_id if orchestrator.campaign else "",
-        turn_windows=list(orchestrator.turn_windows.values()),
-        scenes=list(orchestrator.scenes.values()),
-        players=list(orchestrator.players.values()),
+        campaign_id=campaign.campaign_id if campaign else "",
+        turn_windows=orchestrator.get_turn_windows(),
+        scenes=orchestrator.get_scenes(),
+        players=orchestrator.get_players(),
     )
     text = orchestrator.diagnostics_engine.format_report(report)
     await update.message.reply_text(text[:4096])
@@ -263,7 +264,7 @@ async def cmd_scene(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     exit_parts = []
     for d, sid in scene.exits.items():
-        dest = orchestrator.scenes.get(sid)
+        dest = orchestrator.get_scene(sid)
         dest_name = dest.name if dest else sid
         exit_parts.append(f"{d} -> {dest_name}")
     exits_text = ", ".join(exit_parts) or "None"
@@ -281,7 +282,7 @@ async def cmd_who(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     lines = []
-    for scene in orchestrator.scenes.values():
+    for scene in orchestrator.get_scenes():
         players = orchestrator.get_scene_players(scene.scene_id)
         player_names = [p.display_name for p in players]
         if player_names:

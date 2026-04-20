@@ -154,23 +154,23 @@ Open  ──>  Started  ──>  Completed
 
 | # | Status | Started (PST) | Completed (PST) | Description |
 |---|--------|---------------|------------------|-------------|
-| 5.1 | Open | | | Update `server/api/app.py` to inject a `SessionFactory` into the API routes module (alongside the orchestrator) |
-| 5.2 | Open | | | Update display-data API routes to use repos directly: `GET /api/player/{id}`, `GET /api/character/{id}`, `GET /api/character/{id}/inventory`, `GET /api/scene/{id}`, `GET /api/campaign/{id}/recap`, `GET /api/campaign/{id}/quests`, `GET /api/player/{id}/clues`, `GET /api/campaign/{id}/map` |
-| 5.3 | Open | | | Keep decision-relevant API routes going through orchestrator: `POST /api/action/submit`, `GET /api/scene/{id}/context` (turn state), `POST /api/channel/create`, `POST /api/channel/{id}/send`, `POST /api/channel/{id}/leave` |
-| 5.4 | Open | | | Update inbox route `GET /api/player/{id}/inbox` to use `KnowledgeFactRepo` for facts (DB) + `self.inbox_read` for read status (in-memory) |
-| 5.5 | Open | | | Update channel routes `GET /api/player/{id}/channels`, `GET /api/channel/{id}/messages` — channels from `SideChannelRepo` (DB), messages from `self.channel_messages` (in-memory) |
-| 5.6 | Open | | | Update draft route `GET /api/action/draft/{id}` — drafts remain in `self.drafts` (in-memory) |
-| 5.7 | Open | | | Update bot commands in `bot/commands.py`: replace `orchestrator.scenes`, `orchestrator.players`, `orchestrator.campaign` with calls through orchestrator query methods or direct repo reads |
-| 5.8 | Open | | | Update `/diagnostics` command to query campaigns and turn windows from repos |
-| 5.9 | Open | | | Update `/scene` and `/who` commands to use repo-backed query methods |
-| 5.10 | Open | | | Update all API tests (`tests/unit/test_api_routes.py`, `tests/unit/test_api_gameplay.py`) to use `create_test_session_factory()` |
-| 5.11 | Open | | | Run full test suite and lint, fix any failures |
-| 5.12 | Open | | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 5.1 | Completed | 2026-04-19 09:00 PM | 2026-04-19 09:05 PM | Update `server/api/app.py` to inject a `SessionFactory` into the API routes module (alongside the orchestrator). Added `set_session_factory()` to routes module |
+| 5.2 | Completed | 2026-04-19 09:05 PM | 2026-04-19 09:05 PM | Display-data API routes already use orchestrator query methods (migrated in Phase 3/4). All reads go through `orch.get_*()` which internally use repos |
+| 5.3 | Completed | 2026-04-19 09:05 PM | 2026-04-19 09:05 PM | Decision-relevant API routes already go through orchestrator (migrated in Phase 3/4) |
+| 5.4 | Completed | 2026-04-19 09:05 PM | 2026-04-19 09:05 PM | Inbox route already uses `orch.get_scopes()` and `orch.get_knowledge_facts()` (migrated in Phase 3) |
+| 5.5 | Completed | 2026-04-19 09:05 PM | 2026-04-19 09:05 PM | Channel routes already use `orch._session_scope()` with `SideChannelRepo` (migrated in Phase 3) |
+| 5.6 | Completed | 2026-04-19 09:05 PM | 2026-04-19 09:05 PM | Draft route already uses `self.drafts` (in-memory, unchanged) |
+| 5.7 | Completed | 2026-04-19 09:05 PM | 2026-04-19 09:10 PM | Updated `cmd_newgame` to use `orchestrator.get_scenes()` instead of `orchestrator.scenes` |
+| 5.8 | Completed | 2026-04-19 09:10 PM | 2026-04-19 09:12 PM | Updated `/diagnostics` to use `orchestrator.get_campaign()`, `get_turn_windows()`, `get_scenes()`, `get_players()`. Added `list_for_campaign()` to `TurnWindowRepo` and `get_turn_windows()` to orchestrator |
+| 5.9 | Completed | 2026-04-19 09:12 PM | 2026-04-19 09:15 PM | Updated `/scene` to use `orchestrator.get_scene(sid)` and `/who` to use `orchestrator.get_scenes()` |
+| 5.10 | Completed | 2026-04-19 09:15 PM | 2026-04-19 09:15 PM | All API tests already use `create_test_session_factory()` (migrated in Phase 3) |
+| 5.11 | Completed | 2026-04-19 09:15 PM | 2026-04-19 09:18 PM | Full test suite: 1314 passed. Lint and format clean |
+| 5.12 | Completed | 2026-04-19 09:18 PM | 2026-04-19 09:20 PM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 5 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Added `set_session_factory()` to routes module, called from `create_api_app()`. Added `list_for_campaign()` to `TurnWindowRepo`. Added `get_turn_windows()` to orchestrator. Updated `bot/commands.py`: `cmd_newgame` uses `get_scenes()`, `cmd_diagnostics` uses `get_campaign()` / `get_turn_windows()` / `get_scenes()` / `get_players()`, `cmd_scene` uses `get_scene()`, `cmd_who` uses `get_scenes()`. API routes were already fully migrated in Phases 3–4. All API tests already used `create_test_session_factory()`. Total: 1314 tests, all green, lint clean.
+- **Changes hosted at:** `server/api/app.py`, `server/api/routes.py`, `server/storage/repository.py`, `server/orchestrator/game_loop.py`, `bot/commands.py`
 - **Commit:** `Database Phase 5: Migrate bot commands and API routes to database-backed reads`
 
 ---

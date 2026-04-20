@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from server.api.routes import router, set_orchestrator
+from server.api.routes import router, set_orchestrator, set_session_factory
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session, sessionmaker
@@ -40,6 +40,7 @@ def create_api_app(
     """
     if session_factory is not None:
         orchestrator.session_factory = session_factory
+        set_session_factory(session_factory)
     app = FastAPI(
         title="RPG Mini App API",
         description="REST API for the Telegram Mini App game client.",
