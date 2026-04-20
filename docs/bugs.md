@@ -13,79 +13,6 @@
 |---|---|---|---|---|---|
 | BUG-001 | P2 | Routing | OpenAI inference adapter requires live API key; all narration uses deterministic fallback without it | `models/main/adapter.py` | Deferred (requires OPENAI_API_KEY) |
 | BUG-002 | P3 | Clarity | Narration fallback text is functional but repetitive across turns | `models/main/fallback.py` | Open |
-| BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | — | **Closed** (DB Phases 1–7: all entity state persisted via SQLAlchemy repos, startup recovery, optimistic locking) |
-| BUG20260419-001 | P0 | Security | Bot token accepted from client in /api/auth/validate — attacker can forge auth for any user | `server/api/routes.py:71` | **Fixed** |
-| BUG20260419-002 | P0 | Security | Path traversal in /newgame — user-supplied path passed directly to file open | `bot/commands.py:158` | **Fixed** |
-| BUG20260419-003 | P0 | Scope Leakage | Visibility grant check is overly permissive — any grant for a fact makes it visible to ALL players | `server/scope/engine.py:170` | **Fixed** |
-| BUG20260419-004 | P1 | Correctness | HP not clamped to zero — negative HP causes inflated healing and negative display | `server/combat/resolution.py:33` | **Fixed** |
-| BUG20260419-005 | P1 | Correctness | resolve_attack() does not apply damage to target — caller must separately apply, but coupling is implicit | `server/combat/actions.py:111` | **Fixed** |
-| BUG20260419-006 | P1 | Correctness | Damage pipeline split across actions.py and resolution.py with inconsistent defense models | `server/combat/actions.py` + `server/combat/resolution.py` | **Fixed** |
-| BUG20260419-007 | P1 | Correctness | "defended" status effect never removed at end of turn — permanent +3 armor | `server/combat/resolution.py:29` | **Fixed** |
-| BUG20260419-008 | P1 | Correctness | NPC mutation in social engine has no rollback — failed outcomes still permanently reduce trust | `server/npc/social.py:106` | **Fixed** |
-| BUG20260419-009 | P1 | Correctness | transfer_character claims atomicity but rollback can silently fail | `server/scene/membership.py:106` | **Fixed** |
-| BUG20260419-010 | P1 | Correctness | Running timer with expires_at=None returns "not expired, 0 remaining" instead of error | `server/timer/controller.py:208` | **Fixed** |
-| BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine — paused-to-early_closed not in transition table | `server/timer/controller.py:232` | **Fixed** |
-| BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() which is randomized per process — breaks across restarts | `server/orchestrator/game_loop.py:493` | **Fixed** |
-| BUG20260419-013 | P1 | Correctness | All scenes share one public scope — multi-scene scope separation broken | `server/orchestrator/game_loop.py:638` | **Fixed** |
-| BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | **Fixed** (DB migration: recovery now gets players from CharacterRepo via `get_scene_players()`) |
-| BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict when async fallback silently discarded | `server/reliability/model_recovery.py:117` | **Fixed** |
-| BUG20260419-016 | P1 | Correctness | Unguarded update.effective_user None access in all bot command handlers | `bot/commands.py:47` | **Fixed** |
-| BUG20260419-017 | P1 | Correctness | Unguarded update.message None access in all bot command handlers | `bot/commands.py:48` | **Fixed** |
-| BUG20260419-018 | P1 | Correctness | Fresh empty BotRegistry created on every fallback lookup — players never found | `bot/commands.py:39` | **Fixed** |
-| BUG20260419-019 | P1 | Correctness | Unguarded message.from_user None access in handlers.py | `bot/handlers.py:107` | **Fixed** |
-| BUG20260419-020 | P1 | Contract Drift | combat_summary contract requires "narration" but schemas.py expects "summary" | `models/contracts/main_contracts.py:196` | **Fixed** |
-| BUG20260419-021 | P1 | Contract Drift | ruling_proposal contract fields mismatch schemas.py (reason vs reasoning, etc.) | `models/contracts/main_contracts.py:238` | **Fixed** |
-| BUG20260419-022 | P1 | Contract Drift | npc_dialogue contract has internal_thought field that could leak NPC private state | `models/contracts/main_contracts.py:143` | **Fixed** |
-| BUG20260419-023 | P1 | Correctness | OpenAI adapter returns success=True on empty choices array | `models/main/adapter.py:157` | **Fixed** |
-| BUG20260419-024 | P1 | Correctness | Morale state raw strings — typo silently prevents combat from ending | `server/combat/conditions.py:74` | **Fixed** |
-| BUG20260419-025 | P2 | Correctness | Side channel audit fact_id collision — same player, same channel, multiple messages | `server/scope/side_channel_audit.py:56` | Fixed |
-| BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels within campaign | `server/scope/side_channel_engine.py:89` | Fixed |
-| BUG20260419-027 | P2 | Correctness | Naive datetime stripping (replace(tzinfo=None)) used in 10+ files — fragile | Multiple files | Fixed |
-| BUG20260419-028 | P2 | Correctness | replay_turn() silently drops missing action IDs | `server/engine/turn_engine.py:486` | Fixed |
-| BUG20260419-029 | P2 | Correctness | search() does not flip item.is_hidden=False — items rediscovered every search | `server/exploration/actions.py:301` | Fixed |
-| BUG20260419-030 | P2 | Correctness | Trigger on_enter/on_exit ambiguity — caller must split evaluation correctly | `server/exploration/triggers.py:231` | Fixed |
-| BUG20260419-031 | P2 | Correctness | Trigger _apply() always scopes facts privately regardless of fact content | `server/exploration/triggers.py:281` | Fixed |
-| BUG20260419-032 | P2 | Correctness | Clue discover() allows double-discovery — no idempotency guard | `server/exploration/clues.py:282` | Fixed |
-| BUG20260419-033 | P2 | Correctness | Monster damage: damage=3+ kills exactly 1 unit regardless of magnitude | `server/combat/resolution.py:51` | Fixed |
-| BUG20260419-034 | P2 | Correctness | Combat move validates destination but not direction | `server/combat/actions.py:239` | Fixed |
-| BUG20260419-035 | P2 | Correctness | resolve_use_item heal amount from dict could be string — TypeError | `server/combat/actions.py:192` | Fixed |
-| BUG20260419-036 | P2 | Correctness | SocialOutcome is plain class, not Enum — typos pass silently | `server/npc/social.py:60` | Fixed |
-| BUG20260419-037 | P2 | Correctness | apply_action_delta returns 0 for unknown action_key — typos silently ignored | `server/npc/trust.py:160` | Fixed |
-| BUG20260419-038 | P2 | Correctness | Trust _derive_stance has no "suspicious" zone despite docstring claiming it | `server/npc/trust.py:189` | Fixed |
-| BUG20260419-039 | P2 | Correctness | remove_character unconditionally removes player_id even if other chars remain | `server/scene/membership.py:65` | Fixed |
-| BUG20260419-040 | P2 | Correctness | Timer pause truncation drift — int() instead of round() loses up to 1s per cycle | `server/timer/controller.py:256` | **Fixed** |
-| BUG20260419-041 | P2 | Correctness | Timer resume with 0 remaining gets free extra second — can never truly expire | `server/timer/controller.py:275` | **Fixed** |
-| BUG20260419-042 | P2 | Correctness | timer integration uses raw strings for ActionState comparison | `server/timer/integration.py:77` | **Fixed** |
-| BUG20260419-043 | P2 | Correctness | timeout_players empty list coerced to None via `or None` | `server/orchestrator/game_loop.py:432` | **Fixed** |
-| BUG20260419-044 | P2 | Correctness | Diagnostics always reports ALL players as pending in stuck turns | `server/observability/diagnostics.py:153` | **Fixed** |
-| BUG20260419-045 | P2 | Correctness | fast_model_responsive threshold too permissive — 1 success masks 9 failures | `server/observability/diagnostics.py:221` | **Fixed** |
-| BUG20260419-046 | P2 | Correctness | leave_channel mutates entity directly, bypassing SideChannelEngine | `server/api/routes.py:588` | Fixed |
-| BUG20260419-047 | P2 | Correctness | Map discovered logic wrong — adjacent scenes shown as undiscovered | `server/api/routes.py:686` | Fixed |
-| BUG20260419-048 | P2 | Correctness | output_repair bool/int type confusion — isinstance(True, int) passes | `models/contracts/output_repair.py:75` | Fixed |
-| BUG20260419-049 | P2 | Correctness | combat_summary contract fallback has invalid tone "medium" | `models/contracts/main_contracts.py:206` | **Fixed** |
-| BUG20260419-050 | P2 | Correctness | is_fast_tier admits unknown tasks — typos route to fast tier silently | `models/fast/router.py:44` | Fixed |
-| BUG20260419-051 | P2 | Correctness | Narration system prompt uses Python single quotes instead of JSON double quotes | `models/main/context.py:144` | Fixed |
-| BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost — user gets generic "Failed" | `scenarios/loader.py:199` | Fixed |
-| BUG20260419-053 | P2 | Correctness | puzzle_patterns.create_puzzle mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Fixed |
-| BUG20260419-054 | P2 | Correctness | scenarios/archetypes.py unsafe casts from object overrides with type: ignore | `scenarios/archetypes.py:38` | Fixed |
-| BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | **Fixed** |
-| BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | **Fixed** |
-| BUG20260419-057 | P2 | Performance | httpx.AsyncClient created per request in both adapters — connection overhead | `models/fast/adapter.py:90` + `models/main/adapter.py:117` | Fixed |
-| BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log — O(n) on every open_turn | `server/orchestrator/game_loop.py:268` | **Fixed** (DB migration: uses TurnLogRepo.count_for_scene()) |
-| BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id — repeated O(n) | `server/orchestrator/game_loop.py:344` | **Fixed** (DB migration: uses CommittedActionRepo.list_for_window()) |
-| BUG20260419-060 | P2 | Performance | _get_player_character linear scan on every call — O(characters) | `server/orchestrator/game_loop.py:615` | **Fixed** (DB migration: uses CharacterRepo.get_for_player()) |
-| BUG20260419-061 | P2 | Performance | Histogram values unbounded list — percentile sort is O(n log n) per query | `server/observability/metrics.py:101` | Fixed |
-| BUG20260419-062 | P2 | Error Handling | SchemaValidationError reason silently discarded in all task functions | `models/main/tasks.py:107` | Fixed |
-| BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly — placeholders sent to LLM | `models/contracts/context_assembly.py:269` | Fixed |
-| BUG20260419-064 | P2 | Error Handling | model_recovery broad except Exception catches programming errors as fallback | `server/reliability/model_recovery.py:97` | Fixed |
-| BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | **Fixed** |
-| BUG20260419-066 | P2 | Error Handling | AI-generated narration sent to Telegram without length check or sanitization | `bot/commands.py:221` | Fixed |
-| BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated identically in 5+ files | Multiple files | Fixed |
-| BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py block testability | `server/timer/integration.py:36` | Fixed |
-| BUG20260419-069 | P2 | Design | API routes access orchestrator private methods directly | `server/api/routes.py:95` | Fixed |
-| BUG20260419-070 | P2 | Design | Orchestrator stored in module-level global — prevents DI and testing | `server/api/routes.py:51` | Fixed |
-| BUG20260419-071 | P2 | Design | Scope engine fallback creates fake ConversationScope with empty IDs | `server/scope/engine.py:295` | Fixed |
-| BUG20260419-072 | P2 | Design | bot/outbound.py accesses BotRegistry private _user_to_player dict | `bot/outbound.py:130` | Fixed |
 | BUG20260419-073 | P3 | Data Model | NPC.health_state, stance_to_party, MonsterGroup.morale_state are raw strings not enums | `server/domain/entities.py:271` | Open |
 | BUG20260419-074 | P3 | Data Model | InventoryItem dual-owner fields (character + scene) not enforced by __post_init__ | `server/domain/entities.py:335` | Open |
 | BUG20260419-075 | P3 | Data Model | SideChannelEngine.create_channel created_at typed as object not datetime | `server/scope/side_channel_engine.py:60` | Open |
@@ -98,12 +25,86 @@
 | BUG20260419-082 | P3 | Performance | Scene scoped_prompts O(n*m) ID membership checks on lists | `server/scene/scoped_prompts.py:57` | Open |
 | BUG20260419-083 | P3 | Performance | BFS in scenario validator uses list.pop(0) — O(n^2) | `scenarios/validator.py:376` | Open |
 | BUG20260419-084 | P3 | Performance | Scope violation detection is O(n*m) substring search | `models/contracts/context_assembly.py:219` | Open |
-| BUG20260419-085 | P3 | Design | Leakage guard module-level singletons couple import to instantiation | `server/scope/leakage_guard.py:30` | Fixed |
-| BUG20260419-086 | P3 | Design | Deferred stdlib imports in side_channel_engine (datetime) | `server/scope/side_channel_engine.py:77` | Fixed |
 
 ## Resolved Bugs
 
-None yet.
+| ID | Severity | Category | Description | File | Status |
+|---|---|---|---|---|---|
+| BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | — | Closed (DB Phases 1-7) |
+| BUG20260419-001 | P0 | Security | Bot token accepted from client in /api/auth/validate | `server/api/routes.py:71` | Fixed |
+| BUG20260419-002 | P0 | Security | Path traversal in /newgame — user-supplied path passed directly to file open | `bot/commands.py:158` | Fixed |
+| BUG20260419-003 | P0 | Scope Leakage | Visibility grant check overly permissive — any grant makes fact visible to ALL players | `server/scope/engine.py:170` | Fixed |
+| BUG20260419-004 | P1 | Correctness | HP not clamped to zero — negative HP causes inflated healing | `server/combat/resolution.py:33` | Fixed |
+| BUG20260419-005 | P1 | Correctness | resolve_attack() does not apply damage to target | `server/combat/actions.py:111` | Fixed |
+| BUG20260419-006 | P1 | Correctness | Damage pipeline split with inconsistent defense models | `server/combat/actions.py` + `server/combat/resolution.py` | Fixed |
+| BUG20260419-007 | P1 | Correctness | "defended" status effect never removed at end of turn | `server/combat/resolution.py:29` | Fixed |
+| BUG20260419-008 | P1 | Correctness | NPC mutation has no rollback — failed outcomes permanently reduce trust | `server/npc/social.py:106` | Fixed |
+| BUG20260419-009 | P1 | Correctness | transfer_character rollback can silently fail | `server/scene/membership.py:106` | Fixed |
+| BUG20260419-010 | P1 | Correctness | Running timer with expires_at=None returns wrong result | `server/timer/controller.py:208` | Fixed |
+| BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine | `server/timer/controller.py:232` | Fixed |
+| BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() — randomized per process | `server/orchestrator/game_loop.py:493` | Fixed |
+| BUG20260419-013 | P1 | Correctness | All scenes share one public scope | `server/orchestrator/game_loop.py:638` | Fixed |
+| BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained — recovery gets zero pending | `server/reliability/turn_recovery.py:88` | Fixed (DB migration) |
+| BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict | `server/reliability/model_recovery.py:117` | Fixed |
+| BUG20260419-016 | P1 | Correctness | Unguarded effective_user None access in bot handlers | `bot/commands.py:47` | Fixed |
+| BUG20260419-017 | P1 | Correctness | Unguarded message None access in bot handlers | `bot/commands.py:48` | Fixed |
+| BUG20260419-018 | P1 | Correctness | Fresh empty BotRegistry on every fallback lookup | `bot/commands.py:39` | Fixed |
+| BUG20260419-019 | P1 | Correctness | Unguarded from_user None access in handlers.py | `bot/handlers.py:107` | Fixed |
+| BUG20260419-020 | P1 | Contract Drift | combat_summary "narration" vs "summary" mismatch | `models/contracts/main_contracts.py:196` | Fixed |
+| BUG20260419-021 | P1 | Contract Drift | ruling_proposal fields mismatch schemas.py | `models/contracts/main_contracts.py:238` | Fixed |
+| BUG20260419-022 | P1 | Contract Drift | npc_dialogue internal_thought could leak NPC state | `models/contracts/main_contracts.py:143` | Fixed |
+| BUG20260419-023 | P1 | Correctness | OpenAI adapter returns success=True on empty choices | `models/main/adapter.py:157` | Fixed |
+| BUG20260419-024 | P1 | Correctness | Morale state raw strings — typo prevents combat ending | `server/combat/conditions.py:74` | Fixed |
+| BUG20260419-025 | P2 | Correctness | Side channel audit fact_id collision | `server/scope/side_channel_audit.py:56` | Fixed |
+| BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels | `server/scope/side_channel_engine.py:89` | Fixed |
+| BUG20260419-027 | P2 | Correctness | Naive datetime stripping in 10+ files | Multiple files | Fixed |
+| BUG20260419-028 | P2 | Correctness | replay_turn() silently drops missing action IDs | `server/engine/turn_engine.py:486` | Fixed |
+| BUG20260419-029 | P2 | Correctness | search() does not flip item.is_hidden=False | `server/exploration/actions.py:301` | Fixed |
+| BUG20260419-030 | P2 | Correctness | Trigger on_enter/on_exit ambiguity | `server/exploration/triggers.py:231` | Fixed |
+| BUG20260419-031 | P2 | Correctness | Trigger _apply() always scopes facts privately | `server/exploration/triggers.py:281` | Fixed |
+| BUG20260419-032 | P2 | Correctness | Clue discover() allows double-discovery | `server/exploration/clues.py:282` | Fixed |
+| BUG20260419-033 | P2 | Correctness | Monster damage kills exactly 1 unit regardless of magnitude | `server/combat/resolution.py:51` | Fixed |
+| BUG20260419-034 | P2 | Correctness | Combat move validates destination but not direction | `server/combat/actions.py:239` | Fixed |
+| BUG20260419-035 | P2 | Correctness | resolve_use_item heal amount could be string | `server/combat/actions.py:192` | Fixed |
+| BUG20260419-036 | P2 | Correctness | SocialOutcome is plain class, not Enum | `server/npc/social.py:60` | Fixed |
+| BUG20260419-037 | P2 | Correctness | apply_action_delta returns 0 for unknown action_key | `server/npc/trust.py:160` | Fixed |
+| BUG20260419-038 | P2 | Correctness | Trust _derive_stance has no "suspicious" zone | `server/npc/trust.py:189` | Fixed |
+| BUG20260419-039 | P2 | Correctness | remove_character unconditionally removes player_id | `server/scene/membership.py:65` | Fixed |
+| BUG20260419-040 | P2 | Correctness | Timer pause truncation drift — int() instead of round() | `server/timer/controller.py:256` | Fixed |
+| BUG20260419-041 | P2 | Correctness | Timer resume with 0 remaining gets free extra second | `server/timer/controller.py:275` | Fixed |
+| BUG20260419-042 | P2 | Correctness | timer integration uses raw strings for ActionState | `server/timer/integration.py:77` | Fixed |
+| BUG20260419-043 | P2 | Correctness | timeout_players empty list coerced to None | `server/orchestrator/game_loop.py:432` | Fixed |
+| BUG20260419-044 | P2 | Correctness | Diagnostics reports ALL players as pending in stuck turns | `server/observability/diagnostics.py:153` | Fixed |
+| BUG20260419-045 | P2 | Correctness | fast_model_responsive threshold too permissive | `server/observability/diagnostics.py:221` | Fixed |
+| BUG20260419-046 | P2 | Correctness | leave_channel bypasses SideChannelEngine | `server/api/routes.py:588` | Fixed |
+| BUG20260419-047 | P2 | Correctness | Map discovered logic wrong — adjacent scenes as undiscovered | `server/api/routes.py:686` | Fixed |
+| BUG20260419-048 | P2 | Correctness | output_repair bool/int type confusion | `models/contracts/output_repair.py:75` | Fixed |
+| BUG20260419-049 | P2 | Correctness | combat_summary contract fallback has invalid tone "medium" | `models/contracts/main_contracts.py:206` | Fixed |
+| BUG20260419-050 | P2 | Correctness | is_fast_tier admits unknown tasks silently | `models/fast/router.py:44` | Fixed |
+| BUG20260419-051 | P2 | Correctness | Narration prompt uses Python single quotes not JSON | `models/main/context.py:144` | Fixed |
+| BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost | `scenarios/loader.py:199` | Fixed |
+| BUG20260419-053 | P2 | Correctness | puzzle_patterns mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Fixed |
+| BUG20260419-054 | P2 | Correctness | archetypes.py unsafe casts with type: ignore | `scenarios/archetypes.py:38` | Fixed |
+| BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | Fixed |
+| BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | Fixed |
+| BUG20260419-057 | P2 | Performance | httpx.AsyncClient created per request in both adapters | `models/fast/adapter.py:90` + `models/main/adapter.py:117` | Fixed |
+| BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log | `server/orchestrator/game_loop.py:268` | Fixed (DB migration) |
+| BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id | `server/orchestrator/game_loop.py:344` | Fixed (DB migration) |
+| BUG20260419-060 | P2 | Performance | _get_player_character linear scan on every call | `server/orchestrator/game_loop.py:615` | Fixed (DB migration) |
+| BUG20260419-061 | P2 | Performance | Histogram values unbounded list | `server/observability/metrics.py:101` | Fixed |
+| BUG20260419-062 | P2 | Error Handling | SchemaValidationError reason silently discarded | `models/main/tasks.py:107` | Fixed |
+| BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly | `models/contracts/context_assembly.py:269` | Fixed |
+| BUG20260419-064 | P2 | Error Handling | model_recovery broad except catches programming errors | `server/reliability/model_recovery.py:97` | Fixed |
+| BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | Fixed |
+| BUG20260419-066 | P2 | Error Handling | AI narration sent without length check or sanitization | `bot/commands.py:221` | Fixed |
+| BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated in 5+ files | Multiple files | Fixed |
+| BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py | `server/timer/integration.py:36` | Fixed |
+| BUG20260419-069 | P2 | Design | API routes access orchestrator private methods | `server/api/routes.py:95` | Fixed |
+| BUG20260419-070 | P2 | Design | Orchestrator stored in module-level global | `server/api/routes.py:51` | Fixed |
+| BUG20260419-071 | P2 | Design | Scope engine fallback creates fake ConversationScope | `server/scope/engine.py:295` | Fixed |
+| BUG20260419-072 | P2 | Design | bot/outbound.py accesses BotRegistry private dict | `bot/outbound.py:130` | Fixed |
+| BUG20260419-085 | P3 | Design | Leakage guard module-level singletons | `server/scope/leakage_guard.py:30` | Fixed |
+| BUG20260419-086 | P3 | Design | Deferred stdlib imports in side_channel_engine | `server/scope/side_channel_engine.py:77` | Fixed |
 
 ---
 
