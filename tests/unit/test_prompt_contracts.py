@@ -664,7 +664,7 @@ class TestOutputValidation:
         contract = get_main_contract("ruling_proposal")
         result = validate_output(
             contract,
-            '{"ruling": "allow", "success": true, "confidence": "high", "reasoning": "Valid."}',
+            '{"ruling": "allow", "reason": "Valid."}',
         )
         assert result.is_valid
 

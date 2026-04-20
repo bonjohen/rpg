@@ -87,16 +87,16 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 4.1 | Open | | | BUG-020: Align combat_summary contract in `models/contracts/main_contracts.py` — "narration"→"summary", "tone"→"tension" |
-| 4.2 | Open | | | BUG-021: Align ruling_proposal contract — remove "success"/"confidence", use "ruling"/"reason" per schemas.py |
-| 4.3 | Open | | | BUG-022: Align npc_dialogue contract — remove "internal_thought"/"trust_shift_suggestion", use "dialogue"/"action_beat"/"mood" |
-| 4.4 | Open | | | Add tests verifying contract output_schema keys match validate_* expectations |
-| 4.5 | Open | | | Update BUG-020, 021, 022 status in `docs/bugs.md` |
-| 4.6 | Open | | | Run pytest + ruff, fix any failures |
+| 4.1 | Completed | 2026-04-19 11:36 PM | 2026-04-19 11:38 PM | BUG-020: Align combat_summary contract in `models/contracts/main_contracts.py` — "narration"→"summary", "tone"→"tension" |
+| 4.2 | Completed | 2026-04-19 11:36 PM | 2026-04-19 11:38 PM | BUG-021: Align ruling_proposal contract — remove "success"/"confidence", use "ruling"/"reason" per schemas.py |
+| 4.3 | Completed | 2026-04-19 11:36 PM | 2026-04-19 11:38 PM | BUG-022: Align npc_dialogue contract — remove "internal_thought"/"trust_shift_suggestion", use "dialogue"/"action_beat"/"mood" |
+| 4.4 | Completed | 2026-04-19 11:38 PM | 2026-04-19 11:40 PM | Add tests verifying contract output_schema keys match validate_* expectations |
+| 4.5 | Completed | 2026-04-19 11:42 PM | 2026-04-19 11:42 PM | Update BUG-020, 021, 022 status in `docs/bugs.md` |
+| 4.6 | Completed | 2026-04-19 11:40 PM | 2026-04-19 11:42 PM | Run pytest + ruff, fix any failures |
 
 ### Phase 4 Summary
 
-- **Changes:** TBD
+- **Changes:** Aligned combat_summary contract fields ("narration"→"summary", "tone"→"tension" with proper enum). Aligned ruling_proposal contract fields (removed "success"/"confidence", use "ruling"/"reason" + optional condition/suggested_action_type/difficulty_class). Aligned npc_dialogue contract (removed "internal_thought"/"trust_shift_suggestion", use "action_beat"/"mood"). Updated test fixtures and test assertions. Also fixed BUG-049 (fallback invalid tone). 1369 tests passing.
 - **Commit:** `Bug-fix Phase 4: Align prompt contracts with schema validators`
 
 ## Phase 5: Timer + Orchestrator

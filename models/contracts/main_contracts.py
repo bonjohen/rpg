@@ -145,22 +145,31 @@ _register(
             "required": ["dialogue"],
             "properties": {
                 "dialogue": {"type": "string"},
-                "internal_thought": {"type": "string"},
-                "trust_shift_suggestion": {"type": "integer"},
+                "action_beat": {"type": "string"},
+                "mood": {
+                    "type": "string",
+                    "enum": [
+                        "friendly",
+                        "hostile",
+                        "nervous",
+                        "neutral",
+                        "suspicious",
+                    ],
+                },
             },
         },
         output_example=(
             '{"dialogue": "Welcome, travelers.", '
-            '"internal_thought": "They seem trustworthy.", '
-            '"trust_shift_suggestion": 1}'
+            '"action_beat": "The innkeeper sets down a mug.", '
+            '"mood": "friendly"}'
         ),
         max_input_tokens=8192,
         max_output_tokens=1024,
         scope_rules=["npc_scoped", "no_other_npc_facts"],
         fallback_output={
             "dialogue": "The NPC remains silent for a moment.",
-            "internal_thought": "",
-            "trust_shift_suggestion": 0,
+            "action_beat": "",
+            "mood": "neutral",
         },
     )
 )
@@ -189,22 +198,27 @@ _register(
         input_fields=["battlefield_summary", "action_results", "scene_context"],
         output_schema={
             "type": "object",
-            "required": ["narration"],
+            "required": ["summary"],
             "properties": {
-                "narration": {"type": "string"},
-                "tone": {
+                "summary": {"type": "string"},
+                "outcomes": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                },
+                "tension": {
                     "type": "string",
-                    "enum": ["neutral", "tense", "triumphant", "ominous", "comic"],
+                    "enum": ["low", "medium", "high", "critical"],
                 },
             },
         },
-        output_example='{"narration": "Steel clashes in the darkness.", "tone": "tense"}',
+        output_example='{"summary": "Steel clashes in the darkness.", "outcomes": [], "tension": "high"}',
         max_input_tokens=8192,
         max_output_tokens=1024,
         scope_rules=["public_only", "no_hidden_monster_stats"],
         fallback_output={
-            "narration": "The exchange of blows concludes. The dust settles.",
-            "tone": "medium",
+            "summary": "The exchange of blows concludes. The dust settles.",
+            "outcomes": [],
+            "tension": "medium",
         },
     )
 )
@@ -238,29 +252,35 @@ _register(
         ],
         output_schema={
             "type": "object",
-            "required": ["ruling", "success", "confidence", "reasoning"],
+            "required": ["ruling", "reason"],
             "properties": {
-                "ruling": {"type": "string"},
-                "success": {"type": "boolean"},
-                "confidence": {
+                "ruling": {
                     "type": "string",
-                    "enum": ["high", "medium", "low"],
+                    "enum": [
+                        "allow",
+                        "allow_with_condition",
+                        "deny",
+                        "request_clarification",
+                    ],
                 },
-                "reasoning": {"type": "string"},
+                "reason": {"type": "string"},
+                "condition": {"type": "string"},
+                "suggested_action_type": {"type": "string"},
+                "difficulty_class": {"type": "integer"},
             },
         },
         output_example=(
-            '{"ruling": "allow", "success": true, '
-            '"confidence": "high", "reasoning": "Action is valid."}'
+            '{"ruling": "allow", "reason": "Action is valid within the scene context."}'
         ),
         max_input_tokens=8192,
         max_output_tokens=512,
         scope_rules=["minimal_private_facts"],
         fallback_output={
             "ruling": "request_clarification",
-            "success": False,
-            "confidence": "low",
-            "reasoning": "Unable to evaluate at this time.",
+            "reason": "Unable to evaluate at this time.",
+            "condition": "",
+            "suggested_action_type": "",
+            "difficulty_class": None,
         },
     )
 )
