@@ -32,6 +32,13 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | DB-5 | Migrate Bot Commands and API Routes | Completed | 2026-04-19 09:18 PM | Bot commands migrated from dict access to query methods; session factory injected into routes; API routes already done in DB-3/4; 1314 tests pass |
 | DB-6 | Startup Recovery and Multi-Campaign Support | Completed | 2026-04-19 10:00 PM | startup() method with table creation, campaign loading, timer reconstruction, stuck turn recovery; telegram_group_id on load_scenario; 13 new tests; 1327 tests pass |
 | DB-7 | Documentation, Cleanup, and Verification | Completed | 2026-04-19 10:15 PM | Updated architecture.md, closed BUG-003, verified zero in-memory dict references; 1327 tests pass |
+| BF-1 | Security & Scope (P0) | Completed | 2026-04-19 11:08 PM | 3 P0 bugs fixed (auth bypass, path traversal, scope leakage); 9 new tests; 1338 total |
+| BF-2 | Bot Handler None Guards | Completed | 2026-04-19 11:20 PM | 4 bugs fixed (None guards, registry fallback); 20 new tests; 1358 total |
+| BF-3 | Combat Pipeline | Completed | 2026-04-19 11:35 PM | 5 bugs fixed (HP clamp, damage delegation, status cleanup, morale enum); 11 new tests; 1369 total |
+| BF-4 | Contract Drift | Completed | 2026-04-19 11:42 PM | 3 bugs fixed (contract field alignment) + BUG-049 bonus; 1369 total |
+| BF-5 | Timer + Orchestrator | Completed | 2026-04-19 11:56 PM | 4 bugs fixed (timer ValueError, transition table, SHA-256 idempotency, per-scene scope); 10 new tests; 1379 total |
+| BF-6 | NPC/Social + Scene | Completed | 2026-04-20 12:06 AM | 2 bugs fixed (trust rollback, transfer logging); 8 new tests; 1387 total |
+| BF-7 | Reliability + Model | Completed | 2026-04-20 12:17 AM | 3 bugs fixed (async fallback, empty choices, recovery verified); 9 new tests; 1396 total |
 
 ## Phase Notes
 

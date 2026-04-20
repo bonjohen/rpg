@@ -87,10 +87,11 @@ async def call_with_timeout(
         )
         fallback_data = _invoke_fallback(fallback_fn)
         return ModelCallResult(
-            success=True,
+            success=fallback_data is not None,
             data=fallback_data,
             fallback_used=True,
             timeout=True,
+            error="" if fallback_data is not None else "async fallback discarded",
             duration_ms=elapsed,
             trace_id=trace_id,
         )
@@ -104,23 +105,31 @@ async def call_with_timeout(
         )
         fallback_data = _invoke_fallback(fallback_fn)
         return ModelCallResult(
-            success=True,
+            success=fallback_data is not None,
             data=fallback_data,
             fallback_used=True,
             timeout=False,
-            error=str(exc),
+            error=str(exc)
+            if fallback_data is not None
+            else f"{exc}; async fallback discarded",
             duration_ms=elapsed,
             trace_id=trace_id,
         )
 
 
-def _invoke_fallback(fallback_fn: Callable) -> dict:
-    """Call the fallback function, handling both sync and async variants."""
+def _invoke_fallback(fallback_fn: Callable) -> dict | None:
+    """Call the fallback function, handling both sync and async variants.
+
+    Returns the fallback dict on success, or None if the fallback could
+    not be invoked (e.g. async fallback in sync context).
+    """
     result = fallback_fn()
     # If the fallback returned a coroutine (async def), we can't await it here
     # in a sync context. Fallbacks should be sync for reliability.
     if asyncio.iscoroutine(result):
-        # This shouldn't happen in practice, but handle gracefully
+        logger.warning(
+            "Async fallback function discarded — fallbacks must be synchronous."
+        )
         result.close()
-        return {}
+        return None
     return result

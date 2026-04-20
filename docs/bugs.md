@@ -27,8 +27,8 @@
 | BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine — paused-to-early_closed not in transition table | `server/timer/controller.py:232` | **Fixed** |
 | BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() which is randomized per process — breaks across restarts | `server/orchestrator/game_loop.py:493` | **Fixed** |
 | BUG20260419-013 | P1 | Correctness | All scenes share one public scope — multi-scene scope separation broken | `server/orchestrator/game_loop.py:638` | **Fixed** |
-| BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | Improved (DB migration: recovery now gets players from CharacterRepo via `get_scene_players()`) |
-| BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict when async fallback silently discarded | `server/reliability/model_recovery.py:117` | Open |
+| BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | **Fixed** (DB migration: recovery now gets players from CharacterRepo via `get_scene_players()`) |
+| BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict when async fallback silently discarded | `server/reliability/model_recovery.py:117` | **Fixed** |
 | BUG20260419-016 | P1 | Correctness | Unguarded update.effective_user None access in all bot command handlers | `bot/commands.py:47` | **Fixed** |
 | BUG20260419-017 | P1 | Correctness | Unguarded update.message None access in all bot command handlers | `bot/commands.py:48` | **Fixed** |
 | BUG20260419-018 | P1 | Correctness | Fresh empty BotRegistry created on every fallback lookup — players never found | `bot/commands.py:39` | **Fixed** |
@@ -36,7 +36,7 @@
 | BUG20260419-020 | P1 | Contract Drift | combat_summary contract requires "narration" but schemas.py expects "summary" | `models/contracts/main_contracts.py:196` | **Fixed** |
 | BUG20260419-021 | P1 | Contract Drift | ruling_proposal contract fields mismatch schemas.py (reason vs reasoning, etc.) | `models/contracts/main_contracts.py:238` | **Fixed** |
 | BUG20260419-022 | P1 | Contract Drift | npc_dialogue contract has internal_thought field that could leak NPC private state | `models/contracts/main_contracts.py:143` | **Fixed** |
-| BUG20260419-023 | P1 | Correctness | OpenAI adapter returns success=True on empty choices array | `models/main/adapter.py:157` | Open |
+| BUG20260419-023 | P1 | Correctness | OpenAI adapter returns success=True on empty choices array | `models/main/adapter.py:157` | **Fixed** |
 | BUG20260419-024 | P1 | Correctness | Morale state raw strings — typo silently prevents combat from ending | `server/combat/conditions.py:74` | **Fixed** |
 | BUG20260419-025 | P2 | Correctness | Side channel audit fact_id collision — same player, same channel, multiple messages | `server/scope/side_channel_audit.py:56` | Open |
 | BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels within campaign | `server/scope/side_channel_engine.py:89` | Open |

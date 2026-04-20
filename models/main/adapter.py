@@ -144,10 +144,14 @@ class OpenAIMainAdapter:
         latency_ms = (time.monotonic() - start) * 1000
 
         # Extract text from Chat Completions response
-        text = ""
         choices = data.get("choices", [])
-        if choices:
-            text = choices[0].get("message", {}).get("content", "")
+        if not choices:
+            return GenerateResult(
+                latency_ms=latency_ms,
+                failure_reason="empty choices array in API response",
+            )
+
+        text = choices[0].get("message", {}).get("content", "")
 
         # Extract token usage
         usage = data.get("usage", {})

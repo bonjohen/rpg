@@ -144,15 +144,15 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 7.1 | Open | | | BUG-014: Verify turn_recovery DB fix is complete; close if so |
-| 7.2 | Open | | | BUG-015: Fix `_invoke_fallback` in `server/reliability/model_recovery.py` — return success=False + log warning on async discard |
-| 7.3 | Open | | | BUG-023: Fix `models/main/adapter.py` — return success=False on empty choices |
-| 7.4 | Open | | | Add tests for async fallback failure, empty choices failure |
-| 7.5 | Open | | | Update BUG-014, 015, 023 status in `docs/bugs.md` |
-| 7.6 | Open | | | Run pytest + ruff, fix any failures |
-| 7.7 | Open | | | Update `docs/phase_status.md` and `STARTUP.md` with bug-fix summary |
+| 7.1 | Completed | 2026-04-20 12:08 AM | 2026-04-20 12:09 AM | BUG-014: Verify turn_recovery DB fix is complete; close if so |
+| 7.2 | Completed | 2026-04-20 12:09 AM | 2026-04-20 12:12 AM | BUG-015: Fix `_invoke_fallback` in `server/reliability/model_recovery.py` — return success=False + log warning on async discard |
+| 7.3 | Completed | 2026-04-20 12:09 AM | 2026-04-20 12:11 AM | BUG-023: Fix `models/main/adapter.py` — return success=False on empty choices |
+| 7.4 | Completed | 2026-04-20 12:12 AM | 2026-04-20 12:14 AM | Add tests for async fallback failure, empty choices failure |
+| 7.5 | Completed | 2026-04-20 12:14 AM | 2026-04-20 12:15 AM | Update BUG-014, 015, 023 status in `docs/bugs.md` |
+| 7.6 | Completed | 2026-04-20 12:14 AM | 2026-04-20 12:15 AM | Run pytest + ruff, fix any failures |
+| 7.7 | Completed | 2026-04-20 12:15 AM | 2026-04-20 12:17 AM | Update `docs/phase_status.md` and `STARTUP.md` with bug-fix summary |
 
 ### Phase 7 Summary
 
-- **Changes:** TBD
+- **Changes:** Verified turn_recovery uses pure interface (no DB imports). Fixed _invoke_fallback to return None + log warning on async fallback discard; callers now set success=False. Fixed OpenAI adapter to return success=False on empty choices array. 9 new tests, 1396 total passing. All 24 P0+P1 bugs closed.
 - **Commit:** `Bug-fix Phase 7: Model adapter failure reporting and recovery verification`
