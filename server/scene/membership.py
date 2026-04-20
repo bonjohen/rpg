@@ -7,10 +7,13 @@ and return a result.  No I/O.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Optional
 
 from server.domain.entities import Character, NPC, Scene
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -125,7 +128,23 @@ class SceneMembershipEngine:
         add_result = self.add_character(to_scene, character)
         if not add_result.success:
             # Rollback: put the character back in the source scene
-            self.add_character(from_scene, character)
+            rollback = self.add_character(from_scene, character)
+            if not rollback.success:
+                logger.warning(
+                    "Transfer rollback failed for character %r from scene %r to %r: %s",
+                    character.character_id,
+                    from_scene.scene_id,
+                    to_scene.scene_id,
+                    rollback.reason,
+                )
+            else:
+                logger.warning(
+                    "Transfer rolled back: character %r returned to scene %r (add to %r failed: %s)",
+                    character.character_id,
+                    from_scene.scene_id,
+                    to_scene.scene_id,
+                    add_result.reason,
+                )
             return MembershipChangeResult(
                 success=False,
                 scene=to_scene,

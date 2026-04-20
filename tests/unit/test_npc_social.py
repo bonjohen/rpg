@@ -379,10 +379,15 @@ class TestSocialEngineThreaten:
         result = self.engine.resolve(self._inp(), npc)
         assert result.trust_result.new_trust < 50
 
-    def test_threaten_appends_memory_tag(self):
-        npc = make_npc_theron()
+    def test_threaten_appends_memory_tag_on_success(self):
+        npc = make_npc_theron(personality_tags=["timid"])
         self.engine.resolve(self._inp(), npc)
         assert any("threatened" in t for t in npc.memory_tags)
+
+    def test_threaten_rolls_back_memory_tag_on_failure(self):
+        npc = make_npc_theron()  # guard_captain → escalation (failure)
+        self.engine.resolve(self._inp(), npc)
+        assert not any("threatened" in t for t in npc.memory_tags)
 
     def test_threaten_refuses_for_neutral_non_fearful_npc(self):
         npc = make_npc_mira(personality_tags=["cautious"])  # not timid, not fearless

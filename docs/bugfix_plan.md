@@ -126,15 +126,15 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 6.1 | Open | | | BUG-008: Add trust snapshot + restore on failure in `server/npc/social.py` |
-| 6.2 | Open | | | BUG-009: Verify transfer_character rollback in `server/scene/membership.py`; add warning log on rollback |
-| 6.3 | Open | | | Add tests for trust rollback, transfer rollback logging |
-| 6.4 | Open | | | Update BUG-008, 009 status in `docs/bugs.md` |
-| 6.5 | Open | | | Run pytest + ruff, fix any failures |
+| 6.1 | Completed | 2026-04-19 11:58 PM | 2026-04-20 12:00 AM | BUG-008: Add trust snapshot + restore on failure in `server/npc/social.py` |
+| 6.2 | Completed | 2026-04-20 12:00 AM | 2026-04-20 12:02 AM | BUG-009: Verify transfer_character rollback in `server/scene/membership.py`; add warning log on rollback |
+| 6.3 | Completed | 2026-04-20 12:02 AM | 2026-04-20 12:05 AM | Add tests for trust rollback, transfer rollback logging |
+| 6.4 | Completed | 2026-04-20 12:05 AM | 2026-04-20 12:06 AM | Update BUG-008, 009 status in `docs/bugs.md` |
+| 6.5 | Completed | 2026-04-20 12:04 AM | 2026-04-20 12:06 AM | Run pytest + ruff, fix any failures |
 
 ### Phase 6 Summary
 
-- **Changes:** TBD
+- **Changes:** Added trust/stance/memory snapshot and restore on failure in SocialEngine.resolve(). Added warning logging on transfer_character rollback. Updated test_npc_social.py to split threaten memory tag test into success/failure variants. 8 new tests, 1387 total passing.
 - **Commit:** `Bug-fix Phase 6: NPC trust rollback and scene transfer atomicity`
 
 ## Phase 7: Reliability + Model

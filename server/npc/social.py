@@ -176,7 +176,18 @@ class SocialEngine:
                 rejection_reason=f"Unknown social action type: {inp.action_type!r}.",
             )
 
+        # Snapshot trust state before resolution for rollback on failure
+        trust_snapshot = dict(npc.trust_by_player)
+        stance_snapshot = npc.stance_to_party
+        memory_snapshot = list(npc.memory_tags)
+
         result = handler(inp, npc)
+
+        # Restore trust on failure — partial mutations should not persist
+        if not result.success:
+            npc.trust_by_player = trust_snapshot
+            npc.stance_to_party = stance_snapshot
+            npc.memory_tags = memory_snapshot
 
         # Evaluate tells after state mutation
         tell_result = self._tells.evaluate_tells(

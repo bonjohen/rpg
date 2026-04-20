@@ -21,8 +21,8 @@
 | BUG20260419-005 | P1 | Correctness | resolve_attack() does not apply damage to target — caller must separately apply, but coupling is implicit | `server/combat/actions.py:111` | **Fixed** |
 | BUG20260419-006 | P1 | Correctness | Damage pipeline split across actions.py and resolution.py with inconsistent defense models | `server/combat/actions.py` + `server/combat/resolution.py` | **Fixed** |
 | BUG20260419-007 | P1 | Correctness | "defended" status effect never removed at end of turn — permanent +3 armor | `server/combat/resolution.py:29` | **Fixed** |
-| BUG20260419-008 | P1 | Correctness | NPC mutation in social engine has no rollback — failed outcomes still permanently reduce trust | `server/npc/social.py:106` | Open |
-| BUG20260419-009 | P1 | Correctness | transfer_character claims atomicity but rollback can silently fail | `server/scene/membership.py:106` | Open |
+| BUG20260419-008 | P1 | Correctness | NPC mutation in social engine has no rollback — failed outcomes still permanently reduce trust | `server/npc/social.py:106` | **Fixed** |
+| BUG20260419-009 | P1 | Correctness | transfer_character claims atomicity but rollback can silently fail | `server/scene/membership.py:106` | **Fixed** |
 | BUG20260419-010 | P1 | Correctness | Running timer with expires_at=None returns "not expired, 0 remaining" instead of error | `server/timer/controller.py:208` | **Fixed** |
 | BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine — paused-to-early_closed not in transition table | `server/timer/controller.py:232` | **Fixed** |
 | BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() which is randomized per process — breaks across restarts | `server/orchestrator/game_loop.py:493` | **Fixed** |
