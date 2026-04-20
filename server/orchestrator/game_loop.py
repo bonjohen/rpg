@@ -1,13 +1,22 @@
 """Top-level coordinator that wires bot gateway, turn engine, model adapters,
 scope engine, timer, and all game loop subsystems into a single runnable loop.
-
-All state is in-memory for now (playtest). Production persistence is post-Phase 20.
 """
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+    from typing import TypeVar
+
+    from sqlalchemy.orm import Session, sessionmaker
+
+    T = TypeVar("T")
 
 from bot.config import BotConfig
 from bot.mapping import BotRegistry
@@ -73,8 +82,10 @@ class DispatchResult:
 class GameOrchestrator:
     """Wires all subsystems into a runnable game loop.
 
-    Holds all state in-memory. This is intentional for playtest;
-    production persistence via server/storage/ is a post-Phase 20 concern.
+    Accepts an optional ``session_factory`` for database-backed persistence.
+    When provided, ``_session_scope()`` and ``_run_in_session()`` become
+    available for transactional access.  In-memory dicts are still used
+    during the migration; they will be removed phase-by-phase.
     """
 
     def __init__(
@@ -83,11 +94,13 @@ class GameOrchestrator:
         main_adapter: MainAdapter | None = None,
         bot_registry: BotRegistry | None = None,
         config: BotConfig | None = None,
+        session_factory: sessionmaker[Session] | None = None,
     ) -> None:
         self.fast_adapter = fast_adapter
         self.main_adapter = main_adapter
         self.bot_registry = bot_registry or BotRegistry()
         self.config = config
+        self.session_factory = session_factory
 
         # Game state dicts
         self.campaign: Campaign | None = None
@@ -132,6 +145,42 @@ class GameOrchestrator:
 
         # Timer state (timer_id -> TimerRecord)
         self.timers: dict[str, object] = {}
+
+    # ------------------------------------------------------------------
+    # Database session helpers
+    # ------------------------------------------------------------------
+
+    @contextmanager
+    def _session_scope(self) -> Generator[Session, None, None]:
+        """Yield a database session; commit on clean exit, rollback on error.
+
+        Raises RuntimeError if no session_factory is configured.
+        """
+        if self.session_factory is None:
+            raise RuntimeError("No session_factory configured on GameOrchestrator")
+        session: Session = self.session_factory()
+        try:
+            yield session
+            session.commit()
+        except BaseException:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    async def _run_in_session(self, fn: Callable[[Session], T]) -> T:
+        """Run *fn* with a database session in a thread-pool executor.
+
+        The callable receives a ``Session`` that is committed on success
+        and rolled back on failure, mirroring ``_session_scope`` semantics.
+        """
+        loop = asyncio.get_running_loop()
+
+        def _wrapper() -> T:
+            with self._session_scope() as session:
+                return fn(session)
+
+        return await loop.run_in_executor(None, _wrapper)
 
     # ------------------------------------------------------------------
     # Scenario loading

@@ -26,6 +26,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 19 | Content Expansion and Quality Pass | Completed | 2026-04-18 04:02 AM | 45 new tests; 3 new scenarios, puzzle_patterns.py, archetypes.py, extended validation, narration style guides |
 | 20 | Pre-Release Stabilization | Completed | 2026-04-19 03:04 AM | 41 new tests (33 privacy audit + 8 extended session); hardened bot messages; updated docs |
 | DB-1 | Database Foundation and SQLite Pragmas | Completed | 2026-04-19 11:12 AM | 14 new tests; SQLite pragmas, version column, optimistic locking, test fixtures |
+| DB-2 | Session Scope and Orchestrator Constructor | Completed | 2026-04-19 12:42 PM | 8 new tests; session_factory param, _session_scope(), _run_in_session(), create_api_app() updated |
 
 ## Phase Notes
 

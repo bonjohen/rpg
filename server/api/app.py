@@ -16,21 +16,30 @@ from fastapi.staticfiles import StaticFiles
 from server.api.routes import router, set_orchestrator
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm import Session, sessionmaker
+
     from server.orchestrator.game_loop import GameOrchestrator
 
 # Path to the webapp/ directory (project root / webapp)
 _WEBAPP_DIR = Path(__file__).resolve().parent.parent.parent / "webapp"
 
 
-def create_api_app(orchestrator: GameOrchestrator) -> FastAPI:
+def create_api_app(
+    orchestrator: GameOrchestrator,
+    session_factory: sessionmaker[Session] | None = None,
+) -> FastAPI:
     """Create and configure the FastAPI application.
 
     Args:
         orchestrator: The game orchestrator holding all game state.
+        session_factory: Optional SQLAlchemy session factory. When provided,
+            it is stored on the orchestrator for database-backed persistence.
 
     Returns:
         A fully configured FastAPI app ready to run.
     """
+    if session_factory is not None:
+        orchestrator.session_factory = session_factory
     app = FastAPI(
         title="RPG Mini App API",
         description="REST API for the Telegram Mini App game client.",

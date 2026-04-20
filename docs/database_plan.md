@@ -71,19 +71,19 @@ Open  ──>  Started  ──>  Completed
 
 | # | Status | Started (PST) | Completed (PST) | Description |
 |---|--------|---------------|------------------|-------------|
-| 2.1 | Open | | | Add `session_factory: sessionmaker | None = None` parameter to `GameOrchestrator.__init__()` in `server/orchestrator/game_loop.py` |
-| 2.2 | Open | | | Implement `_session_scope()` context manager on `GameOrchestrator` that yields a `Session`, commits on clean exit, rolls back on exception |
-| 2.3 | Open | | | Implement `_run_in_session(fn)` helper that wraps a sync callable in `asyncio.get_event_loop().run_in_executor(None, fn)` for use from async methods |
-| 2.4 | Open | | | Update `server/api/app.py` `create_api_app()` to optionally accept and store a `session_factory` on the orchestrator |
-| 2.5 | Open | | | Update all test files that construct `GameOrchestrator()` (7 files in `tests/`) to pass `session_factory=create_test_session_factory()` where needed, or `None` to preserve existing behavior |
-| 2.6 | Open | | | Add unit tests for `_session_scope()` commit/rollback behavior |
-| 2.7 | Open | | | Run full test suite and lint, fix any failures |
-| 2.8 | Open | | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 2.1 | Completed | 2026-04-19 12:30 PM | 2026-04-19 12:32 PM | Add `session_factory: sessionmaker | None = None` parameter to `GameOrchestrator.__init__()` in `server/orchestrator/game_loop.py` |
+| 2.2 | Completed | 2026-04-19 12:30 PM | 2026-04-19 12:32 PM | Implement `_session_scope()` context manager on `GameOrchestrator` that yields a `Session`, commits on clean exit, rolls back on exception |
+| 2.3 | Completed | 2026-04-19 12:30 PM | 2026-04-19 12:32 PM | Implement `_run_in_session(fn)` helper that wraps a sync callable in `asyncio.get_running_loop().run_in_executor(None, fn)` for use from async methods |
+| 2.4 | Completed | 2026-04-19 12:32 PM | 2026-04-19 12:33 PM | Update `server/api/app.py` `create_api_app()` to optionally accept and store a `session_factory` on the orchestrator |
+| 2.5 | Completed | 2026-04-19 12:33 PM | 2026-04-19 12:33 PM | All 7 test files already work — `session_factory` defaults to `None`, preserving existing behavior with no changes needed |
+| 2.6 | Completed | 2026-04-19 12:33 PM | 2026-04-19 12:38 PM | Add 8 unit tests in `tests/unit/test_database_session_scope.py`: commit/rollback for `_session_scope`, RuntimeError without factory, async commit/rollback for `_run_in_session` |
+| 2.7 | Completed | 2026-04-19 12:38 PM | 2026-04-19 12:40 PM | Full test suite: 1314 passed. Lint and format clean. |
+| 2.8 | Completed | 2026-04-19 12:40 PM | 2026-04-19 12:42 PM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 2 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Added `session_factory` parameter to `GameOrchestrator.__init__()`. Implemented `_session_scope()` context manager (commit on clean exit, rollback on exception) and `_run_in_session(fn)` async helper (wraps sync callable in executor). Updated `create_api_app()` to optionally accept and forward a `session_factory`. Added `tests/unit/test_database_session_scope.py` (8 tests). Total: 1314 tests, all green, lint clean.
+- **Changes hosted at:** local only
 - **Commit:** `Database Phase 2: Session scope and orchestrator constructor`
 
 ---
