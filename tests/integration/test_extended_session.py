@@ -14,6 +14,7 @@ import os
 
 from server.domain.enums import ActionType, SceneState
 from server.orchestrator.game_loop import GameOrchestrator
+from tests.fixtures.db_helpers import create_test_session_factory
 
 
 SCENARIOS = os.path.join(os.path.dirname(__file__), "..", "..", "scenarios", "starters")
@@ -21,7 +22,7 @@ SCENARIOS = os.path.join(os.path.dirname(__file__), "..", "..", "scenarios", "st
 
 def _load(scenario_name: str, num_players: int = 3) -> GameOrchestrator:
     """Load a scenario, register players, return ready orchestrator."""
-    orch = GameOrchestrator()
+    orch = GameOrchestrator(session_factory=create_test_session_factory())
     path = os.path.join(SCENARIOS, f"{scenario_name}.yaml")
     assert orch.load_scenario(path), f"Failed to load {scenario_name}"
     for i in range(1, num_players + 1):
@@ -133,7 +134,7 @@ class TestHauntedManor10Turn:
 
         for _ in range(3):
             _play_turn(orch, starting, {"p1": (ActionType.inspect, "room")})
-            scene = orch.scenes[starting]
+            scene = orch.get_scene(starting)
             assert scene.state == SceneState.narrated
 
 
@@ -188,11 +189,16 @@ class TestPlayerDisconnectRejoin:
                 },
             )
 
-        # Remove p3 from scene membership
-        scene = orch.scenes[starting]
+        # Remove p3 from scene membership via repo
         char_p3 = orch.get_player_character("p3")
-        if char_p3 and char_p3.character_id in scene.character_ids:
-            scene.character_ids.remove(char_p3.character_id)
+        if char_p3:
+            scene = orch.get_scene(starting)
+            if char_p3.character_id in scene.character_ids:
+                scene.character_ids.remove(char_p3.character_id)
+                with orch._session_scope() as session:
+                    from server.storage.repository import SceneRepo
+
+                    SceneRepo(session).save(scene)
 
         # Play a turn without p3
         entry = _play_turn(
@@ -204,7 +210,12 @@ class TestPlayerDisconnectRejoin:
 
         # Re-add p3 to the scene
         if char_p3:
+            scene = orch.get_scene(starting)
             scene.character_ids.append(char_p3.character_id)
+            with orch._session_scope() as session:
+                from server.storage.repository import SceneRepo
+
+                SceneRepo(session).save(scene)
 
         # Play another turn with all 3
         entry = _play_turn(
@@ -274,9 +285,9 @@ class TestSplitParty:
             "merchant_quarter",
         ]:
             orch = _load(name, num_players=2)
-            assert orch.campaign is not None
-            assert len(orch.scenes) > 0
-            assert len(orch.players) == 2
+            assert orch.campaign_id is not None
+            assert len(orch.get_scenes()) > 0
+            assert len(orch.get_players()) == 2
             starting = orch._find_starting_scene_id()
             assert starting is not None
             # One turn each

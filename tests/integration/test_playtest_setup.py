@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 
-
 from server.orchestrator.game_loop import GameOrchestrator
 from server.domain.enums import SceneState, TurnWindowState
+from tests.fixtures.db_helpers import create_test_session_factory
 
 
 GOBLIN_CAVES_PATH = os.path.join(
@@ -15,7 +15,7 @@ GOBLIN_CAVES_PATH = os.path.join(
 
 
 def _make_orchestrator() -> GameOrchestrator:
-    return GameOrchestrator()
+    return GameOrchestrator(session_factory=create_test_session_factory())
 
 
 # ------------------------------------------------------------------
@@ -26,18 +26,19 @@ def _make_orchestrator() -> GameOrchestrator:
 def test_goblin_caves_loads_into_orchestrator():
     orch = _make_orchestrator()
     assert orch.load_scenario(GOBLIN_CAVES_PATH)
-    assert len(orch.scenes) == 4
-    assert len(orch.npcs) == 2
-    assert len(orch.monster_groups) == 2
-    assert len(orch.items) == 7
-    assert orch.campaign is not None
+    assert len(orch.get_scenes()) == 4
+    assert len(orch.get_npcs()) == 2
+    assert len(orch.get_monster_groups()) == 2
+    assert len(orch.get_items()) == 7
+    assert orch.campaign_id is not None
 
 
 def test_newgame_populates_campaign():
     orch = _make_orchestrator()
     orch.load_scenario(GOBLIN_CAVES_PATH, campaign_name="Test Campaign")
-    assert orch.campaign is not None
-    assert orch.campaign.name == "Test Campaign"
+    campaign = orch.get_campaign()
+    assert campaign is not None
+    assert campaign.name == "Test Campaign"
 
 
 def test_scenario_starting_scene_is_cave_entrance():
@@ -45,21 +46,22 @@ def test_scenario_starting_scene_is_cave_entrance():
     orch.load_scenario(GOBLIN_CAVES_PATH)
     starting_id = orch._find_starting_scene_id()
     assert starting_id is not None
-    scene = orch.scenes[starting_id]
+    scene = orch.get_scene(starting_id)
+    assert scene is not None
     assert scene.name == "Cave Entrance"
 
 
 def test_scenario_has_puzzles_and_quests():
     orch = _make_orchestrator()
     orch.load_scenario(GOBLIN_CAVES_PATH)
-    assert len(orch.puzzles) == 2
-    assert len(orch.quests) == 2
+    assert len(orch.get_puzzles()) == 2
+    assert len(orch.get_quests()) == 2
 
 
 def test_scenario_has_scopes():
     orch = _make_orchestrator()
     orch.load_scenario(GOBLIN_CAVES_PATH)
-    assert len(orch.scopes) > 0
+    assert len(orch.get_scopes()) > 0
 
 
 def test_scenario_has_triggers():
@@ -71,7 +73,7 @@ def test_scenario_has_triggers():
 def test_scenario_has_knowledge_facts():
     orch = _make_orchestrator()
     orch.load_scenario(GOBLIN_CAVES_PATH)
-    assert len(orch.knowledge_facts) > 0
+    assert len(orch.get_knowledge_facts()) > 0
 
 
 # ------------------------------------------------------------------
@@ -87,8 +89,8 @@ def test_player_join_and_scene_assignment():
     p2, c2 = orch.add_player("p2", "Bob", telegram_user_id=1002)
     p3, c3 = orch.add_player("p3", "Charlie", telegram_user_id=1003)
 
-    assert len(orch.players) == 3
-    assert len(orch.characters) == 3
+    assert len(orch.get_players()) == 3
+    assert len(orch.get_characters()) == 3
 
     # All assigned to starting scene
     starting_id = orch._find_starting_scene_id()
@@ -155,7 +157,7 @@ def test_first_turn_opens_correctly():
     assert tw.scene_id == starting_id
 
     # Scene state updated
-    scene = orch.scenes[starting_id]
+    scene = orch.get_scene(starting_id)
     assert scene.active_turn_window_id == tw.turn_window_id
     assert scene.state == SceneState.awaiting_actions
 

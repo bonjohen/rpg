@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 
-
 from server.domain.enums import ActionType, SceneState
 from server.orchestrator.game_loop import GameOrchestrator
+from tests.fixtures.db_helpers import create_test_session_factory
 
 
 GOBLIN_CAVES_PATH = os.path.join(
@@ -16,7 +16,7 @@ GOBLIN_CAVES_PATH = os.path.join(
 
 def _setup_game(num_players: int = 3) -> GameOrchestrator:
     """Load goblin_caves, register players, return ready orchestrator."""
-    orch = GameOrchestrator()
+    orch = GameOrchestrator(session_factory=create_test_session_factory())
     orch.load_scenario(GOBLIN_CAVES_PATH)
     for i in range(1, num_players + 1):
         orch.add_player(f"p{i}", f"Player{i}")
@@ -100,7 +100,7 @@ class TestExplorationSequence:
         orch.submit_action("p1", ActionType.hold)
         orch.resolve_turn(tw.turn_window_id)
 
-        scene = orch.scenes[starting]
+        scene = orch.get_scene(starting)
         assert scene.state == SceneState.narrated
         assert scene.active_turn_window_id is None
 
@@ -139,7 +139,7 @@ class TestSocialSequence:
         tw2 = orch.open_turn(main_hall.scene_id)
         # Find Grix's NPC id
         grix_id = None
-        for npc in orch.npcs.values():
+        for npc in orch.get_npcs():
             if "Grix" in npc.name:
                 grix_id = npc.npc_id
                 break
@@ -168,7 +168,7 @@ class TestCombatSequence:
         tw = orch.open_turn(starting)
         # Attack goblin scouts
         scout_id = None
-        for mg in orch.monster_groups.values():
+        for mg in orch.get_monster_groups():
             if mg.unit_type == "goblin_scout":
                 scout_id = mg.monster_group_id
                 break

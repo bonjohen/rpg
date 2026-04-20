@@ -339,8 +339,8 @@ class KnowledgeFactRow(Base):
     campaign_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("campaigns.campaign_id"), nullable=False
     )
-    scene_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("scenes.scene_id"), nullable=False
+    scene_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("scenes.scene_id"), nullable=True
     )
     owner_scope_id: Mapped[str] = mapped_column(String(36), nullable=False)
     fact_type: Mapped[str] = mapped_column(String(32), nullable=False)

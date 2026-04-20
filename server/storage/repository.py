@@ -293,7 +293,7 @@ def _knowledge_fact_from_row(r: KnowledgeFactRow) -> KnowledgeFact:
     return KnowledgeFact(
         fact_id=r.fact_id,
         campaign_id=r.campaign_id,
-        scene_id=r.scene_id,
+        scene_id=r.scene_id or "",
         owner_scope_id=r.owner_scope_id,
         fact_type=KnowledgeFactType(r.fact_type),
         payload=r.payload,
@@ -426,6 +426,10 @@ class CharacterRepo:
         rows = self._s.query(CharacterRow).filter_by(scene_id=scene_id).all()
         return [_character_from_row(r) for r in rows]
 
+    def list_for_campaign(self, campaign_id: str) -> list[Character]:
+        rows = self._s.query(CharacterRow).filter_by(campaign_id=campaign_id).all()
+        return [_character_from_row(r) for r in rows]
+
 
 class SceneRepo:
     def __init__(self, session: Session) -> None:
@@ -487,6 +491,12 @@ class ConversationScopeRepo:
         )
         return _scope_from_row(row) if row else None
 
+    def list_for_campaign(self, campaign_id: str) -> list[ConversationScope]:
+        rows = (
+            self._s.query(ConversationScopeRow).filter_by(campaign_id=campaign_id).all()
+        )
+        return [_scope_from_row(r) for r in rows]
+
     def get_private_scope_for_player(
         self, campaign_id: str, player_id: str
     ) -> ConversationScope | None:
@@ -522,6 +532,10 @@ class SideChannelRepo:
     def get(self, side_channel_id: str) -> SideChannel | None:
         row = self._s.get(SideChannelRow, side_channel_id)
         return _side_channel_from_row(row) if row else None
+
+    def list_for_campaign(self, campaign_id: str) -> list[SideChannel]:
+        rows = self._s.query(SideChannelRow).filter_by(campaign_id=campaign_id).all()
+        return [_side_channel_from_row(r) for r in rows]
 
 
 class TurnWindowRepo:
@@ -733,6 +747,10 @@ class NPCRepo:
         rows = self._s.query(NPCRow).filter_by(scene_id=scene_id).all()
         return [_npc_from_row(r) for r in rows]
 
+    def list_for_campaign(self, campaign_id: str) -> list[NPC]:
+        rows = self._s.query(NPCRow).filter_by(campaign_id=campaign_id).all()
+        return [_npc_from_row(r) for r in rows]
+
 
 class MonsterGroupRepo:
     def __init__(self, session: Session) -> None:
@@ -765,6 +783,10 @@ class MonsterGroupRepo:
 
     def list_for_scene(self, scene_id: str) -> list[MonsterGroup]:
         rows = self._s.query(MonsterGroupRow).filter_by(scene_id=scene_id).all()
+        return [_monster_group_from_row(r) for r in rows]
+
+    def list_for_campaign(self, campaign_id: str) -> list[MonsterGroup]:
+        rows = self._s.query(MonsterGroupRow).filter_by(campaign_id=campaign_id).all()
         return [_monster_group_from_row(r) for r in rows]
 
 
@@ -802,6 +824,10 @@ class InventoryItemRepo:
 
     def list_for_scene(self, scene_id: str) -> list[InventoryItem]:
         rows = self._s.query(InventoryItemRow).filter_by(owner_scene_id=scene_id).all()
+        return [_inventory_item_from_row(r) for r in rows]
+
+    def list_for_campaign(self, campaign_id: str) -> list[InventoryItem]:
+        rows = self._s.query(InventoryItemRow).filter_by(campaign_id=campaign_id).all()
         return [_inventory_item_from_row(r) for r in rows]
 
 
@@ -859,6 +885,10 @@ class PuzzleStateRepo:
         rows = self._s.query(PuzzleStateRow).filter_by(scene_id=scene_id).all()
         return [_puzzle_state_from_row(r) for r in rows]
 
+    def list_for_campaign(self, campaign_id: str) -> list[PuzzleState]:
+        rows = self._s.query(PuzzleStateRow).filter_by(campaign_id=campaign_id).all()
+        return [_puzzle_state_from_row(r) for r in rows]
+
 
 class KnowledgeFactRepo:
     def __init__(self, session: Session) -> None:
@@ -870,7 +900,7 @@ class KnowledgeFactRepo:
             row = KnowledgeFactRow(fact_id=kf.fact_id)
             self._s.add(row)
         row.campaign_id = kf.campaign_id
-        row.scene_id = kf.scene_id
+        row.scene_id = kf.scene_id or None
         row.owner_scope_id = kf.owner_scope_id
         row.fact_type = kf.fact_type.value
         row.payload = kf.payload
@@ -892,6 +922,10 @@ class KnowledgeFactRepo:
 
     def list_for_scene(self, scene_id: str) -> list[KnowledgeFact]:
         rows = self._s.query(KnowledgeFactRow).filter_by(scene_id=scene_id).all()
+        return [_knowledge_fact_from_row(r) for r in rows]
+
+    def list_for_campaign(self, campaign_id: str) -> list[KnowledgeFact]:
+        rows = self._s.query(KnowledgeFactRow).filter_by(campaign_id=campaign_id).all()
         return [_knowledge_fact_from_row(r) for r in rows]
 
 

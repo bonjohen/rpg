@@ -10,9 +10,9 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Database Phase 2 — Session Scope** (complete). Now executing `docs/database_plan.md`.
+Current phase: **Database Phase 3 — Entity Migration** (complete). Now executing `docs/database_plan.md`.
 
-All 20 original phases complete. Database integration plan (`docs/database_plan.md`, 7 phases) is now active. DB Phase 1 complete: SQLite pragmas, optimistic locking, test fixtures. DB Phase 2 complete: `session_factory` on orchestrator, `_session_scope()` context manager, `_run_in_session()` async helper, `create_api_app()` accepts session factory. 1314 tests pass, lint clean.
+All 20 original phases complete. Database integration plan (`docs/database_plan.md`, 7 phases) is now active. DB Phase 1 complete: SQLite pragmas, optimistic locking, test fixtures. DB Phase 2 complete: `session_factory` on orchestrator, `_session_scope()` context manager, `_run_in_session()` async helper, `create_api_app()` accepts session factory. DB Phase 3 complete: removed all 12 in-memory entity dicts from orchestrator, all reads/writes go through repos, added 20+ query methods, updated all tests. 1314 tests pass, lint clean.
 
 ## Key Design Decisions (do not revisit without cause)
 
@@ -64,7 +64,7 @@ C:\Projects\rpg\
 ├── docs/                    # Design docs, plan, release readiness
 │   ├── release_readiness.md # Open bugs and release criteria
 │   └── feature_freeze.md   # Feature freeze notice
-└── tests/                   # 1292 tests (unit + integration)
+└── tests/                   # 1314 tests (unit + integration)
 ```
 
 ## Known Defects / Open Issues

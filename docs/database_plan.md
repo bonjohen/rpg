@@ -96,25 +96,25 @@ Open  ──>  Started  ──>  Completed
 
 | # | Status | Started (PST) | Completed (PST) | Description |
 |---|--------|---------------|------------------|-------------|
-| 3.1 | Open | | | Rewrite `load_scenario()` to open a session, save all entities via repos (CampaignRepo, SceneRepo, NPCRepo, MonsterGroupRepo, InventoryItemRepo, PuzzleStateRepo, QuestStateRepo, KnowledgeFactRepo, ConversationScopeRepo), and commit atomically |
-| 3.2 | Open | | | Rewrite `add_player()` to open a session, save Player + Character + private ConversationScope + updated Scene via repos, and commit atomically |
-| 3.3 | Open | | | Rewrite `get_player_character()` to use `CharacterRepo.get_for_player()` |
-| 3.4 | Open | | | Rewrite `get_player_scene()` to use `CharacterRepo.get_for_player()` + `SceneRepo.get()` |
-| 3.5 | Open | | | Rewrite `get_scene_players()` to use `CharacterRepo.list_for_scene()` + `PlayerRepo.get()` |
-| 3.6 | Open | | | Rewrite `_find_starting_scene_id()` to use `SceneRepo.list_for_campaign()` |
-| 3.7 | Open | | | Rewrite `_get_private_scope_id()` to use `ConversationScopeRepo.get_private_scope_for_player()` |
-| 3.8 | Open | | | Rewrite `_get_or_create_public_scope()` to use `ConversationScopeRepo.get_public_scope()` with fallback create+save |
-| 3.9 | Open | | | Remove the in-memory dicts: `self.campaign`, `self.scenes`, `self.characters`, `self.players`, `self.npcs`, `self.monster_groups`, `self.items`, `self.puzzles`, `self.quests`, `self.knowledge_facts`, `self.scopes`, `self.side_channels`. Keep `self.triggers` (loaded from scenario, not persisted), `self.drafts`, `self.inbox_read`, `self.channel_messages`, `self.timers` |
-| 3.10 | Open | | | Store `self.campaign_id: str | None` instead of `self.campaign: Campaign | None` — the orchestrator holds only the ID; the full entity is loaded from the repo when needed |
-| 3.11 | Open | | | Update all orchestrator tests (`tests/integration/test_playtest_setup.py`, `test_playtest_session.py`, `test_playtest_logging.py`, `test_defect_categories.py`, `test_extended_session.py`) to use `create_test_session_factory()` and verify scenario loads persist to DB |
-| 3.12 | Open | | | Run full test suite and lint, fix any failures |
-| 3.13 | Open | | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 3.1 | Completed | 2026-04-19 01:00 PM | 2026-04-19 01:20 PM | Rewrite `load_scenario()` to open a session, save all entities via repos (CampaignRepo, SceneRepo, NPCRepo, MonsterGroupRepo, InventoryItemRepo, PuzzleStateRepo, QuestStateRepo, KnowledgeFactRepo, ConversationScopeRepo), and commit atomically |
+| 3.2 | Completed | 2026-04-19 01:20 PM | 2026-04-19 01:35 PM | Rewrite `add_player()` to open a session, save Player + Character + private ConversationScope + updated Scene via repos, and commit atomically |
+| 3.3 | Completed | 2026-04-19 01:35 PM | 2026-04-19 01:45 PM | Rewrite `get_player_character()` to use `CharacterRepo.get_for_player()` |
+| 3.4 | Completed | 2026-04-19 01:45 PM | 2026-04-19 01:50 PM | Rewrite `get_player_scene()` to use `CharacterRepo.get_for_player()` + `SceneRepo.get()` |
+| 3.5 | Completed | 2026-04-19 01:50 PM | 2026-04-19 01:55 PM | Rewrite `get_scene_players()` to use `CharacterRepo.list_for_scene()` + `PlayerRepo.get()` |
+| 3.6 | Completed | 2026-04-19 01:55 PM | 2026-04-19 02:00 PM | Rewrite `_find_starting_scene_id()` to use `SceneRepo.list_for_campaign()` |
+| 3.7 | Completed | 2026-04-19 02:00 PM | 2026-04-19 02:05 PM | Rewrite `_get_private_scope_id()` to use `ConversationScopeRepo.get_private_scope_for_player()` |
+| 3.8 | Completed | 2026-04-19 02:05 PM | 2026-04-19 02:15 PM | Rewrite `_get_or_create_public_scope()` to use `ConversationScopeRepo.get_public_scope()` with fallback create+save |
+| 3.9 | Completed | 2026-04-19 02:15 PM | 2026-04-19 02:30 PM | Remove the in-memory dicts: `self.campaign`, `self.scenes`, `self.characters`, `self.players`, `self.npcs`, `self.monster_groups`, `self.items`, `self.puzzles`, `self.quests`, `self.knowledge_facts`, `self.scopes`, `self.side_channels`. Keep `self.triggers` (loaded from scenario, not persisted), `self.drafts`, `self.inbox_read`, `self.channel_messages`, `self.timers` |
+| 3.10 | Completed | 2026-04-19 02:30 PM | 2026-04-19 02:35 PM | Store `self.campaign_id: str | None` instead of `self.campaign: Campaign | None` — the orchestrator holds only the ID; the full entity is loaded from the repo when needed |
+| 3.11 | Completed | 2026-04-19 02:35 PM | 2026-04-19 07:10 PM | Update all orchestrator tests (`tests/integration/test_playtest_setup.py`, `test_playtest_session.py`, `test_playtest_logging.py`, `test_defect_categories.py`, `test_extended_session.py`) and API tests (`tests/unit/test_api_routes.py`, `test_api_gameplay.py`) to use `create_test_session_factory()` and replace all dict accesses with repo-based query methods |
+| 3.12 | Completed | 2026-04-19 07:10 PM | 2026-04-19 07:25 PM | Run full test suite and lint, fix any failures — 1314 tests pass, lint clean |
+| 3.13 | Completed | 2026-04-19 07:25 PM | 2026-04-19 07:30 PM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 3 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
-- **Commit:** `Database Phase 3: Migrate scenario loading and player management to repos`
+- **Changes:** Rewrote `game_loop.py` to remove all 12 in-memory entity dicts and replace with repo-based reads/writes. Added `campaign_id` field, 20+ public query methods, `save_knowledge_fact()`. Added `list_for_campaign()` to 8 repos. Rewrote `routes.py` to use orchestrator query methods and direct repo calls. Made `KnowledgeFactRow.scene_id` nullable (empty scene_id from scenarios). Updated `db_helpers.py` to use `StaticPool` for cross-thread SQLite safety in TestClient. Updated all 7 test files to use `create_test_session_factory()` and repo-based state modification. Fixed pragma tests to use production `get_engine` for pragma assertions.
+- **Changes hosted at:** `server/orchestrator/game_loop.py`, `server/api/routes.py`, `server/storage/repository.py`, `server/storage/models.py`, `tests/fixtures/db_helpers.py`, `tests/integration/test_*.py` (5 files), `tests/unit/test_api_routes.py`, `tests/unit/test_api_gameplay.py`, `tests/unit/test_database_foundation.py`
+- **Commit:** `Database Phase 3: Migrate entity storage from in-memory dicts to repository pattern`
 
 ---
 

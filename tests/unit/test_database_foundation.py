@@ -88,13 +88,13 @@ class TestSQLitePragmas:
             assert result == 1
 
     def test_busy_timeout_set(self):
-        engine = create_test_engine()
+        engine = get_engine("sqlite:///:memory:")
         with engine.connect() as conn:
             result = conn.exec_driver_sql("PRAGMA busy_timeout").scalar()
             assert result == 5000
 
     def test_synchronous_normal(self):
-        engine = create_test_engine()
+        engine = get_engine("sqlite:///:memory:")
         with engine.connect() as conn:
             # NORMAL = 1
             result = conn.exec_driver_sql("PRAGMA synchronous").scalar()

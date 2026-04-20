@@ -6,6 +6,7 @@ import os
 
 from server.domain.enums import ActionType, ScopeType, TurnWindowState
 from server.orchestrator.game_loop import GameOrchestrator
+from tests.fixtures.db_helpers import create_test_session_factory
 
 
 GOBLIN_CAVES_PATH = os.path.join(
@@ -14,7 +15,7 @@ GOBLIN_CAVES_PATH = os.path.join(
 
 
 def _setup_game(num_players: int = 2) -> GameOrchestrator:
-    orch = GameOrchestrator()
+    orch = GameOrchestrator(session_factory=create_test_session_factory())
     orch.load_scenario(GOBLIN_CAVES_PATH)
     for i in range(1, num_players + 1):
         orch.add_player(f"p{i}", f"Player{i}")
@@ -80,20 +81,21 @@ class TestLeakageDefects:
         entry = orch.resolve_turn(tw.turn_window_id)
         assert entry is not None
         # Referee notes should not appear in public narration
-        for scene in orch.scenes.values():
+        for scene in orch.get_scenes():
             if scene.hidden_description:
                 assert scene.hidden_description not in entry.narration
 
     def test_hidden_exit_not_in_scene_description(self):
         orch = _setup_game(1)
         # Main hall has a hidden exit to treasury
-        main_hall = orch.scenes.get("main_hall") or next(
-            s for s in orch.scenes.values() if s.name == "Main Hall"
-        )
+        main_hall = None
+        for s in orch.get_scenes():
+            if s.name == "Main Hall":
+                main_hall = s
+                break
+        assert main_hall is not None
         # Hidden exits should not be in the exits dict
-        # (they were excluded during loading)
         for direction, target in main_hall.exits.items():
-            # The hidden passage should not be in visible exits
             assert "treasury" not in direction.lower() or target != "treasury"
 
     def test_private_scope_facts_isolated(self):
@@ -107,14 +109,14 @@ class TestLeakageDefects:
 
     def test_referee_only_facts_have_correct_scope(self):
         orch = _setup_game(1)
+        scopes = orch.get_scopes()
+        referee_scope_ids = {
+            s.scope_id for s in scopes if s.scope_type == ScopeType.referee_only
+        }
         referee_facts = [
             f
-            for f in orch.knowledge_facts.values()
-            if any(
-                s.scope_type == ScopeType.referee_only
-                for s in orch.scopes.values()
-                if s.scope_id == f.owner_scope_id
-            )
+            for f in orch.get_knowledge_facts()
+            if f.owner_scope_id in referee_scope_ids
         ]
         # Should have referee-only facts from scenario
         assert len(referee_facts) > 0

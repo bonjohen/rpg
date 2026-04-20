@@ -27,6 +27,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | 20 | Pre-Release Stabilization | Completed | 2026-04-19 03:04 AM | 41 new tests (33 privacy audit + 8 extended session); hardened bot messages; updated docs |
 | DB-1 | Database Foundation and SQLite Pragmas | Completed | 2026-04-19 11:12 AM | 14 new tests; SQLite pragmas, version column, optimistic locking, test fixtures |
 | DB-2 | Session Scope and Orchestrator Constructor | Completed | 2026-04-19 12:42 PM | 8 new tests; session_factory param, _session_scope(), _run_in_session(), create_api_app() updated |
+| DB-3 | Migrate Entity Storage to Repository Pattern | Completed | 2026-04-19 07:30 PM | Removed 12 in-memory dicts, added 20+ query methods, all reads/writes via repos; 1314 tests pass |
 
 ## Phase Notes
 

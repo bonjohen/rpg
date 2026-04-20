@@ -40,7 +40,6 @@ from server.domain.entities import (
     PuzzleState,
     QuestState,
     Scene,
-    SideChannel,
     TurnLogEntry,
     TurnWindow,
 )
@@ -65,6 +64,19 @@ from server.reliability.idempotency import IdempotencyStore
 from server.scene.membership import SceneMembershipEngine
 from server.domain.helpers import new_id, utc_now
 from server.scope.engine import ScopeEngine
+from server.storage.repository import (
+    CampaignRepo,
+    CharacterRepo,
+    ConversationScopeRepo,
+    InventoryItemRepo,
+    KnowledgeFactRepo,
+    MonsterGroupRepo,
+    NPCRepo,
+    PlayerRepo,
+    PuzzleStateRepo,
+    QuestStateRepo,
+    SceneRepo,
+)
 from server.timer.controller import TimerController
 
 
@@ -82,10 +94,9 @@ class DispatchResult:
 class GameOrchestrator:
     """Wires all subsystems into a runnable game loop.
 
-    Accepts an optional ``session_factory`` for database-backed persistence.
-    When provided, ``_session_scope()`` and ``_run_in_session()`` become
-    available for transactional access.  In-memory dicts are still used
-    during the migration; they will be removed phase-by-phase.
+    Entity state (campaigns, scenes, characters, players, NPCs, etc.) is
+    persisted via the repository layer. Turn-lifecycle state (turn_windows,
+    committed_actions, turn_log) remains in-memory until Phase 4.
     """
 
     def __init__(
@@ -102,23 +113,16 @@ class GameOrchestrator:
         self.config = config
         self.session_factory = session_factory
 
-        # Game state dicts
-        self.campaign: Campaign | None = None
-        self.scenes: dict[str, Scene] = {}
-        self.characters: dict[str, Character] = {}
-        self.players: dict[str, Player] = {}
-        self.npcs: dict[str, NPC] = {}
-        self.monster_groups: dict[str, MonsterGroup] = {}
-        self.items: dict[str, InventoryItem] = {}
-        self.puzzles: dict[str, PuzzleState] = {}
-        self.quests: dict[str, QuestState] = {}
-        self.knowledge_facts: dict[str, KnowledgeFact] = {}
-        self.scopes: dict[str, ConversationScope] = {}
+        # Campaign ID (full entity is loaded from the repo when needed)
+        self.campaign_id: str | None = None
+
+        # Triggers loaded from scenario (not persisted)
         self.triggers: list = []
+
+        # Turn-lifecycle state (in-memory, migrated in Phase 4)
         self.turn_windows: dict[str, TurnWindow] = {}
         self.committed_actions: dict[str, CommittedAction] = {}
         self.turn_log: list[TurnLogEntry] = []
-        self.side_channels: dict[str, SideChannel] = {}
 
         # Phase 18: in-memory draft and inbox-read tracking
         self.drafts: dict[str, dict] = {}  # player_id -> draft dict
@@ -187,13 +191,13 @@ class GameOrchestrator:
     # ------------------------------------------------------------------
 
     def load_scenario(self, yaml_path: str, campaign_name: str = "Playtest") -> bool:
-        """Load a scenario from YAML, populate all state dicts."""
+        """Load a scenario from YAML, persist all entities via repos."""
         result = self.scenario_loader.load_from_yaml(yaml_path)
         if not result.success:
             return False
 
         campaign_id = result.campaign_id
-        self.campaign = Campaign(
+        campaign = Campaign(
             campaign_id=campaign_id,
             name=campaign_name,
             telegram_group_id=0,
@@ -201,22 +205,26 @@ class GameOrchestrator:
             created_at=utc_now(),
         )
 
-        for scene in result.scenes:
-            self.scenes[scene.scene_id] = scene
-        for npc in result.npcs:
-            self.npcs[npc.npc_id] = npc
-        for mg in result.monster_groups:
-            self.monster_groups[mg.monster_group_id] = mg
-        for item in result.items:
-            self.items[item.item_id] = item
-        for puzzle in result.puzzles:
-            self.puzzles[puzzle.puzzle_state_id] = puzzle
-        for quest in result.quests:
-            self.quests[quest.quest_state_id] = quest
-        for fact in result.knowledge_facts:
-            self.knowledge_facts[fact.fact_id] = fact
-        for scope in result.scopes:
-            self.scopes[scope.scope_id] = scope
+        with self._session_scope() as session:
+            CampaignRepo(session).save(campaign)
+            for scene in result.scenes:
+                SceneRepo(session).save(scene)
+            for npc in result.npcs:
+                NPCRepo(session).save(npc)
+            for mg in result.monster_groups:
+                MonsterGroupRepo(session).save(mg)
+            for item in result.items:
+                InventoryItemRepo(session).save(item)
+            for puzzle in result.puzzles:
+                PuzzleStateRepo(session).save(puzzle)
+            for quest in result.quests:
+                QuestStateRepo(session).save(quest)
+            for fact in result.knowledge_facts:
+                KnowledgeFactRepo(session).save(fact)
+            for scope in result.scopes:
+                ConversationScopeRepo(session).save(scope)
+
+        self.campaign_id = campaign_id
         self.triggers = list(result.triggers)
 
         return True
@@ -233,10 +241,10 @@ class GameOrchestrator:
         starting_scene_id: str | None = None,
     ) -> tuple[Player, Character]:
         """Register a player and create a character in the starting scene."""
-        if self.campaign is None:
+        if self.campaign_id is None:
             raise RuntimeError("No campaign loaded")
 
-        campaign_id = self.campaign.campaign_id
+        campaign_id = self.campaign_id
         now = utc_now()
 
         player = Player(
@@ -248,7 +256,6 @@ class GameOrchestrator:
             joined_at=now,
             has_dm_open=True,
         )
-        self.players[player_id] = player
 
         # Determine starting scene
         if starting_scene_id is None:
@@ -264,14 +271,6 @@ class GameOrchestrator:
             scene_id=starting_scene_id,
             stats={"hp": 20, "attack": 5, "defense": 3},
         )
-        self.characters[char_id] = character
-
-        # Add to scene membership
-        if starting_scene_id and starting_scene_id in self.scenes:
-            scene = self.scenes[starting_scene_id]
-            result = self.membership_engine.add_character(scene, character)
-            if result.success:
-                self.scenes[starting_scene_id] = result.scene
 
         # Create private-referee scope for this player
         private_scope = ConversationScope(
@@ -280,14 +279,30 @@ class GameOrchestrator:
             scope_type=ScopeType.private_referee,
             player_id=player_id,
         )
-        self.scopes[private_scope.scope_id] = private_scope
+
+        with self._session_scope() as session:
+            PlayerRepo(session).save(player)
+            CharacterRepo(session).save(character)
+            ConversationScopeRepo(session).save(private_scope)
+
+            # Add to scene membership
+            if starting_scene_id:
+                scene = SceneRepo(session).get(starting_scene_id)
+                if scene is not None:
+                    result = self.membership_engine.add_character(scene, character)
+                    if result.success:
+                        SceneRepo(session).save(result.scene)
 
         return player, character
 
     def _find_starting_scene_id(self) -> str | None:
-        """Find the starting scene — first scene in the dict."""
-        if self.scenes:
-            return next(iter(self.scenes))
+        """Find the starting scene — first scene for the campaign."""
+        if self.campaign_id is None:
+            return None
+        with self._session_scope() as session:
+            scenes = SceneRepo(session).list_for_campaign(self.campaign_id)
+        if scenes:
+            return scenes[0].scene_id
         return None
 
     # ------------------------------------------------------------------
@@ -296,43 +311,48 @@ class GameOrchestrator:
 
     def open_turn(self, scene_id: str, duration_seconds: int = 90) -> TurnWindow | None:
         """Create a new TurnWindow for a scene."""
-        if self.campaign is None:
-            return None
-        scene = self.scenes.get(scene_id)
-        if scene is None:
+        if self.campaign_id is None:
             return None
 
-        # Find or create public scope for this scene
-        public_scope_id = self._get_or_create_public_scope(scene_id)
+        with self._session_scope() as session:
+            scene = SceneRepo(session).get(scene_id)
+            if scene is None:
+                return None
 
-        # Determine turn number
-        scene_turns = [e for e in self.turn_log if e.scene_id == scene_id]
-        turn_number = len(scene_turns) + 1
+            # Find or create public scope for this scene
+            public_scope_id = self._get_or_create_public_scope_in_session(
+                session, scene_id
+            )
 
-        now = utc_now()
-        tw = TurnWindow(
-            turn_window_id=new_id(),
-            campaign_id=self.campaign.campaign_id,
-            scene_id=scene_id,
-            public_scope_id=public_scope_id,
-            opened_at=now,
-            expires_at=datetime.fromtimestamp(
-                now.timestamp() + duration_seconds, tz=timezone.utc
-            ),
-            state=TurnWindowState.open,
-            turn_number=turn_number,
-        )
-        self.turn_windows[tw.turn_window_id] = tw
+            # Determine turn number
+            scene_turns = [e for e in self.turn_log if e.scene_id == scene_id]
+            turn_number = len(scene_turns) + 1
 
-        # Update scene
-        scene.active_turn_window_id = tw.turn_window_id
-        scene.state = SceneState.awaiting_actions
+            now = utc_now()
+            tw = TurnWindow(
+                turn_window_id=new_id(),
+                campaign_id=self.campaign_id,
+                scene_id=scene_id,
+                public_scope_id=public_scope_id,
+                opened_at=now,
+                expires_at=datetime.fromtimestamp(
+                    now.timestamp() + duration_seconds, tz=timezone.utc
+                ),
+                state=TurnWindowState.open,
+                turn_number=turn_number,
+            )
+            self.turn_windows[tw.turn_window_id] = tw
+
+            # Update scene
+            scene.active_turn_window_id = tw.turn_window_id
+            scene.state = SceneState.awaiting_actions
+            SceneRepo(session).save(scene)
 
         # Create timer
         timer = self.timer_controller.create_timer(
-            tw.turn_window_id, self.campaign.campaign_id, duration_seconds
+            tw.turn_window_id, self.campaign_id, duration_seconds
         )
-        timer = self.timer_controller.start(timer, now)
+        timer = self.timer_controller.start(timer, utc_now())
         self.timers[timer.timer_id] = timer
 
         return tw
@@ -352,7 +372,8 @@ class GameOrchestrator:
         if character is None or character.scene_id is None:
             return None
 
-        scene = self.scenes.get(character.scene_id)
+        with self._session_scope() as session:
+            scene = SceneRepo(session).get(character.scene_id)
         if scene is None or scene.active_turn_window_id is None:
             return None
 
@@ -413,7 +434,8 @@ class GameOrchestrator:
         if tw is None:
             return None
 
-        scene = self.scenes.get(tw.scene_id)
+        with self._session_scope() as session:
+            scene = SceneRepo(session).get(tw.scene_id)
         if scene is None:
             return None
 
@@ -479,7 +501,7 @@ class GameOrchestrator:
         # Apply action effects and collect narration fragments
         narration_parts = [f"In {scene.name}:"]
         for action in resolve_result.ordered_actions:
-            char = self.characters.get(action.character_id)
+            char = self._get_character(action.character_id)
             char_name = char.name if char else "Unknown"
             if action.is_timeout_fallback:
                 narration_parts.append(f"{char_name} hesitates, unsure what to do.")
@@ -514,8 +536,12 @@ class GameOrchestrator:
             self.turn_log.append(log_entry)
 
         # Clean up scene state
-        scene.active_turn_window_id = None
-        scene.state = SceneState.narrated
+        with self._session_scope() as session:
+            scene_fresh = SceneRepo(session).get(scene.scene_id)
+            if scene_fresh:
+                scene_fresh.active_turn_window_id = None
+                scene_fresh.state = SceneState.narrated
+                SceneRepo(session).save(scene_fresh)
 
         return log_entry
 
@@ -616,32 +642,136 @@ class GameOrchestrator:
         return result
 
     # ------------------------------------------------------------------
-    # Query helpers
+    # Query helpers (public API)
     # ------------------------------------------------------------------
+
+    def get_campaign(self) -> Campaign | None:
+        """Load the active campaign from the database."""
+        if self.campaign_id is None:
+            return None
+        with self._session_scope() as session:
+            return CampaignRepo(session).get(self.campaign_id)
+
+    def get_scene(self, scene_id: str) -> Scene | None:
+        """Load a scene from the database."""
+        with self._session_scope() as session:
+            return SceneRepo(session).get(scene_id)
+
+    def get_scenes(self) -> list[Scene]:
+        """Load all scenes for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return SceneRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_player(self, player_id: str) -> Player | None:
+        """Load a player from the database."""
+        with self._session_scope() as session:
+            return PlayerRepo(session).get(player_id)
+
+    def get_players(self) -> list[Player]:
+        """Load all players for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return PlayerRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_player_character(self, player_id: str) -> Character | None:
+        """Load a player's character from the database."""
+        with self._session_scope() as session:
+            return CharacterRepo(session).get_for_player(player_id)
+
+    def get_characters(self) -> list[Character]:
+        """Load all characters for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return CharacterRepo(session).list_for_campaign(self.campaign_id)
 
     def get_player_scene(self, player_id: str) -> Scene | None:
         """Look up which scene a player's character is in."""
         char = self.get_player_character(player_id)
         if char is None or char.scene_id is None:
             return None
-        return self.scenes.get(char.scene_id)
+        return self.get_scene(char.scene_id)
 
     def get_scene_players(self, scene_id: str) -> list[Player]:
         """Return all players whose characters are in this scene."""
-        player_ids = self._get_scene_player_ids(
-            self.scenes.get(
-                scene_id,
-                Scene(
-                    scene_id="",
-                    campaign_id="",
-                    name="",
-                    description="",
-                    created_at=utc_now(),
-                    state=SceneState.idle,
-                ),
-            )
-        )
-        return [self.players[pid] for pid in player_ids if pid in self.players]
+        with self._session_scope() as session:
+            scene = SceneRepo(session).get(scene_id)
+            if scene is None:
+                return []
+            chars = CharacterRepo(session).list_for_scene(scene_id)
+            player_ids = [c.player_id for c in chars if c.is_alive]
+            return [
+                p
+                for pid in player_ids
+                if (p := PlayerRepo(session).get(pid)) is not None
+            ]
+
+    def get_npcs(self) -> list[NPC]:
+        """Load all NPCs for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return NPCRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_npc(self, npc_id: str) -> NPC | None:
+        """Load an NPC from the database."""
+        with self._session_scope() as session:
+            return NPCRepo(session).get(npc_id)
+
+    def get_monster_groups(self) -> list[MonsterGroup]:
+        """Load all monster groups for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return MonsterGroupRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_monster_group(self, mg_id: str) -> MonsterGroup | None:
+        """Load a monster group from the database."""
+        with self._session_scope() as session:
+            return MonsterGroupRepo(session).get(mg_id)
+
+    def get_items(self) -> list[InventoryItem]:
+        """Load all items for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return InventoryItemRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_puzzles(self) -> list[PuzzleState]:
+        """Load all puzzles for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return PuzzleStateRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_quests(self) -> list[QuestState]:
+        """Load all quests for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return QuestStateRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_scopes(self) -> list[ConversationScope]:
+        """Load all scopes for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return ConversationScopeRepo(session).list_for_campaign(self.campaign_id)
+
+    def get_knowledge_facts(self) -> list[KnowledgeFact]:
+        """Load all knowledge facts for the active campaign."""
+        if self.campaign_id is None:
+            return []
+        with self._session_scope() as session:
+            return KnowledgeFactRepo(session).list_for_campaign(self.campaign_id)
+
+    def save_knowledge_fact(self, fact: KnowledgeFact) -> None:
+        """Persist a knowledge fact to the database."""
+        with self._session_scope() as session:
+            KnowledgeFactRepo(session).save(fact)
 
     def get_turn_log_for_scene(self, scene_id: str) -> list[TurnLogEntry]:
         """Get all turn log entries for a scene, ordered by turn number."""
@@ -653,45 +783,51 @@ class GameOrchestrator:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def get_player_character(self, player_id: str) -> Character | None:
-        for char in self.characters.values():
-            if char.player_id == player_id:
-                return char
-        return None
+    def _get_character(self, character_id: str) -> Character | None:
+        """Load a character by ID from the database."""
+        with self._session_scope() as session:
+            return CharacterRepo(session).get(character_id)
 
     def _get_scene_player_ids(self, scene: Scene) -> list[str]:
         """Get player IDs for characters in a scene."""
-        player_ids = []
-        for char in self.characters.values():
-            if char.scene_id == scene.scene_id and char.is_alive:
-                player_ids.append(char.player_id)
-        return player_ids
+        with self._session_scope() as session:
+            chars = CharacterRepo(session).list_for_scene(scene.scene_id)
+        return [c.player_id for c in chars if c.is_alive]
 
     def _get_private_scope_id(self, player_id: str) -> str | None:
-        for scope in self.scopes.values():
-            if (
-                scope.scope_type == ScopeType.private_referee
-                and scope.player_id == player_id
-            ):
-                return scope.scope_id
-        return None
+        """Find the private-referee scope for a player."""
+        if self.campaign_id is None:
+            return None
+        with self._session_scope() as session:
+            scope = ConversationScopeRepo(session).get_private_scope_for_player(
+                self.campaign_id, player_id
+            )
+        return scope.scope_id if scope else None
 
     def _get_or_create_public_scope(self, scene_id: str) -> str:
-        """Get or create a public scope for a scene."""
-        for scope in self.scopes.values():
-            if scope.scope_type == ScopeType.public:
-                return scope.scope_id
-        scope = ConversationScope(
+        """Get or create a public scope for the campaign."""
+        with self._session_scope() as session:
+            return self._get_or_create_public_scope_in_session(session, scene_id)
+
+    def _get_or_create_public_scope_in_session(
+        self, session: Session, scene_id: str
+    ) -> str:
+        """Get or create a public scope within an existing session."""
+        campaign_id = self.campaign_id or ""
+        scope = ConversationScopeRepo(session).get_public_scope(campaign_id)
+        if scope:
+            return scope.scope_id
+        new_scope = ConversationScope(
             scope_id=new_id(),
-            campaign_id=self.campaign.campaign_id if self.campaign else "",
+            campaign_id=campaign_id,
             scope_type=ScopeType.public,
         )
-        self.scopes[scope.scope_id] = scope
-        return scope.scope_id
+        ConversationScopeRepo(session).save(new_scope)
+        return new_scope.scope_id
 
     def _apply_action_effects(self, action: CommittedAction, scene: Scene) -> str:
         """Apply resolved action effects to game state. Returns effect text."""
-        character = self.characters.get(action.character_id)
+        character = self._get_character(action.character_id)
         if character is None:
             return ""
 
@@ -731,16 +867,20 @@ class GameOrchestrator:
         if dest_scene_id is None:
             return f"{character.name} cannot go {direction}."
 
-        dest_scene = self.scenes.get(dest_scene_id)
-        if dest_scene is None:
-            return f"{character.name} cannot go {direction} — unknown area."
+        with self._session_scope() as session:
+            dest_scene = SceneRepo(session).get(dest_scene_id)
+            if dest_scene is None:
+                return f"{character.name} cannot go {direction} — unknown area."
 
-        result = self.membership_engine.transfer_character(scene, dest_scene, character)
-        if result.success:
-            self.scenes[scene.scene_id] = scene
-            self.scenes[dest_scene_id] = result.scene
-            character.scene_id = dest_scene_id
-            return f"{character.name} moves {direction} to {dest_scene.name}."
+            result = self.membership_engine.transfer_character(
+                scene, dest_scene, character
+            )
+            if result.success:
+                SceneRepo(session).save(scene)
+                SceneRepo(session).save(result.scene)
+                character.scene_id = dest_scene_id
+                CharacterRepo(session).save(character)
+                return f"{character.name} moves {direction} to {dest_scene.name}."
         return f"{character.name} cannot move {direction}."
 
     def _apply_inspect(
@@ -759,12 +899,10 @@ class GameOrchestrator:
     ) -> str:
         if action.target_ids:
             target_id = action.target_ids[0]
-            # Check if target is a monster group
-            mg = self.monster_groups.get(target_id)
+            mg = self.get_monster_group(target_id)
             if mg:
                 return f"{character.name} attacks the {mg.unit_type}!"
-            # Check if target is an NPC
-            npc = self.npcs.get(target_id)
+            npc = self.get_npc(target_id)
             if npc:
                 return f"{character.name} attacks {npc.name}!"
         return f"{character.name} attacks!"
@@ -774,7 +912,7 @@ class GameOrchestrator:
     ) -> str:
         action_name = action.declared_action_type.value
         if action.target_ids:
-            npc = self.npcs.get(action.target_ids[0])
+            npc = self.get_npc(action.target_ids[0])
             if npc:
                 return f"{character.name} attempts to {action_name} {npc.name}."
         return f"{character.name} attempts to {action_name}."

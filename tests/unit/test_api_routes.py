@@ -17,6 +17,7 @@ from server.api.app import create_api_app
 from server.api.auth import validate_init_data
 from server.domain.enums import ActionType
 from server.orchestrator.game_loop import GameOrchestrator
+from tests.fixtures.db_helpers import create_test_session_factory
 
 GOBLIN_CAVES_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "scenarios", "starters", "goblin_caves.yaml"
@@ -31,7 +32,7 @@ BOT_TOKEN = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
 
 
 def _make_orchestrator() -> GameOrchestrator:
-    orch = GameOrchestrator()
+    orch = GameOrchestrator(session_factory=create_test_session_factory())
     orch.load_scenario(GOBLIN_CAVES_PATH)
     return orch
 
@@ -142,6 +143,10 @@ class TestCharacterSheet:
         pids = _add_players(orch, 1)
         char = orch.get_player_character(pids[0])
         char.status_effects = ["poisoned", "stunned"]
+        with orch._session_scope() as session:
+            from server.storage.repository import CharacterRepo
+
+            CharacterRepo(session).save(char)
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}")
         data = resp.json()
@@ -174,14 +179,17 @@ class TestInventory:
 
         item = InventoryItem(
             item_id="test_item_1",
-            campaign_id=orch.campaign.campaign_id,
+            campaign_id=orch.campaign_id,
             item_type="sword",
             name="Iron Sword",
             created_at=datetime.now(timezone.utc),
             owner_character_id=char.character_id,
             properties={"description": "A sturdy blade", "damage": "1d6"},
         )
-        orch.items["test_item_1"] = item
+        with orch._session_scope() as session:
+            from server.storage.repository import InventoryItemRepo
+
+            InventoryItemRepo(session).save(item)
 
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}/inventory")
@@ -196,11 +204,16 @@ class TestInventory:
         pids = _add_players(orch, 1)
         char = orch.get_player_character(pids[0])
         # Remove any default items owned by this character
-        orch.items = {
-            k: v
-            for k, v in orch.items.items()
-            if v.owner_character_id != char.character_id
-        }
+        with orch._session_scope() as session:
+            from server.storage.models import InventoryItemRow
+
+            rows = (
+                session.query(InventoryItemRow)
+                .filter_by(owner_character_id=char.character_id)
+                .all()
+            )
+            for row in rows:
+                session.delete(row)
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}/inventory")
         data = resp.json()
@@ -215,14 +228,17 @@ class TestInventory:
 
         item = InventoryItem(
             item_id="test_prop_item",
-            campaign_id=orch.campaign.campaign_id,
+            campaign_id=orch.campaign_id,
             item_type="key",
             name="Bronze Key",
             created_at=datetime.now(timezone.utc),
             owner_character_id=char.character_id,
             properties={"description": "An old key", "quest_item": True},
         )
-        orch.items["test_prop_item"] = item
+        with orch._session_scope() as session:
+            from server.storage.repository import InventoryItemRepo
+
+            InventoryItemRepo(session).save(item)
 
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}/inventory")
@@ -266,8 +282,12 @@ class TestScene:
     def test_get_scene_excludes_hidden_description(self):
         orch = _make_orchestrator()
         scene_id = orch._find_starting_scene_id()
-        scene = orch.scenes[scene_id]
+        scene = orch.get_scene(scene_id)
         scene.hidden_description = "SECRET: There is a hidden trap here."
+        with orch._session_scope() as session:
+            from server.storage.repository import SceneRepo
+
+            SceneRepo(session).save(scene)
         client = _make_client(orch)
         resp = client.get(f"/api/scene/{scene_id}")
         data = resp.json()
@@ -300,7 +320,7 @@ class TestRecap:
         # Resolve the turn
         entry = orch.resolve_turn(tw.turn_window_id)
         assert entry is not None
-        return orch, orch.campaign.campaign_id
+        return orch, orch.campaign_id
 
     def test_get_recap_returns_recent_entries(self):
         orch, campaign_id = self._setup_with_turns()
@@ -323,7 +343,7 @@ class TestRecap:
         # Play a second turn
         scene_id = orch._find_starting_scene_id()
         tw2 = orch.open_turn(scene_id, duration_seconds=90)
-        pids = list(orch.players.keys())
+        pids = [p.player_id for p in orch.get_players()]
         for pid in pids:
             orch.submit_action(pid, ActionType.hold, public_text="Wait again")
         orch.resolve_turn(tw2.turn_window_id)
@@ -420,7 +440,7 @@ class TestFullHydration:
         assert player_data["display_name"] in scene_data["players_present"]
 
         # Recap endpoint
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         resp = client.get(f"/api/campaign/{campaign_id}/recap")
         assert resp.status_code == 200
         recap_data = resp.json()

@@ -6,6 +6,7 @@ import os
 
 from server.domain.enums import ActionType
 from server.orchestrator.game_loop import GameOrchestrator
+from tests.fixtures.db_helpers import create_test_session_factory
 
 
 GOBLIN_CAVES_PATH = os.path.join(
@@ -14,7 +15,7 @@ GOBLIN_CAVES_PATH = os.path.join(
 
 
 def _setup_game(num_players: int = 2) -> GameOrchestrator:
-    orch = GameOrchestrator()
+    orch = GameOrchestrator(session_factory=create_test_session_factory())
     orch.load_scenario(GOBLIN_CAVES_PATH)
     for i in range(1, num_players + 1):
         orch.add_player(f"p{i}", f"Player{i}")

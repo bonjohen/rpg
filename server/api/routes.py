@@ -92,11 +92,10 @@ async def validate_auth(req: ValidateAuthRequest) -> dict:
 @router.get("/api/player/{player_id}")
 async def get_player(player_id: str) -> dict:
     orch = _orch()
-    player = orch.players.get(player_id)
+    player = orch.get_player(player_id)
     if player is None:
         raise HTTPException(status_code=404, detail="Player not found.")
 
-    # Find the player's character
     character = orch.get_player_character(player_id)
     char_id = character.character_id if character else ""
     scene_id = character.scene_id or "" if character else ""
@@ -119,7 +118,7 @@ async def get_player(player_id: str) -> dict:
 @router.get("/api/character/{character_id}")
 async def get_character(character_id: str) -> dict:
     orch = _orch()
-    char = orch.characters.get(character_id)
+    char = orch._get_character(character_id)
     if char is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 
@@ -142,22 +141,25 @@ async def get_character(character_id: str) -> dict:
 @router.get("/api/character/{character_id}/inventory")
 async def get_inventory(character_id: str) -> dict:
     orch = _orch()
-    char = orch.characters.get(character_id)
+    char = orch._get_character(character_id)
     if char is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 
-    items: list[ItemResponse] = []
-    for item in orch.items.values():
-        if item.owner_character_id == character_id:
-            items.append(
-                ItemResponse(
-                    item_id=item.item_id,
-                    name=item.name,
-                    description=item.properties.get("description", ""),
-                    quantity=item.quantity,
-                    properties=dict(item.properties),
-                )
-            )
+    with orch._session_scope() as session:
+        from server.storage.repository import InventoryItemRepo
+
+        db_items = InventoryItemRepo(session).list_for_character(character_id)
+
+    items: list[ItemResponse] = [
+        ItemResponse(
+            item_id=item.item_id,
+            name=item.name,
+            description=item.properties.get("description", ""),
+            quantity=item.quantity,
+            properties=dict(item.properties),
+        )
+        for item in db_items
+    ]
 
     resp = InventoryResponse(character_id=character_id, items=items)
     return asdict(resp)
@@ -171,35 +173,31 @@ async def get_inventory(character_id: str) -> dict:
 @router.get("/api/scene/{scene_id}")
 async def get_scene(scene_id: str) -> dict:
     orch = _orch()
-    scene = orch.scenes.get(scene_id)
+    scene = orch.get_scene(scene_id)
     if scene is None:
         raise HTTPException(status_code=404, detail="Scene not found.")
 
     # Collect player display names present in scene
-    players_present: list[str] = []
-    for char in orch.characters.values():
-        if char.scene_id == scene_id and char.is_alive:
-            player = orch.players.get(char.player_id)
-            if player:
-                players_present.append(player.display_name)
+    scene_players = orch.get_scene_players(scene_id)
+    players_present = [p.display_name for p in scene_players]
 
     # Collect NPC names present in scene
     npcs_present: list[str] = []
     for npc_id in scene.npc_ids:
-        npc = orch.npcs.get(npc_id)
+        npc = orch.get_npc(npc_id)
         if npc and npc.is_visible:
             npcs_present.append(npc.name)
 
     # Build exit labels: direction -> target scene name
     exit_labels: dict[str, str] = {}
     for direction, target_id in scene.exits.items():
-        target = orch.scenes.get(target_id)
+        target = orch.get_scene(target_id)
         exit_labels[direction] = target.name if target else target_id
 
     resp = SceneResponse(
         scene_id=scene.scene_id,
         name=scene.name,
-        description=scene.description,  # public only — hidden_description excluded
+        description=scene.description,
         exits=exit_labels,
         players_present=players_present,
         npcs_present=npcs_present,
@@ -215,14 +213,14 @@ async def get_scene(scene_id: str) -> dict:
 @router.get("/api/scene/{scene_id}/context")
 async def get_scene_context(scene_id: str) -> dict:
     orch = _orch()
-    scene = orch.scenes.get(scene_id)
+    scene = orch.get_scene(scene_id)
     if scene is None:
         raise HTTPException(status_code=404, detail="Scene not found.")
 
     # Exits — non-hidden only
     exits: list[ExitInfo] = []
     for direction, target_id in scene.exits.items():
-        target = orch.scenes.get(target_id)
+        target = orch.get_scene(target_id)
         target_name = target.name if target else target_id
         exits.append(
             ExitInfo(
@@ -233,13 +231,13 @@ async def get_scene_context(scene_id: str) -> dict:
     # Targets — visible NPCs and monster groups
     targets: list[TargetInfo] = []
     for npc_id in scene.npc_ids:
-        npc = orch.npcs.get(npc_id)
+        npc = orch.get_npc(npc_id)
         if npc and npc.is_visible:
             targets.append(
                 TargetInfo(target_id=npc_id, name=npc.name, target_type="npc")
             )
     for mg_id in scene.monster_group_ids:
-        mg = orch.monster_groups.get(mg_id)
+        mg = orch.get_monster_group(mg_id)
         if mg and mg.is_visible:
             targets.append(
                 TargetInfo(
@@ -256,8 +254,8 @@ async def get_scene_context(scene_id: str) -> dict:
         description=scene.description,
         exits=exits,
         targets=targets,
-        objects=[],  # objects not tracked in current orchestrator state
-        inventory_items=[],  # populated per-player on the frontend
+        objects=[],
+        inventory_items=[],
         active_turn_window_id=tw_id,
     )
     return asdict(resp)
@@ -368,7 +366,7 @@ async def get_recap(
     campaign_id: str, limit: int = Query(default=10, ge=1, le=100)
 ) -> dict:
     orch = _orch()
-    if orch.campaign is None or orch.campaign.campaign_id != campaign_id:
+    if orch.campaign_id is None or orch.campaign_id != campaign_id:
         raise HTTPException(status_code=404, detail="Campaign not found.")
 
     # Get log entries sorted by turn number descending
@@ -376,7 +374,7 @@ async def get_recap(
 
     recap_entries: list[RecapEntry] = []
     for entry in entries:
-        scene = orch.scenes.get(entry.scene_id)
+        scene = orch.get_scene(entry.scene_id)
         scene_name = scene.name if scene else entry.scene_id
         recap_entries.append(
             RecapEntry(
@@ -401,13 +399,13 @@ async def get_recap(
 @router.get("/api/player/{player_id}/inbox")
 async def get_inbox(player_id: str, since: str = "") -> dict:
     orch = _orch()
-    player = orch.players.get(player_id)
+    player = orch.get_player(player_id)
     if player is None:
         raise HTTPException(status_code=404, detail="Player not found.")
 
     # Find the player's private-referee scope(s)
     private_scope_ids: set[str] = set()
-    for scope in orch.scopes.values():
+    for scope in orch.get_scopes():
         if (
             scope.scope_type == ScopeType.private_referee
             and scope.player_id == player_id
@@ -416,10 +414,10 @@ async def get_inbox(player_id: str, since: str = "") -> dict:
 
     read_facts = orch.inbox_read.get(player_id, set())
     messages: list[InboxMessage] = []
-    for fact in orch.knowledge_facts.values():
+    for fact in orch.get_knowledge_facts():
         if fact.owner_scope_id not in private_scope_ids:
             continue
-        scene = orch.scenes.get(fact.scene_id)
+        scene = orch.get_scene(fact.scene_id)
         scene_name = scene.name if scene else fact.scene_id
         messages.append(
             InboxMessage(
@@ -447,7 +445,8 @@ async def get_inbox(player_id: str, since: str = "") -> dict:
 
 
 # -----------------------------------------------------------------------
-# Channels
+# Channels (side_channels still loaded via DB in Phase 5; for now use
+# in-memory channel_messages + DB-backed SideChannelRepo)
 # -----------------------------------------------------------------------
 
 
@@ -455,12 +454,21 @@ async def get_inbox(player_id: str, since: str = "") -> dict:
 async def get_channels(player_id: str) -> dict:
     orch = _orch()
     channels: list[ChannelInfo] = []
-    for ch in orch.side_channels.values():
+
+    with orch._session_scope() as session:
+        from server.storage.repository import SideChannelRepo
+
+        if orch.campaign_id:
+            all_channels = SideChannelRepo(session).list_for_campaign(orch.campaign_id)
+        else:
+            all_channels = []
+
+    for ch in all_channels:
         if player_id not in ch.member_player_ids:
             continue
         member_names = []
         for mid in ch.member_player_ids:
-            p = orch.players.get(mid)
+            p = orch.get_player(mid)
             member_names.append(p.display_name if p else mid)
         msg_count = len(orch.channel_messages.get(ch.side_channel_id, []))
         channels.append(
@@ -478,14 +486,19 @@ async def get_channels(player_id: str) -> dict:
 @router.get("/api/channel/{channel_id}/messages")
 async def get_channel_messages(channel_id: str) -> dict:
     orch = _orch()
-    ch = orch.side_channels.get(channel_id)
+
+    with orch._session_scope() as session:
+        from server.storage.repository import SideChannelRepo
+
+        ch = SideChannelRepo(session).get(channel_id)
+
     if ch is None:
         raise HTTPException(status_code=404, detail="Channel not found.")
 
     raw_msgs = orch.channel_messages.get(channel_id, [])
     messages: list[ChannelMessage] = []
     for msg in raw_msgs:
-        sender = orch.players.get(msg.get("sender_id", ""))
+        sender = orch.get_player(msg.get("sender_id", ""))
         sender_name = sender.display_name if sender else msg.get("sender_id", "")
         messages.append(
             ChannelMessage(
@@ -506,14 +519,16 @@ class CreateChannelRequest(BaseModel):
 @router.post("/api/channel/create")
 async def create_channel(req: CreateChannelRequest) -> dict:
     orch = _orch()
-    if orch.campaign is None:
+    if orch.campaign_id is None:
         return asdict(
             CreateChannelResponse(success=False, rejection_reason="No campaign loaded.")
         )
 
     # Validate all members exist
+    all_players = orch.get_players()
+    player_ids = {p.player_id for p in all_players}
     for mid in req.member_player_ids:
-        if mid not in orch.players:
+        if mid not in player_ids:
             return asdict(
                 CreateChannelResponse(
                     success=False, rejection_reason=f"Player {mid} not found."
@@ -523,12 +538,11 @@ async def create_channel(req: CreateChannelRequest) -> dict:
     from server.scope.side_channel_engine import SideChannelEngine
 
     engine = SideChannelEngine()
-    all_pids = list(orch.players.keys())
     result = engine.create_channel(
         creator_player_id=req.creator_player_id,
         member_player_ids=req.member_player_ids,
-        campaign_id=orch.campaign.campaign_id,
-        all_campaign_player_ids=all_pids,
+        campaign_id=orch.campaign_id,
+        all_campaign_player_ids=list(player_ids),
         label=req.label,
     )
     if not result.success:
@@ -538,11 +552,14 @@ async def create_channel(req: CreateChannelRequest) -> dict:
             )
         )
 
-    # Store the channel and scope
+    # Store the channel and scope in DB
     ch = result.channel
-    orch.side_channels[ch.side_channel_id] = ch
-    if result.scope:
-        orch.scopes[result.scope.scope_id] = result.scope
+    with orch._session_scope() as session:
+        from server.storage.repository import ConversationScopeRepo, SideChannelRepo
+
+        SideChannelRepo(session).save(ch)
+        if result.scope:
+            ConversationScopeRepo(session).save(result.scope)
     orch.channel_messages[ch.side_channel_id] = []
 
     return asdict(CreateChannelResponse(success=True, channel_id=ch.side_channel_id))
@@ -556,7 +573,12 @@ class SendMessageRequest(BaseModel):
 @router.post("/api/channel/{channel_id}/send")
 async def send_channel_message(channel_id: str, req: SendMessageRequest) -> dict:
     orch = _orch()
-    ch = orch.side_channels.get(channel_id)
+
+    with orch._session_scope() as session:
+        from server.storage.repository import SideChannelRepo
+
+        ch = SideChannelRepo(session).get(channel_id)
+
     if ch is None:
         return asdict(SendMessageResponse(success=False, error="Channel not found."))
     if not ch.is_open:
@@ -585,18 +607,26 @@ class LeaveChannelRequest(BaseModel):
 @router.post("/api/channel/{channel_id}/leave")
 async def leave_channel(channel_id: str, req: LeaveChannelRequest) -> dict:
     orch = _orch()
-    ch = orch.side_channels.get(channel_id)
-    if ch is None:
-        return asdict(LeaveChannelResponse(success=False, error="Channel not found."))
-    if req.player_id not in ch.member_player_ids:
-        return asdict(
-            LeaveChannelResponse(success=False, error="Not a member of this channel.")
-        )
 
-    ch.member_player_ids.remove(req.player_id)
-    # Auto-close if fewer than 2 members
-    if len(ch.member_player_ids) < 2:
-        ch.is_open = False
+    with orch._session_scope() as session:
+        from server.storage.repository import SideChannelRepo
+
+        ch = SideChannelRepo(session).get(channel_id)
+        if ch is None:
+            return asdict(
+                LeaveChannelResponse(success=False, error="Channel not found.")
+            )
+        if req.player_id not in ch.member_player_ids:
+            return asdict(
+                LeaveChannelResponse(
+                    success=False, error="Not a member of this channel."
+                )
+            )
+
+        ch.member_player_ids.remove(req.player_id)
+        if len(ch.member_player_ids) < 2:
+            ch.is_open = False
+        SideChannelRepo(session).save(ch)
 
     return asdict(LeaveChannelResponse(success=True))
 
@@ -609,15 +639,15 @@ async def leave_channel(channel_id: str, req: LeaveChannelRequest) -> dict:
 @router.get("/api/campaign/{campaign_id}/quests")
 async def get_quests(campaign_id: str) -> dict:
     orch = _orch()
-    if orch.campaign is None or orch.campaign.campaign_id != campaign_id:
+    if orch.campaign_id is None or orch.campaign_id != campaign_id:
         raise HTTPException(status_code=404, detail="Campaign not found.")
 
     quests: list[QuestInfo] = []
-    for quest in orch.quests.values():
+    for quest in orch.get_quests():
         quests.append(
             QuestInfo(
                 quest_id=quest.quest_id,
-                title=quest.quest_id,  # quest_id is used as title
+                title=quest.quest_id,
                 description="",
                 status=quest.status.value,
                 objectives=[],
@@ -635,7 +665,7 @@ async def get_quests(campaign_id: str) -> dict:
 @router.get("/api/player/{player_id}/clues")
 async def get_clues(player_id: str) -> dict:
     orch = _orch()
-    player = orch.players.get(player_id)
+    player = orch.get_player(player_id)
     if player is None:
         raise HTTPException(status_code=404, detail="Player not found.")
 
@@ -643,7 +673,7 @@ async def get_clues(player_id: str) -> dict:
 
     # Find the player's private-referee scope(s) + public scopes
     accessible_scope_ids: set[str] = set()
-    for scope in orch.scopes.values():
+    for scope in orch.get_scopes():
         if scope.scope_type == ScopeType.public:
             accessible_scope_ids.add(scope.scope_id)
         elif (
@@ -653,12 +683,12 @@ async def get_clues(player_id: str) -> dict:
             accessible_scope_ids.add(scope.scope_id)
 
     clues: list[ClueInfo] = []
-    for fact in orch.knowledge_facts.values():
+    for fact in orch.get_knowledge_facts():
         if fact.fact_type != KnowledgeFactType.clue:
             continue
         if fact.owner_scope_id not in accessible_scope_ids:
             continue
-        scene = orch.scenes.get(fact.scene_id)
+        scene = orch.get_scene(fact.scene_id)
         scene_name = scene.name if scene else fact.scene_id
         clues.append(
             ClueInfo(
@@ -680,7 +710,7 @@ async def get_clues(player_id: str) -> dict:
 @router.get("/api/campaign/{campaign_id}/map")
 async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
     orch = _orch()
-    if orch.campaign is None or orch.campaign.campaign_id != campaign_id:
+    if orch.campaign_id is None or orch.campaign_id != campaign_id:
         raise HTTPException(status_code=404, detail="Campaign not found.")
 
     # Determine which scenes the player has visited
@@ -693,8 +723,7 @@ async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
     discovered_ids: set[str] = set()
     if current_scene_id:
         discovered_ids.add(current_scene_id)
-        # Add scenes connected via exits from discovered scenes
-        scene = orch.scenes.get(current_scene_id)
+        scene = orch.get_scene(current_scene_id)
         if scene:
             for target_id in scene.exits.values():
                 discovered_ids.add(target_id)
@@ -704,7 +733,7 @@ async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
 
     # Add discovered nodes
     for sid in discovered_ids:
-        scene = orch.scenes.get(sid)
+        scene = orch.get_scene(sid)
         if scene and sid not in seen_node_ids:
             is_current = sid == current_scene_id
             nodes.append(
@@ -720,11 +749,11 @@ async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
 
     # Add undiscovered adjacent nodes as "?" for scenes connected from discovered
     for sid in list(discovered_ids):
-        scene = orch.scenes.get(sid)
+        scene = orch.get_scene(sid)
         if scene:
             for target_id in scene.exits.values():
                 if target_id not in seen_node_ids:
-                    target = orch.scenes.get(target_id)
+                    target = orch.get_scene(target_id)
                     nodes.append(
                         MapNode(
                             scene_id=target_id,
@@ -737,7 +766,7 @@ async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
     # Build edges
     edges: list[MapEdge] = []
     for sid in discovered_ids:
-        scene = orch.scenes.get(sid)
+        scene = orch.get_scene(sid)
         if scene:
             for direction, target_id in scene.exits.items():
                 if target_id in seen_node_ids:

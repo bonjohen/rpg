@@ -21,6 +21,7 @@ from server.domain.enums import (
 )
 from server.domain.helpers import utc_now as _now
 from server.orchestrator.game_loop import GameOrchestrator
+from tests.fixtures.db_helpers import create_test_session_factory
 
 GOBLIN_CAVES_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "scenarios", "starters", "goblin_caves.yaml"
@@ -33,7 +34,7 @@ GOBLIN_CAVES_PATH = os.path.join(
 
 
 def _make_orchestrator() -> GameOrchestrator:
-    orch = GameOrchestrator()
+    orch = GameOrchestrator(session_factory=create_test_session_factory())
     orch.load_scenario(GOBLIN_CAVES_PATH)
     return orch
 
@@ -66,15 +67,15 @@ def _add_private_fact(
     if not scene_id:
         scene_id = orch._find_starting_scene_id() or ""
     fact = KnowledgeFact(
-        fact_id=f"fact-{player_id}-{len(orch.knowledge_facts)}",
-        campaign_id=orch.campaign.campaign_id,
+        fact_id=f"fact-{player_id}-{len(orch.get_knowledge_facts())}",
+        campaign_id=orch.campaign_id,
         scene_id=scene_id,
         owner_scope_id=scope_id or "",
         fact_type=fact_type,
         payload=payload,
         revealed_at=_now(),
     )
-    orch.knowledge_facts[fact.fact_id] = fact
+    orch.save_knowledge_fact(fact)
     return fact
 
 
@@ -85,7 +86,7 @@ def _add_public_fact(
 ) -> KnowledgeFact:
     """Add a public fact."""
     public_scope_id = None
-    for scope in orch.scopes.values():
+    for scope in orch.get_scopes():
         if scope.scope_type == ScopeType.public:
             public_scope_id = scope.scope_id
             break
@@ -96,15 +97,15 @@ def _add_public_fact(
     if not scene_id:
         scene_id = orch._find_starting_scene_id() or ""
     fact = KnowledgeFact(
-        fact_id=f"fact-public-{len(orch.knowledge_facts)}",
-        campaign_id=orch.campaign.campaign_id,
+        fact_id=f"fact-public-{len(orch.get_knowledge_facts())}",
+        campaign_id=orch.campaign_id,
         scene_id=scene_id,
         owner_scope_id=public_scope_id,
         fact_type=KnowledgeFactType.clue,
         payload=payload,
         revealed_at=_now(),
     )
-    orch.knowledge_facts[fact.fact_id] = fact
+    orch.save_knowledge_fact(fact)
     return fact
 
 
@@ -117,14 +118,17 @@ def _add_side_channel(
     ch_id = f"sc-{label}"
     ch = SideChannel(
         side_channel_id=ch_id,
-        campaign_id=orch.campaign.campaign_id,
+        campaign_id=orch.campaign_id,
         created_at=_now(),
         created_by_player_id=member_ids[0],
         member_player_ids=list(member_ids),
         is_open=True,
         label=label,
     )
-    orch.side_channels[ch_id] = ch
+    with orch._session_scope() as session:
+        from server.storage.repository import SideChannelRepo
+
+        SideChannelRepo(session).save(ch)
     orch.channel_messages[ch_id] = []
     return ch
 
@@ -151,7 +155,7 @@ class TestSceneContext:
         """Hidden exits (not in scene.exits) should not appear in context."""
         orch = _make_orchestrator()
         scene_id = orch._find_starting_scene_id()
-        scene = orch.scenes[scene_id]
+        scene = orch.get_scene(scene_id)
         # The scene only returns exits from scene.exits (public)
         # hidden_description is not included
         client = _make_client(orch)
@@ -415,7 +419,10 @@ class TestChannels:
         data = resp.json()
         assert data["success"] is True
         # Verify pids[2] is no longer a member
-        ch = orch.side_channels["sc-trio"]
+        with orch._session_scope() as session:
+            from server.storage.repository import SideChannelRepo
+
+            ch = SideChannelRepo(session).get("sc-trio")
         assert pids[2] not in ch.member_player_ids
 
 
@@ -429,7 +436,7 @@ class TestQuests:
         orch = _make_orchestrator()
         _add_players(orch, 1)
         client = _make_client(orch)
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         resp = client.get(f"/api/campaign/{campaign_id}/quests")
         assert resp.status_code == 200
         data = resp.json()
@@ -439,11 +446,15 @@ class TestQuests:
         orch = _make_orchestrator()
         _add_players(orch, 1)
         # Update a quest status to active
-        for quest in orch.quests.values():
-            quest.status = QuestStatus.active
-            break
+        quests = orch.get_quests()
+        if quests:
+            quests[0].status = QuestStatus.active
+            with orch._session_scope() as session:
+                from server.storage.repository import QuestStateRepo
+
+                QuestStateRepo(session).save(quests[0])
         client = _make_client(orch)
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         resp = client.get(f"/api/campaign/{campaign_id}/quests")
         data = resp.json()
         active = [q for q in data["quests"] if q["status"] == "active"]
@@ -503,7 +514,7 @@ class TestMap:
     def test_get_map_returns_discovered_scenes(self):
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
         assert resp.status_code == 200
@@ -515,18 +526,18 @@ class TestMap:
         """Scenes not connected to the player's current scene are excluded."""
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
         data = resp.json()
         # Should not include ALL scenes — only current + connected
-        assert len(data["nodes"]) <= len(orch.scenes)
+        assert len(data["nodes"]) <= len(orch.get_scenes())
 
     def test_get_map_shows_adjacent_undiscovered_as_question(self):
         """Adjacent scenes to the current scene should appear as nodes."""
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
         data = resp.json()
@@ -546,12 +557,12 @@ class TestMap:
         """
         orch = _make_orchestrator()
         pids = _add_players(orch, 1)
-        campaign_id = orch.campaign.campaign_id
+        campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
         data = resp.json()
         # Each edge should correspond to an exit in the source scene
         for edge in data["edges"]:
-            source_scene = orch.scenes.get(edge["from_scene_id"])
+            source_scene = orch.get_scene(edge["from_scene_id"])
             assert source_scene is not None
             assert edge["direction"] in source_scene.exits
