@@ -308,6 +308,7 @@ class QuestStateRow(Base):
         String(36), ForeignKey("campaigns.campaign_id"), nullable=False
     )
     quest_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="inactive")
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

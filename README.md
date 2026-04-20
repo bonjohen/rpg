@@ -14,10 +14,10 @@ The server owns state, timer control, action validation, rules resolution, scope
 
 | Tier | Model | Latency Target | Tasks |
 |---|---|---|---|
-| Fast | qwen2.5:1.5b | < 500 ms | Intent classification, command normalization, action extraction, scope suggestion, format repair |
-| Main | Gemma 4 26B A4B | < 5 s | Scene narration, NPC dialogue, combat summaries, ruling proposals, unusual action interpretation |
+| Fast | qwen2.5:1.5b via Ollama | < 500 ms | Intent classification, command normalization, action extraction, scope suggestion, format repair |
+| Main | Gemma 4 26B A4B (local) or GPT-5.4 mini (OpenAI API) | < 5–10 s | Scene narration, NPC dialogue, combat summaries, ruling proposals, unusual action interpretation |
 
-Both models run locally via [Ollama](https://ollama.com). If either model is unavailable, the server falls back to deterministic responses — the game never blocks on a model failure.
+The fast model runs locally via [Ollama](https://ollama.com). The main model supports two backends: a local Gemma adapter (any OpenAI-compatible endpoint) or the OpenAI API. Both implement the `MainAdapter` protocol. If either model is unavailable, the server falls back to deterministic responses — the game never blocks on a model failure.
 
 ### Conversation Scopes
 
@@ -56,6 +56,7 @@ Each player submits one committed action packet per turn. A countdown timer enfo
 +------------------------v--------------------------------+
 |                   Game Orchestrator                       |
 |  server/orchestrator/ -- wires all subsystems            |
+|  Database-backed persistence (SQLite/PostgreSQL)         |
 +------------------------+--------------------------------+
 |                     Game Server                          |
 |  Turn engine, scope enforcement, timer, combat,          |
@@ -63,8 +64,8 @@ Each player submits one committed action packet per turn. A countdown timer enfo
 +--------+---------------------------+--------------------+
          | Fast tier                 | Main tier
 +--------v----------+   +-----------v--------------------+
-|  qwen2.5:1.5b     |   |  Gemma 4 26B A4B              |
-|  via Ollama        |   |  via Ollama                    |
+|  qwen2.5:1.5b     |   |  Gemma 4 26B A4B (local)      |
+|  via Ollama        |   |  or GPT-5.4 mini (OpenAI API) |
 +-------------------+   +--------------------------------+
 ```
 
@@ -90,14 +91,19 @@ source .venv/bin/activate       # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### Pull the Models
+### Pull the Fast Model
 
 ```bash
 ollama pull qwen2.5:1.5b
-ollama pull gemma3:27b
 ```
 
-The Ollama `OLLAMA_MODELS` environment variable controls where model weights are stored. Set it if you want models on a specific drive.
+If using Gemma locally as the main model:
+
+```bash
+ollama pull gemma3:27b       # or your preferred Gemma variant
+```
+
+The Ollama `OLLAMA_MODELS` environment variable controls where model weights are stored. Set it if you want models on a specific drive. If using GPT-5.4 mini instead, set `OPENAI_API_KEY` (no Ollama pull needed for the main model).
 
 ### Environment Variables
 
@@ -111,8 +117,10 @@ Create a `.env` file or set these in your shell:
 | `WEBHOOK_URL` | No | Webhook URL (if empty, uses polling mode) |
 | `WEBHOOK_PORT` | No | Webhook port (default: 8443) |
 | `FAST_MODEL_BASE_URL` | No | Ollama URL for fast model (default: http://localhost:11434) |
-| `GEMMA_BASE_URL` | No | Ollama URL for main model (default: http://localhost:11434) |
-| `DATABASE_URL` | No | Database connection string (in-memory by default) |
+| `OPENAI_API_KEY` | No | OpenAI API key (if using GPT-5.4 mini as main model) |
+| `GEMMA_BASE_URL` | No | Ollama/vLLM URL for Gemma main model (default: http://localhost:11434) |
+| `GEMMA_API_KEY` | No | API key for Gemma endpoint (if required by your setup) |
+| `DATABASE_URL` | No | Database connection string (default: `sqlite:///rpg.db`) |
 
 ### Start the Bot
 
@@ -211,7 +219,7 @@ if not result.success:
 ### Running Tests
 
 ```bash
-pytest                              # Run all 1265 tests
+pytest                              # Run all 1479 tests
 pytest tests/unit/                  # Unit tests only
 pytest tests/integration/           # Integration tests only
 pytest -k "test_combat"             # Run tests matching a pattern
@@ -242,16 +250,17 @@ rpg/
 |   +-- api/             # FastAPI REST API for Mini App
 |   +-- reliability/     # Retry, idempotency, model recovery, turn recovery
 |   +-- observability/   # Structured logging, metrics, diagnostics
-|   +-- storage/         # ORM models and repository
+|   +-- storage/         # ORM models, repositories, database setup
 +-- bot/                 # Telegram bot gateway
 +-- models/
 |   +-- fast/            # Fast model adapter (qwen2.5:1.5b via Ollama)
-|   +-- main/            # Main model adapter (Gemma 4 26B A4B via Ollama)
+|   +-- main/            # Main model adapter (OpenAI API / GPT-5.4 mini)
+|   +-- gemma/           # Main model adapter (Gemma 4 26B A4B, OpenAI-compatible)
 |   +-- contracts/       # Prompt contracts, context assembly, output repair
 +-- scenarios/           # Scenario schema, loader, validator, patterns
 |   +-- starters/        # 4 starter scenarios (YAML)
 +-- webapp/              # Mini App frontend (HTML/JS/CSS)
-+-- tests/               # 1265 tests (unit + integration)
++-- tests/               # 1479 tests (unit + integration)
 +-- docs/                # Architecture, design, conventions, routing
 ```
 

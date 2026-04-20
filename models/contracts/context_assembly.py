@@ -220,7 +220,8 @@ class ContextAssembler:
             contract.scope_rules,
             target_npc_id=target_npc_id,
         )
-        excluded_facts = [f for f in all_available if f not in permitted_facts]
+        permitted_ids = {f.fact_id for f in permitted_facts}
+        excluded_facts = [f for f in all_available if f.fact_id not in permitted_ids]
 
         facts_text = (
             "\n".join(f"- {f.text}" for f in permitted_facts) if permitted_facts else ""

@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 
 from server.domain.entities import Character, NPC, Scene
-from server.domain.enums import SceneState
+from server.domain.enums import SceneState, StanceToParty
 from server.npc.social import SocialActionInput, SocialEngine, SocialOutcome
 from server.scene.membership import SceneMembershipEngine
 
@@ -21,7 +21,7 @@ def _make_npc(
     trust: int = 0,
     player_id: str = "p1",
     personality_tags: list[str] | None = None,
-    stance: str = "neutral",
+    stance: str | StanceToParty = "neutral",
 ) -> NPC:
     return NPC(
         npc_id=npc_id,
@@ -31,7 +31,7 @@ def _make_npc(
         scene_id="scene1",
         trust_by_player={player_id: trust} if trust != 0 else {},
         personality_tags=personality_tags or [],
-        stance_to_party=stance,
+        stance_to_party=StanceToParty(stance),
     )
 
 

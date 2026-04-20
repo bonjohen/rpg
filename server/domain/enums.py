@@ -116,3 +116,19 @@ class MoraleState(str, Enum):
     shaken = "shaken"
     routed = "routed"
     broken = "broken"
+
+
+class HealthState(str, Enum):
+    healthy = "healthy"
+    injured = "injured"
+    critical = "critical"
+    incapacitated = "incapacitated"
+    dead = "dead"
+
+
+class StanceToParty(str, Enum):
+    friendly = "friendly"
+    neutral = "neutral"
+    suspicious = "suspicious"
+    hostile = "hostile"
+    fearful = "fearful"

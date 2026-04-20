@@ -11,25 +11,25 @@
 
 | ID | Severity | Category | Description | File | Status |
 |---|---|---|---|---|---|
-| BUG-001 | P2 | Routing | OpenAI inference adapter requires live API key; all narration uses deterministic fallback without it | `models/main/adapter.py` | Deferred (requires OPENAI_API_KEY) |
 | BUG-002 | P3 | Clarity | Narration fallback text is functional but repetitive across turns | `models/main/fallback.py` | Open |
-| BUG20260419-073 | P3 | Data Model | NPC.health_state, stance_to_party, MonsterGroup.morale_state are raw strings not enums | `server/domain/entities.py:271` | Open |
-| BUG20260419-074 | P3 | Data Model | InventoryItem dual-owner fields (character + scene) not enforced by __post_init__ | `server/domain/entities.py:335` | Open |
-| BUG20260419-075 | P3 | Data Model | SideChannelEngine.create_channel created_at typed as object not datetime | `server/scope/side_channel_engine.py:60` | Open |
-| BUG20260419-076 | P3 | Data Model | facts.py validate_fact_creation None check on non-Optional parameter | `server/scope/facts.py:70` | Open |
-| BUG20260419-077 | P3 | Data Model | SocialActionInput.extra dead field — never read anywhere | `server/npc/social.py:91` | Open |
-| BUG20260419-078 | P3 | Correctness | Memory recall_description off-by-one: visit_count=1 says "once before" | `server/exploration/memory.py:209` | Open |
-| BUG20260419-079 | P3 | Correctness | Monster ambush code sets flag but applies no bonus — dead code | `server/combat/monsters.py:109` | Open |
-| BUG20260419-080 | P3 | Correctness | /api/player/{id}/inbox `since` parameter accepted but ignored | `server/api/routes.py:397` | Open |
-| BUG20260419-081 | P3 | Correctness | Quest title displays quest_id (UUID) instead of human-readable name | `server/api/routes.py:613` | Open |
-| BUG20260419-082 | P3 | Performance | Scene scoped_prompts O(n*m) ID membership checks on lists | `server/scene/scoped_prompts.py:57` | Open |
-| BUG20260419-083 | P3 | Performance | BFS in scenario validator uses list.pop(0) — O(n^2) | `scenarios/validator.py:376` | Open |
-| BUG20260419-084 | P3 | Performance | Scope violation detection is O(n*m) substring search | `models/contracts/context_assembly.py:219` | Open |
 
 ## Resolved Bugs
 
 | ID | Severity | Category | Description | File | Status |
 |---|---|---|---|---|---|
+| BUG-001 | P2 | Routing | OpenAI inference adapter requires live API key; all narration uses deterministic fallback without it | `models/main/adapter.py` | Fixed |
+| BUG20260419-078 | P3 | Correctness | Memory recall_description off-by-one: visit_count=1 says "once before" | `server/exploration/memory.py:209` | Fixed |
+| BUG20260419-079 | P3 | Correctness | Monster ambush code sets flag but applies no bonus — dead code | `server/combat/monsters.py:109` | Fixed |
+| BUG20260419-080 | P3 | Correctness | /api/player/{id}/inbox `since` parameter accepted but ignored | `server/api/routes.py:397` | Fixed |
+| BUG20260419-081 | P3 | Correctness | Quest title displays quest_id (UUID) instead of human-readable name | `server/api/routes.py:613` | Fixed |
+| BUG20260419-082 | P3 | Performance | Scene scoped_prompts O(n*m) ID membership checks on lists | `server/scene/scoped_prompts.py:57` | Fixed |
+| BUG20260419-083 | P3 | Performance | BFS in scenario validator uses list.pop(0) — O(n^2) | `scenarios/validator.py:376` | Fixed |
+| BUG20260419-084 | P3 | Performance | Scope violation detection is O(n*m) substring search | `models/contracts/context_assembly.py:219` | Fixed |
+| BUG20260419-073 | P3 | Data Model | NPC.health_state, stance_to_party, MonsterGroup.morale_state are raw strings not enums | `server/domain/entities.py:271` | Fixed |
+| BUG20260419-074 | P3 | Data Model | InventoryItem dual-owner fields (character + scene) not enforced by __post_init__ | `server/domain/entities.py:335` | Fixed |
+| BUG20260419-075 | P3 | Data Model | SideChannelEngine.create_channel created_at typed as object not datetime | `server/scope/side_channel_engine.py:60` | Fixed |
+| BUG20260419-076 | P3 | Data Model | facts.py validate_fact_creation None check on non-Optional parameter | `server/scope/facts.py:70` | Fixed |
+| BUG20260419-077 | P3 | Data Model | SocialActionInput.extra dead field — never read anywhere | `server/npc/social.py:91` | Fixed |
 | BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | — | Closed (DB Phases 1-7) |
 | BUG20260419-001 | P0 | Security | Bot token accepted from client in /api/auth/validate | `server/api/routes.py:71` | Fixed |
 | BUG20260419-002 | P0 | Security | Path traversal in /newgame — user-supplied path passed directly to file open | `bot/commands.py:158` | Fixed |
@@ -662,101 +662,53 @@
 
 **Status:** Fixed in Phase 24. Added `get_user_id_for_player()` to BotRegistry.
 
-### BUG20260419-073 — NPC/MonsterGroup raw string state fields
+### BUG20260419-073 — NPC/MonsterGroup raw string state fields (FIXED)
 
-**File:** `server/domain/entities.py:271`
-**Severity:** P3
-**Category:** Data Model
-**Description:** `NPC.health_state` (line 271: `"healthy"`, `"injured"`, `"incapacitated"`, `"dead"`), `NPC.stance_to_party` (line 277: `"friendly"`, `"neutral"`, `"hostile"`, `"fearful"`), and `MonsterGroup.morale_state` are all plain `str` fields with valid values documented only in comments. Typos pass silently, type checkers cannot validate usage, and there is no discoverability.
-**Suggested fix:** Define `HealthState`, `StanceToParty`, and `MoraleState` enums in `server/domain/enums.py` and use throughout.
+**Status:** Fixed. Defined `HealthState` (healthy/injured/critical/incapacitated/dead) and `StanceToParty` (friendly/neutral/suspicious/hostile/fearful) enums in `server/domain/enums.py`. Updated NPC and MonsterGroup entities, repository mappers, resolution code, trust engine, social engine, summaries, and test fixtures.
 
-### BUG20260419-074 — InventoryItem dual-owner invariant not enforced
+### BUG20260419-074 — InventoryItem dual-owner invariant not enforced (FIXED)
 
-**File:** `server/domain/entities.py:335`
-**Severity:** P3
-**Category:** Data Model
-**Description:** `InventoryItem` has `owner_character_id` and `owner_scene_id` with a comment stating "exactly one should be set", but no `__post_init__` enforces the XOR constraint. Items can have both owners (data corruption) or no owner.
-**Suggested fix:** Add `__post_init__` validating `(owner_character_id is None) != (owner_scene_id is None)`.
+**Status:** Fixed. Added `__post_init__` to InventoryItem that rejects having both `owner_character_id` and `owner_scene_id` set. Allows neither-set for NPC inventory items not yet assigned to a scene.
 
-### BUG20260419-075 — create_channel created_at typed as object
+### BUG20260419-075 — create_channel created_at typed as object (FIXED)
 
-**File:** `server/scope/side_channel_engine.py:60`
-**Severity:** P3
-**Category:** Data Model
-**Description:** `created_at: object = None` should be `created_at: datetime | None = None`. The `object` type accepts anything, provides no type-checker guidance, and makes the API contract unclear.
-**Suggested fix:** Change to `created_at: datetime | None = None` and add `from datetime import datetime` (already imported).
+**Status:** Fixed. Changed `created_at: object = None` to `created_at: datetime | None = None` with proper import.
 
-### BUG20260419-076 — validate_fact_creation None check on non-Optional
+### BUG20260419-076 — validate_fact_creation None check on non-Optional (FIXED)
 
-**File:** `server/scope/facts.py:70`
-**Severity:** P3
-**Category:** Data Model
-**Description:** `scope: ConversationScope` is typed as non-Optional but line 70 checks `if scope is None: raise ...`. Type checkers won't warn callers about None, creating a false sense of safety.
-**Suggested fix:** Either change to `scope: ConversationScope | None` and let callers handle None, or remove the None check and trust the type annotation.
+**Status:** Fixed. Changed parameter type to `scope: ConversationScope | None` to match the runtime None check.
 
-### BUG20260419-077 — SocialActionInput.extra dead field
+### BUG20260419-077 — SocialActionInput.extra dead field (FIXED)
 
-**File:** `server/npc/social.py:91`
-**Severity:** P3
-**Category:** Data Model
-**Description:** `SocialActionInput.extra: dict` (line 77) is defined with `field(default_factory=dict)` but no code in the codebase reads it. It accumulates unused data and creates confusion about feature completeness.
-**Suggested fix:** Remove the field, or implement reading it in the relevant social action handlers.
+**Status:** Fixed. Removed the unused `extra: dict` field from `SocialActionInput`.
 
-### BUG20260419-078 — Memory recall_description off-by-one
+### BUG20260419-078 — Memory recall_description off-by-one (FIXED)
 
-**File:** `server/exploration/memory.py:209`
-**Severity:** P3
-**Category:** Correctness
-**Description:** When `visit_count == 1`, `recall_description()` returns "You have been here once before." But `visit_count` includes the current visit, so `1` means this is the first visit — not that the player has been here "once before". The message should say "first time" for count 1 and "once before" for count 2.
-**Suggested fix:** Adjust: `if count <= 1: return "first visit" text; elif count == 2: "once before"; else: f"{count - 1} times before"`.
+**Status:** Fixed. Corrected branching: count==1 → "first visit", count==2 → "once before", count>2 → "{count-1} times before".
 
-### BUG20260419-079 — Monster ambush flag is dead code
+### BUG20260419-079 — Monster ambush flag is dead code (FIXED)
 
-**File:** `server/combat/monsters.py:109`
-**Severity:** P3
-**Category:** Correctness
-**Description:** Lines 109–111 check `group.behavior_mode == BehaviorMode.ambush` and append `"ambush_used"` to `group.special_rules`, but this flag is never read anywhere. No bonus (damage, initiative, etc.) is applied for ambush. The code sets a flag with no consumer.
-**Suggested fix:** Either implement the ambush bonus logic, or remove the dead code.
+**Status:** Fixed. Removed dead ambush flag code (set flag with no consumer). Ambush monsters now behave identically to other attack-mode monsters.
 
-### BUG20260419-080 — /api/player/{id}/inbox `since` parameter ignored
+### BUG20260419-080 — /api/player/{id}/inbox `since` parameter ignored (FIXED)
 
-**File:** `server/api/routes.py:397`
-**Severity:** P3
-**Category:** Correctness
-**Description:** The inbox endpoint declares `since: str = ""` as a query parameter but never uses it in the function body. The API contract promises time-based filtering that isn't implemented.
-**Suggested fix:** Implement filtering (parse `since` as a datetime, filter facts by `revealed_at >= since`), or remove the parameter.
+**Status:** Fixed. Inbox endpoint now parses `since` as ISO datetime and filters facts by `revealed_at >= since`. Returns 400 on invalid format.
 
-### BUG20260419-081 — Quest title displays quest_id (UUID)
+### BUG20260419-081 — Quest title displays quest_id (UUID) (FIXED)
 
-**File:** `server/api/routes.py:613`
-**Severity:** P3
-**Category:** Correctness
-**Description:** `QuestInfo(title=quest.quest_id, ...)` uses the internal UUID as the quest title shown to players. The inline comment confirms this: `"quest_id is used as title"`. Should use `quest.name` or `quest.title`.
-**Suggested fix:** Change to `title=quest.name` (or whichever field holds the human-readable quest name).
+**Status:** Fixed. Added `title` field to `QuestState` entity and ORM model. Loader populates from `QuestDefinition.title`. API route uses `quest.title` with fallback to `quest.quest_id`.
 
-### BUG20260419-082 — Scene scoped_prompts O(n*m) membership checks
+### BUG20260419-082 — Scene scoped_prompts O(n*m) membership checks (FIXED)
 
-**File:** `server/scene/scoped_prompts.py:57`
-**Severity:** P3
-**Category:** Performance
-**Description:** List comprehensions use `in` membership checks against `scene.character_ids`, `scene.npc_ids`, and `scene.monster_group_ids`. If these are lists, each `in` check is O(m), making overall complexity O(n*m).
-**Suggested fix:** Convert scene membership lists to sets at the start of the method: `char_ids = set(scene.character_ids)`.
+**Status:** Fixed. Converted `scene.character_ids`, `scene.npc_ids`, and `scene.monster_group_ids` to sets before filtering, making membership checks O(1).
 
-### BUG20260419-083 — BFS uses list.pop(0) — O(n^2)
+### BUG20260419-083 — BFS uses list.pop(0) — O(n^2) (FIXED)
 
-**File:** `scenarios/validator.py:376`
-**Severity:** P3
-**Category:** Performance
-**Description:** The reachability BFS uses `queue.pop(0)` which is O(n) per call on a Python list (shifts all elements). For a BFS with m nodes, total time is O(m^2).
-**Suggested fix:** Use `collections.deque` with `popleft()` for O(1) dequeue.
+**Status:** Fixed. Replaced `list` with `collections.deque` and `pop(0)` with `popleft()` for O(1) dequeue.
 
-### BUG20260419-084 — Scope violation detection O(n*m) substring search
+### BUG20260419-084 — Scope violation detection O(n*m) substring search (FIXED)
 
-**File:** `models/contracts/context_assembly.py:219`
-**Severity:** P3
-**Category:** Performance
-**Description:** `excluded_facts` is built with `[f for f in all_available if f not in permitted_facts]` where `permitted_facts` is a list. The `not in` check on a list is O(m), making the total O(n*m).
-**Suggested fix:** Convert to set: `permitted_set = set(permitted_facts); excluded = [f for f in all_available if f not in permitted_set]`.
+**Status:** Fixed. Built a `permitted_ids` set from `fact_id` values for O(1) membership checks when computing excluded facts.
 
 ### BUG20260419-085 — Leakage guard module-level singletons (FIXED)
 

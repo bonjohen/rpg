@@ -408,20 +408,6 @@ class TestMonsterBehavior:
         decision = self.engine.decide_action(goblins, [kira])
         assert decision.action_type == "attack"
 
-    def test_ambush_marks_used(self):
-        goblins = make_goblin_patrol()
-        goblins.behavior_mode = BehaviorMode.ambush
-        assert "ambush_used" not in goblins.special_rules
-        self.engine.decide_action(goblins, [make_kira()])
-        assert "ambush_used" in goblins.special_rules
-
-    def test_ambush_does_not_double_mark(self):
-        goblins = make_goblin_patrol()
-        goblins.behavior_mode = BehaviorMode.ambush
-        goblins.special_rules.append("ambush_used")
-        self.engine.decide_action(goblins, [make_kira()])
-        assert goblins.special_rules.count("ambush_used") == 1
-
     def test_no_alive_targets_idles(self):
         goblins = make_goblin_patrol()
         kira = make_kira()

@@ -106,11 +106,6 @@ class MonsterBehaviorEngine:
                 reason=f"Defending territory against {target.name}",
             )
 
-        # Ambush: first-round bonus check
-        if group.behavior_mode == BehaviorMode.ambush:
-            if "ambush_used" not in group.special_rules:
-                group.special_rules.append("ambush_used")
-
         # Patrol, guard, pursue, ambush: attack highest-threat
         target = self._pick_target(group, alive_chars)
         return MonsterActionDecision(

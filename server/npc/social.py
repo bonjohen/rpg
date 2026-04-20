@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from server.domain.entities import KnowledgeFact, NPC
-from server.domain.enums import KnowledgeFactType
+from server.domain.enums import HealthState, KnowledgeFactType
 from server.domain.helpers import new_id, utc_now
 from server.npc.dialogue import DialogueContext, DialogueContextBuilder
 from server.npc.tells import NpcTellEngine, TellDefinition, TellResult
@@ -77,8 +77,6 @@ class SocialActionInput:
     public_scope_id: str = ""
     private_scope_id: str = ""
     referee_scope_id: str = ""
-    # Optional: offer details for bargain, claimed info for lie
-    extra: dict = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +154,7 @@ class SocialEngine:
             SocialActionResult.
         """
         # Guard: NPC must be alive and in the same scene
-        if npc.health_state in ("incapacitated", "dead"):
+        if npc.health_state in (HealthState.incapacitated, HealthState.dead):
             return SocialActionResult(
                 success=False,
                 outcome=SocialOutcome.FAILURE,

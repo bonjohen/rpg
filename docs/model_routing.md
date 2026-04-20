@@ -55,6 +55,8 @@ Both adapters implement `MainAdapter` protocol (`models/protocol.py`). Pass eith
 
 | Task | Notes |
 |---|---|
+| Task | Notes |
+|---|---|
 | Scene narration (official, post-resolution) | The authoritative public result after a turn commits |
 | NPC dialogue | Any NPC line that players will see publicly |
 | Combat summary prose | The readable battle narrative for the party |
@@ -90,7 +92,7 @@ Incoming task
 │   YES → Fast tier
 │
 ├─ Does quality of narration/dialogue matter to players?
-│   YES → Main tier (GPT-5.4 mini)
+│   YES → Main tier
 │
 ├─ Is this a ruling proposal for an ambiguous action?
 │   YES → Main tier
@@ -107,7 +109,7 @@ Routing is performed by the server's LLM router component. The router is determi
 | Tier | Target prompt size | Hard limit |
 |---|---|---|
 | Fast | < 2K tokens | 4K tokens |
-| Main (GPT-5.4 mini) | < 16K tokens | 32K tokens |
+| Main | < 16K tokens | 32K tokens |
 
 Truncation policy: prefer dropping oldest public chat history before dropping scene state or player facts.
 
@@ -130,7 +132,7 @@ Never pass raw unfiltered chat history to any LLM call where secrecy matters.
 Every model call must log:
 
 - `trace_id` (tied to the TurnWindow or request context)
-- `tier` (fast / openai / gemma)
+- `tier` (fast / main)
 - `task_type`
 - `prompt_token_count`
 - `output_token_count`

@@ -52,13 +52,15 @@ The server owns: state storage, timer control, action validation, rules resoluti
 └────────┬───────────────────────────┬────────────────────┘
          │ Fast tier                 │ Main tier
 ┌────────▼──────────┐   ┌───────────▼────────────────────┐
-│  Fast Local Model │   │  GPT-5.4 mini (OpenAI API)     │
-│  (small, low-lat) │   │  (cloud, Chat Completions)      │
-│  intent classify  │   │  scene narration                │
-│  cmd normalize    │   │  NPC dialogue                   │
-│  action extract   │   │  combat summary prose           │
-│  scope suggest    │   │  arbitration proposals          │
-│  context summarize│   │  unusual player intent          │
+│  Fast Local Model │   │  Main Model (choose one):      │
+│  qwen2.5:1.5b     │   │  • Gemma 4 26B A4B (local)     │
+│  via Ollama        │   │  • GPT-5.4 mini (OpenAI API)   │
+│                   │   │  Both use MainAdapter protocol  │
+│  intent classify  │   │                                 │
+│  cmd normalize    │   │  scene narration                │
+│  action extract   │   │  NPC dialogue                   │
+│  scope suggest    │   │  combat summary prose           │
+│  context summarize│   │  arbitration proposals          │
 │  format repair    │   │  structured ruling proposals    │
 └───────────────────┘   └─────────────────────────────────┘
 ```
@@ -108,13 +110,13 @@ Applies identically to exploration, social, and combat scenes. Only resolution r
 | Recent-turn context summarization | Fast |
 | Short clarification question generation | Fast |
 | Format repair / schema validation | Fast |
-| Scene narration (official) | GPT-5.4 mini |
-| NPC dialogue | GPT-5.4 mini |
-| Combat summary prose | GPT-5.4 mini |
-| Structured ruling proposals | GPT-5.4 mini |
-| Unusual player action interpretation | GPT-5.4 mini |
+| Scene narration (official) | Main |
+| NPC dialogue | Main |
+| Combat summary prose | Main |
+| Structured ruling proposals | Main |
+| Unusual player action interpretation | Main |
 
-All authoritative resolution remains server-side. If Gemma fails schema validation or exceeds latency, the server falls back to a deterministic response rather than blocking the turn.
+All authoritative resolution remains server-side. If the main model fails schema validation or exceeds latency, the server falls back to a deterministic response rather than blocking the turn.
 
 ---
 
@@ -186,7 +188,7 @@ Monsters are tactical actors, not conversational agents. A MonsterGroup tracks: 
 
 ## Telegram Control Surface
 
-**Bot commands:** `/start`, `/join`, `/help`, `/status`, `/ready`, `/pass`, `/sheet`, `/inventory`, `/log`, `/recap`
+**Bot commands:** `/start`, `/join`, `/help`, `/status`, `/newgame`, `/nextturn`, `/forceresolve`, `/diagnostics`, `/scene`, `/who`
 
 **Inline keyboard controls** (turn-control message): Ready, Pass, Ask Ref, Revise, Submit
 
@@ -202,6 +204,6 @@ Character sheet, inventory, map, quest log, private inbox, side-channel manageme
 
 ## MVP Scope
 
-Included: one supergroup, one play topic, one DM per player, timer-driven turn loop, one committed action per player per turn, exploration loop, social loop, combat loop, basic NPC memory tags, grouped monster encounters, player-private clue delivery, append-only turn logging, split LLM routing (fast local + GPT-5.4 mini via OpenAI).
+Included: one supergroup, one play topic, one DM per player, timer-driven turn loop, one committed action per player per turn, exploration loop, social loop, combat loop, basic NPC memory tags, grouped monster encounters, player-private clue delivery, append-only turn logging, split LLM routing (fast local + main tier), database-backed persistence with startup recovery.
 
-Excluded from MVP: live maps, scenario authoring suite, real-time combat, persistent storage (in-memory only for playtest).
+Excluded from MVP: live maps, scenario authoring suite, real-time combat.

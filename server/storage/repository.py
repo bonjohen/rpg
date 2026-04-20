@@ -31,12 +31,15 @@ from server.domain.enums import (
     ActionType,
     AwarenessState,
     BehaviorMode,
+    HealthState,
     KnowledgeFactType,
+    MoraleState,
     PuzzleStatus,
     QuestStatus,
     ReadyState,
     SceneState,
     ScopeType,
+    StanceToParty,
     TurnWindowState,
     ValidationStatus,
 )
@@ -212,12 +215,12 @@ def _npc_from_row(r: NPCRow) -> NPC:
         name=r.name,
         created_at=r.created_at,
         scene_id=r.scene_id,
-        health_state=r.health_state,
+        health_state=HealthState(r.health_state),
         inventory_item_ids=r.inventory_item_ids or [],
         faction_id=r.faction_id,
         status_effects=r.status_effects or [],
         is_visible=r.is_visible,
-        stance_to_party=r.stance_to_party,
+        stance_to_party=StanceToParty(r.stance_to_party),
         trust_by_player=r.trust_by_player or {},
         goal_tags=r.goal_tags or [],
         fear_tags=r.fear_tags or [],
@@ -238,12 +241,12 @@ def _monster_group_from_row(r: MonsterGroupRow) -> MonsterGroup:
         created_at=r.created_at,
         behavior_mode=BehaviorMode(r.behavior_mode),
         awareness_state=AwarenessState(r.awareness_state),
-        morale_state=r.morale_state,
+        morale_state=MoraleState(r.morale_state),
         threat_table=r.threat_table or {},
         formation_state=r.formation_state,
         territory_id=r.territory_id,
         special_rules=r.special_rules or [],
-        health_state=r.health_state,
+        health_state=HealthState(r.health_state),
         is_visible=r.is_visible,
     )
 
@@ -268,6 +271,7 @@ def _quest_state_from_row(r: QuestStateRow) -> QuestState:
         quest_state_id=r.quest_state_id,
         campaign_id=r.campaign_id,
         quest_id=r.quest_id,
+        title=r.title or "",
         status=QuestStatus(r.status),
         started_at=r.started_at,
         completed_at=r.completed_at,
@@ -756,12 +760,12 @@ class NPCRepo:
         row.name = npc.name
         row.created_at = npc.created_at
         row.scene_id = npc.scene_id
-        row.health_state = npc.health_state
+        row.health_state = npc.health_state.value
         row.inventory_item_ids = npc.inventory_item_ids
         row.faction_id = npc.faction_id
         row.status_effects = npc.status_effects
         row.is_visible = npc.is_visible
-        row.stance_to_party = npc.stance_to_party
+        row.stance_to_party = npc.stance_to_party.value
         row.trust_by_player = npc.trust_by_player
         row.goal_tags = npc.goal_tags
         row.fear_tags = npc.fear_tags
@@ -800,12 +804,12 @@ class MonsterGroupRepo:
         row.created_at = mg.created_at
         row.behavior_mode = mg.behavior_mode.value
         row.awareness_state = mg.awareness_state.value
-        row.morale_state = mg.morale_state
+        row.morale_state = mg.morale_state.value
         row.threat_table = mg.threat_table
         row.formation_state = mg.formation_state
         row.territory_id = mg.territory_id
         row.special_rules = mg.special_rules
-        row.health_state = mg.health_state
+        row.health_state = mg.health_state.value
         row.is_visible = mg.is_visible
         self._s.flush()
 
@@ -874,6 +878,7 @@ class QuestStateRepo:
             self._s.add(row)
         row.campaign_id = qs.campaign_id
         row.quest_id = qs.quest_id
+        row.title = qs.title
         row.status = qs.status.value
         row.started_at = qs.started_at
         row.completed_at = qs.completed_at

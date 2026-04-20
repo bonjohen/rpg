@@ -1246,7 +1246,7 @@ class TestMemoryEngine:
         )
 
         assert result.has_visited is True
-        assert "once" in result.recall_text.lower()
+        assert "first visit" in result.recall_text.lower()
         assert "A dark room." in result.recall_text
 
     def test_recall_description_multiple_visits(self):

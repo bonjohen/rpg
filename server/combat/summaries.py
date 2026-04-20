@@ -44,9 +44,19 @@ class BattlefieldSummaryBuilder:
         for g in groups:
             if not g.is_visible:
                 continue
-            line = f"{g.unit_type} (x{g.count}) — {g.health_state}"
-            if g.morale_state != "steady":
-                line += f" — {g.morale_state}"
+            hs = (
+                g.health_state.value
+                if hasattr(g.health_state, "value")
+                else g.health_state
+            )
+            line = f"{g.unit_type} (x{g.count}) — {hs}"
+            ms = (
+                g.morale_state.value
+                if hasattr(g.morale_state, "value")
+                else g.morale_state
+            )
+            if ms != "steady":
+                line += f" — {ms}"
             combatant_lines.append(line)
 
         return BattlefieldSummary(

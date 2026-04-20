@@ -15,12 +15,15 @@ from server.domain.enums import (
     ActionType,
     AwarenessState,
     BehaviorMode,
+    HealthState,
     KnowledgeFactType,
+    MoraleState,
     PuzzleStatus,
     QuestStatus,
     ReadyState,
     SceneState,
     ScopeType,
+    StanceToParty,
     TurnWindowState,
     ValidationStatus,
 )
@@ -271,13 +274,13 @@ class NPC:
     created_at: datetime
     # Hard state
     scene_id: Optional[str] = None
-    health_state: str = "healthy"  # "healthy", "injured", "incapacitated", "dead"
+    health_state: HealthState = HealthState.healthy
     inventory_item_ids: list[str] = field(default_factory=list)
     faction_id: Optional[str] = None
     status_effects: list[str] = field(default_factory=list)
     is_visible: bool = True  # visible to players in the scene
     # Durable mind
-    stance_to_party: str = "neutral"  # "friendly", "neutral", "hostile", "fearful"
+    stance_to_party: StanceToParty = StanceToParty.neutral
     trust_by_player: dict[str, int] = field(
         default_factory=dict
     )  # player_id → -100..100
@@ -307,13 +310,13 @@ class MonsterGroup:
     created_at: datetime
     behavior_mode: BehaviorMode = BehaviorMode.patrol
     awareness_state: AwarenessState = AwarenessState.unaware
-    morale_state: str = "steady"  # "steady", "shaken", "routed"
+    morale_state: MoraleState = MoraleState.steady
     # threat_table: player_id → threat score
     threat_table: dict[str, int] = field(default_factory=dict)
     formation_state: str = "grouped"
     territory_id: Optional[str] = None
     special_rules: list[str] = field(default_factory=list)
-    health_state: str = "healthy"
+    health_state: HealthState = HealthState.healthy
     is_visible: bool = False  # hidden until spotted
 
 
@@ -335,6 +338,13 @@ class InventoryItem:
     owner_character_id: Optional[str] = None
     owner_scene_id: Optional[str] = None
     quantity: int = 1
+
+    def __post_init__(self) -> None:
+        if self.owner_character_id is not None and self.owner_scene_id is not None:
+            raise ValueError(
+                "InventoryItem cannot have both owner_character_id and owner_scene_id set."
+            )
+
     properties: dict = field(default_factory=dict)  # game-system specific
     is_hidden: bool = False  # hidden from public scene description
 
@@ -351,6 +361,7 @@ class QuestState:
     quest_state_id: str
     campaign_id: str
     quest_id: str  # references scenario quest definition
+    title: str = ""
     status: QuestStatus = QuestStatus.inactive
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None

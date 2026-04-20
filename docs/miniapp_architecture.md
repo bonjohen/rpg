@@ -31,20 +31,35 @@ viewport size). The Mini App communicates with the game server via a REST API.
 | /app/#sheet | Character sheet |
 | /app/#inventory | Inventory |
 | /app/#recap | Turn recap |
-| /app/#quest-log | Quest log (Phase 18) |
-| /app/#inbox | Private inbox (Phase 18) |
-| /app/#action | Action builder (Phase 18) |
+| /app/#quest-log | Quest log |
+| /app/#inbox | Private inbox |
+| /app/#action | Action builder |
+| /app/#channels | Side channel management |
+| /app/#clues | Clue journal |
+| /app/#map | Scene map |
 
 ## API Endpoints (served by FastAPI)
 
 | Method | Path | Purpose |
 |---|---|---|
+| POST | /api/auth/validate | Validate Telegram initData |
 | GET | /api/player/{player_id} | Player info + character |
 | GET | /api/character/{character_id} | Full character sheet |
 | GET | /api/character/{character_id}/inventory | Character's items |
 | GET | /api/scene/{scene_id} | Current scene state |
+| GET | /api/scene/{scene_id}/context | Scene context for prompts |
+| POST | /api/action/submit | Submit a player action |
+| GET | /api/action/draft/{player_id} | Get player's draft action |
 | GET | /api/campaign/{campaign_id}/recap | Recent turn log entries |
-| POST | /api/auth/validate | Validate Telegram initData |
+| GET | /api/player/{player_id}/inbox | Private referee messages (supports `since` filter) |
+| GET | /api/player/{player_id}/channels | Player's side channels |
+| GET | /api/channel/{channel_id}/messages | Side channel message history |
+| POST | /api/channel/create | Create a new side channel |
+| POST | /api/channel/{channel_id}/send | Send a side channel message |
+| POST | /api/channel/{channel_id}/leave | Leave a side channel |
+| GET | /api/campaign/{campaign_id}/quests | Quest log |
+| GET | /api/player/{player_id}/clues | Discovered clues |
+| GET | /api/campaign/{campaign_id}/map | Scene graph / map |
 
 ## Security
 

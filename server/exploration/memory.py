@@ -195,11 +195,11 @@ class MemoryEngine:
         description = existing_record.last_visit_description
 
         if count == 1:
+            recall_text = f"This is your first visit. You notice: {description}"
+        elif count == 2:
             recall_text = f"You have been here once before. You recall: {description}"
         else:
-            recall_text = (
-                f"You have visited this place {count} times. You recall: {description}"
-            )
+            recall_text = f"You have visited this place {count - 1} times before. You recall: {description}"
 
         return RecallResult(
             has_visited=True,

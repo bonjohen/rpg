@@ -8,6 +8,7 @@ Stateless, no I/O.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 from server.domain.entities import ConversationScope, KnowledgeFact, SideChannel
@@ -65,7 +66,7 @@ class SideChannelEngine:
         *,
         channel_id: str = "",
         scope_id: str = "",
-        created_at: object = None,
+        created_at: datetime | None = None,
     ) -> SideChannelCreateResult:
         """Create a new side-channel with the given members.
 

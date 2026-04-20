@@ -469,10 +469,21 @@ async def get_inbox(
         ):
             private_scope_ids.add(scope.scope_id)
 
+    since_dt: datetime | None = None
+    if since:
+        try:
+            since_dt = datetime.fromisoformat(since)
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="Invalid 'since' datetime format."
+            )
+
     read_facts = orch.inbox_read.get(player_id, set())
     messages: list[InboxMessage] = []
     for fact in orch.get_knowledge_facts():
         if fact.owner_scope_id not in private_scope_ids:
+            continue
+        if since_dt and fact.revealed_at and fact.revealed_at < since_dt:
             continue
         scene = orch.get_scene(fact.scene_id)
         scene_name = scene.name if scene else fact.scene_id
@@ -713,7 +724,7 @@ async def get_quests(
         quests.append(
             QuestInfo(
                 quest_id=quest.quest_id,
-                title=quest.quest_id,
+                title=quest.title or quest.quest_id,
                 description="",
                 status=quest.status.value,
                 objectives=[],

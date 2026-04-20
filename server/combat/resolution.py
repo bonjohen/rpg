@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from server.domain.entities import Character, MonsterGroup
+from server.domain.enums import HealthState
 
 
 @dataclass
@@ -57,13 +58,13 @@ class CombatResolutionEngine:
         if original_count > 0:
             ratio = group.count / original_count
             if ratio > 0.5:
-                group.health_state = "healthy"
+                group.health_state = HealthState.healthy
             elif ratio > 0.25:
-                group.health_state = "injured"
+                group.health_state = HealthState.injured
             elif ratio > 0:
-                group.health_state = "critical"
+                group.health_state = HealthState.critical
             else:
-                group.health_state = "dead"
+                group.health_state = HealthState.dead
 
         return group, DamageResult(
             raw_damage=damage,

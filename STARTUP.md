@@ -10,12 +10,13 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **All bug-fix plans complete.** All P0+P1+P2 bugs closed. Plans: `docs/bugfix_plan.md` (P0/P1), `docs/p2_bugfix_plan.md` (P2).
+Current phase: **All bug-fix plans complete.** Only 1 P3 bug remains open (BUG-002: narration fallback text repetitive). Plans: `docs/bugfix_plan.md` (P0/P1), `docs/p2_bugfix_plan.md` (P2).
 
 All 20 original phases, 7 database integration phases, 7 P0/P1 bug-fix phases, and 7 P2 bug-fix phases are complete:
 - **DB Phase 1-7**: Full database integration (SQLite/PostgreSQL via SQLAlchemy, repositories, optimistic locking). 1327 tests.
 - **Bug-fix Phase 1-7 (P0/P1)**: 24 bugs fixed across security, bot handlers, combat, contracts, timer, NPC, reliability. 1396 tests pass.
-- **P2 Bug-fix Phase 1-7**: 42 P2 bugs fixed across API auth, timer arithmetic, combat scaling, exploration state, NPC types, model contracts, API routes, bot safety, scenario errors, connection reuse, datetime hardening, replay warnings. 1479 tests pass.
+- **P2 Bug-fix Phase 1-7**: 48 P2 bugs fixed across API auth, timer arithmetic, combat scaling, exploration state, NPC types, model contracts, API routes, bot safety, scenario errors, connection reuse, datetime hardening, replay warnings. 1479 tests pass.
+- **P3 Bug fixes**: 12 of 13 P3 bugs fixed (correctness, performance, data model). Enum type safety for NPC/MonsterGroup fields, BFS deque optimization, set-based lookups, quest title persistence, exploration memory text, side channel typing, scope nullability.
 
 ## Key Design Decisions (do not revisit without cause)
 
@@ -41,7 +42,7 @@ C:\Projects\rpg\
 │   ├── model_routing.md     # LLM routing rules
 │   ├── repo_conventions.md  # Branch, commit, env, logging conventions
 │   ├── testing.md           # Test strategy
-│   ├── bugs.md              # Bug tracker (89 bugs)
+│   ├── bugs.md              # Bug tracker (88 bugs, 87 resolved, 1 open)
 │   ├── release_readiness.md # Open bugs and release criteria
 │   ├── design.md            # Original design document
 │   └── pdr.md               # Product design requirements
@@ -71,18 +72,20 @@ C:\Projects\rpg\
 ├── webapp/                  # Mini App frontend (HTML/JS/CSS)
 ├── docs/                    # Design docs, plan, release readiness
 │   ├── release_readiness.md # Open bugs and release criteria
-│   └── feature_freeze.md   # Feature freeze notice
-└── tests/                   # 1396 tests (unit + integration)
+│   ├── feature_freeze.md   # Feature freeze notice
+│   ├── miniapp_architecture.md # Mini App architecture
+│   └── code_review.md      # Code review instructions
+└── tests/                   # 1479 tests (unit + integration)
 ```
 
 ## Known Defects / Open Issues
 
-See `docs/bugs.md` for the full bug tracker (89 bugs) and `docs/release_readiness.md` for release criteria.
+See `docs/bugs.md` for the full bug tracker (88 bugs) and `docs/release_readiness.md` for release criteria.
 
-**P0 (3 — all Fixed):** Bot token auth bypass, path traversal in /newgame, scope grant leakage.
-**P1 (21 — all Fixed):** Combat pipeline, NPC trust rollback, bot handler None guards, contract drift, timer, idempotency, scope, recovery, model adapters.
-**P2 (49, 1 fixed):** Various correctness, performance, error handling, and design issues. BUG-049 (combat_summary fallback invalid tone) fixed as bonus.
-**P3 (16, 1 closed):** Data model enhancements, minor correctness, performance. BUG-003 (persistent storage) closed.
+**P0 (3 — all fixed):** Bot token auth bypass, path traversal in /newgame, scope grant leakage.
+**P1 (21 — all fixed):** Combat pipeline, NPC trust rollback, bot handler None guards, contract drift, timer, idempotency, scope, recovery, model adapters.
+**P2 (48 — all fixed):** API auth, timer arithmetic, combat scaling, exploration state, NPC types, model contracts, API routes, bot safety, scenario errors, connection reuse, datetime hardening, replay warnings.
+**P3 (16, 15 fixed):** Only BUG-002 (narration fallback text repetitive) remains open. Fixed: enum type safety, BFS optimization, set-based lookups, quest title persistence, exploration memory, side channel typing, scope nullability, dead code removal.
 
 ## Phase Completion Log
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 from server.domain.helpers import utc_now as _now
 
 from server.domain.entities import NPC
-from server.domain.enums import BehaviorMode
+from server.domain.enums import BehaviorMode, HealthState, StanceToParty
 from server.npc.tells import TellDefinition
 
 # ---------------------------------------------------------------------------
@@ -49,12 +49,12 @@ def make_npc_mira(**kwargs) -> NPC:
         name=kwargs.get("name", "Mira the Innkeeper"),
         created_at=kwargs.get("created_at", _now()),
         scene_id=kwargs.get("scene_id", SCENE_TAVERN_ID),
-        health_state=kwargs.get("health_state", "healthy"),
+        health_state=HealthState(kwargs.get("health_state", "healthy")),
         inventory_item_ids=kwargs.get("inventory_item_ids", []),
         faction_id=kwargs.get("faction_id", "townsfolk"),
         status_effects=kwargs.get("status_effects", []),
         is_visible=kwargs.get("is_visible", True),
-        stance_to_party=kwargs.get("stance_to_party", "neutral"),
+        stance_to_party=StanceToParty(kwargs.get("stance_to_party", "neutral")),
         trust_by_player=kwargs.get("trust_by_player", {}),
         goal_tags=kwargs.get("goal_tags", ["protect_family", "keep_inn_safe"]),
         fear_tags=kwargs.get("fear_tags", ["exposure", "retaliation"]),
@@ -121,12 +121,12 @@ def make_npc_theron(**kwargs) -> NPC:
         name=kwargs.get("name", "Theron the Gate Guard"),
         created_at=kwargs.get("created_at", _now()),
         scene_id=kwargs.get("scene_id", SCENE_GATE_ID),
-        health_state=kwargs.get("health_state", "healthy"),
+        health_state=HealthState(kwargs.get("health_state", "healthy")),
         inventory_item_ids=kwargs.get("inventory_item_ids", []),
         faction_id=kwargs.get("faction_id", "city_watch"),
         status_effects=kwargs.get("status_effects", []),
         is_visible=kwargs.get("is_visible", True),
-        stance_to_party=kwargs.get("stance_to_party", "neutral"),
+        stance_to_party=StanceToParty(kwargs.get("stance_to_party", "neutral")),
         trust_by_player=kwargs.get("trust_by_player", {}),
         goal_tags=kwargs.get("goal_tags", ["enforce_gate_rules", "supplement_wage"]),
         fear_tags=kwargs.get("fear_tags", ["losing_post", "captain_disapproval"]),

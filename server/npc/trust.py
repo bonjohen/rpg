@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from server.domain.entities import NPC
+from server.domain.enums import StanceToParty
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +186,7 @@ class TrustEngine:
     # Stance derivation
     # ------------------------------------------------------------------
 
-    def _derive_stance(self, npc: NPC) -> str:
+    def _derive_stance(self, npc: NPC) -> StanceToParty:
         """Derive party-level stance from the mean of all trust scores.
 
         If trust_by_player is empty, stance stays as-is (neutral default).
@@ -200,17 +201,17 @@ class TrustEngine:
         if min_trust <= _HOSTILE_THRESHOLD:
             # If threatening NPC is also fearful by personality
             if "fearful" in npc.personality_tags or "timid" in npc.personality_tags:
-                return "fearful"
-            return "hostile"
+                return StanceToParty.fearful
+            return StanceToParty.hostile
 
         if mean_trust >= _FRIENDLY_THRESHOLD:
-            return "friendly"
+            return StanceToParty.friendly
         if mean_trust >= -20:
-            return "neutral"
+            return StanceToParty.neutral
         if mean_trust >= _HOSTILE_THRESHOLD:
-            return "suspicious"
+            return StanceToParty.suspicious
         # Should not reach here given min_trust check above, but guard it
-        return "hostile"
+        return StanceToParty.hostile
 
     # ------------------------------------------------------------------
     # Query helpers
@@ -224,13 +225,13 @@ class TrustEngine:
         """
         if player_id is not None:
             trust = self.get_trust(npc, player_id)
-            return trust >= 0 and npc.stance_to_party != "hostile"
-        return npc.stance_to_party in ("friendly", "neutral")
+            return trust >= 0 and npc.stance_to_party != StanceToParty.hostile
+        return npc.stance_to_party in (StanceToParty.friendly, StanceToParty.neutral)
 
     def is_hostile(self, npc: NPC) -> bool:
         """Return True if the NPC stance is hostile."""
-        return npc.stance_to_party == "hostile"
+        return npc.stance_to_party == StanceToParty.hostile
 
     def is_fearful(self, npc: NPC) -> bool:
         """Return True if the NPC stance is fearful."""
-        return npc.stance_to_party == "fearful"
+        return npc.stance_to_party == StanceToParty.fearful

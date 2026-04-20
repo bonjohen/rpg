@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
 
 from server.domain.enums import AwarenessState, BehaviorMode, ScopeType
@@ -371,9 +372,9 @@ class ScenarioValidator:
 
         # BFS from starting scene
         visited: set[str] = set()
-        queue = [manifest.starting_scene_id]
+        queue: deque[str] = deque([manifest.starting_scene_id])
         while queue:
-            current = queue.pop(0)
+            current = queue.popleft()
             if current in visited:
                 continue
             visited.add(current)

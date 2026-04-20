@@ -54,7 +54,7 @@ class FactOwnershipPolicy:
 
     def validate_fact_creation(
         self,
-        scope: ConversationScope,
+        scope: ConversationScope | None,
         fact_type: KnowledgeFactType,
     ) -> None:
         """Validate that a fact of ``fact_type`` may be created in ``scope``.

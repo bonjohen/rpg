@@ -429,6 +429,7 @@ class ScenarioLoader:
             quest_state_id=new_id(),
             campaign_id=campaign_id,
             quest_id=defn.quest_id,
+            title=defn.title,
         )
 
     def _convert_trigger(

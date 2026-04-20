@@ -31,50 +31,52 @@ C:\Projects\rpg\
 ├── STARTUP.md               # Session-restore context (update each phase)
 ├── CLAUDE.md                # Claude Code project instructions
 ├── docs/
-│   ├── plan.md              # Active phased release tracker (source of truth for work queue)
-│   ├── phase_status.md      # Phase completion log
 │   ├── architecture.md      # System architecture
 │   ├── model_routing.md     # LLM routing rules
 │   ├── repo_conventions.md  # This file
 │   ├── testing.md           # Test strategy
+│   ├── bugs.md              # Bug tracker
+│   ├── release_readiness.md # Release criteria and open bug counts
+│   ├── feature_freeze.md    # Feature freeze notice
 │   ├── design.md            # Original design document
-│   └── pdr.md               # Product design requirements
+│   ├── database_design.md   # Database integration design
+│   ├── miniapp_architecture.md # Mini App architecture
+│   └── code_review.md       # Code review instructions
 ├── server/                  # Game server (Python)
-│   ├── domain/              # Domain model: entities, state machines, enums
-│   ├── engine/              # Turn engine, timer, rules resolution
-│   ├── storage/             # ORM models, migrations, repositories
-│   ├── scopes/              # Scope enforcement layer
-│   ├── router/              # LLM routing logic
-│   └── api/                 # Internal API (for bot gateway)
-├── bot/                     # Telegram bot gateway
-│   ├── handlers/            # Incoming message and callback handlers
-│   ├── outbound/            # Outbound message sending (public + DM)
-│   └── commands/            # /start, /join, /help, /status, etc.
+│   ├── domain/              # Entities, enums, helpers (pure dataclasses)
+│   ├── engine/              # Turn engine (lifecycle, validation, commit)
+│   ├── scope/               # Scope enforcement, side channels, leakage guard
+│   ├── timer/               # Countdown timer, early-close, pause/resume
+│   ├── exploration/         # Movement, actions, triggers, clues, objects, memory
+│   ├── npc/                 # Trust engine, tells, social resolution
+│   ├── combat/              # Conditions, actions, monsters, morale, summaries
+│   ├── scene/               # Scene membership, multi-scene, split-party
+│   ├── orchestrator/        # GameOrchestrator (top-level game loop)
+│   ├── api/                 # FastAPI REST API for Mini App
+│   ├── reliability/         # Retry, idempotency, model recovery, turn recovery
+│   ├── observability/       # Structured logging, metrics, diagnostics
+│   └── storage/             # ORM models, repositories, database setup
+├── bot/                     # Telegram bot gateway (flat module: commands.py, handlers.py, outbound.py, etc.)
 ├── models/                  # Inference adapters
-│   ├── fast/                # Fast local model adapter
-│   └── gemma/               # Gemma 4 26B A4B adapter
-├── scenarios/               # Scenario content files (YAML/JSON)
-│   └── starter/             # First playable scenario
-├── prompts/                 # Prompt contract templates
-│   ├── fast/                # Fast-tier prompt contracts
-│   └── gemma/               # Gemma-tier prompt contracts
-└── tests/
-    ├── unit/                # Unit tests
-    ├── integration/         # Persistence and integration tests
-    ├── fixtures/            # Entity builders, Telegram payloads, LLM outputs, scenarios
-    └── scenarios/           # Scenario-level game behavior tests
+│   ├── fast/                # Fast local model adapter (qwen2.5:1.5b via Ollama)
+│   ├── main/                # Main model adapter (GPT-5.4 mini via OpenAI API)
+│   ├── gemma/               # Main model adapter (Gemma 4 26B A4B, OpenAI-compatible)
+│   ├── contracts/           # Prompt contracts, context assembly, output repair
+│   └── protocol.py          # MainAdapter protocol (shared interface)
+├── scenarios/               # Scenario schema, loader, validator, patterns
+│   └── starters/            # 4 starter scenarios (YAML)
+├── webapp/                  # Mini App frontend (HTML/JS/CSS)
+└── tests/                   # 1479 tests (unit + integration)
+    ├── unit/
+    ├── integration/
+    └── fixtures/            # Entity builders, Telegram payloads, scenario fixtures
 ```
-
-Directories are created as they are needed in each phase. Do not create empty directories in advance.
 
 ---
 
 ## Where Prompt Contracts Live
 
-All prompt templates live in `prompts/`. Each template is a text file with clear variable placeholders (e.g., `{scene_description}`, `{player_actions}`).
-
-- `prompts/fast/` — fast-model prompt contracts (intent classification, extraction, scope suggestion, etc.)
-- `prompts/gemma/` — Gemma 4 26B A4B prompt contracts (narration, NPC dialogue, ruling proposals, combat summaries)
+Prompt contracts live in `models/contracts/`. Each contract is a Python dataclass in `main_contracts.py` with an output schema, system/user prompt templates, and a fallback output. Context assembly (`context_assembly.py`) builds scoped prompts from game state. Output repair (`output_repair.py`) fixes minor schema errors in model output.
 
 Prompt contracts are versioned alongside the code. A change to a prompt contract is a code change and requires a test update if it affects any regression fixture.
 
@@ -82,20 +84,20 @@ Prompt contracts are versioned alongside the code. A change to a prompt contract
 
 ## Where Scenario Content Lives
 
-All scenario files live in `scenarios/`. Format is YAML (preferred) or JSON.
+All scenario files live in `scenarios/starters/` as single YAML files. Each file defines the full scenario: metadata, scenes, NPCs, monsters, items, puzzles, quests, and triggers in one document.
 
-- `scenarios/starter/` — the first playable scenario (developed in Phase 13)
-- `scenarios/<name>/` — additional scenarios added in Phase 19+
+Four starter scenarios ship with the repo:
+- `goblin_caves.yaml` — mixed exploration/combat
+- `haunted_manor.yaml` — puzzle/investigation
+- `forest_ambush.yaml` — combat/tactical
+- `merchant_quarter.yaml` — social/investigation
 
-Each scenario directory contains:
-- `scenario.yaml` — top-level scenario metadata
-- `scenes/` — individual scene definitions (room descriptions, exits, items, hidden content)
-- `npcs/` — NPC definitions (hard state + durable mind initial values)
-- `monsters/` — monster group templates
-- `puzzles/` — puzzle definitions
-- `quests/` — quest definitions
+Scenarios are validated by the `ScenarioLoader` and `ScenarioValidator` at load time. Use the loader to test:
 
-Scenarios must pass `python -m server.tools.validate_scenario <path>` before use (validation tool added in Phase 13).
+```python
+from scenarios.loader import ScenarioLoader
+result = ScenarioLoader().load_from_yaml("scenarios/starters/goblin_caves.yaml")
+```
 
 ---
 
@@ -131,10 +133,13 @@ Secrets are never committed to the repo.
 
 | Variable | Purpose | Where to set |
 |---|---|---|
-| `TELEGRAM_BOT_TOKEN` | Telegram Bot API token | `.env` file (local only) |
-| `GEMMA_BASE_URL` | Gemma 4 26B A4B inference endpoint | `.env` file |
-| `FAST_MODEL_BASE_URL` | Fast local model inference endpoint | `.env` file |
-| `DATABASE_URL` | Persistence connection string | `.env` file |
+| `BOT_TOKEN` | Telegram Bot API token | `.env` file (local only) |
+| `GROUP_CHAT_ID` | Telegram supergroup chat ID | `.env` file |
+| `FAST_MODEL_BASE_URL` | Fast local model inference endpoint (Ollama) | `.env` file |
+| `OPENAI_API_KEY` | OpenAI API key (if using GPT-5.4 mini) | `.env` file |
+| `GEMMA_BASE_URL` | Gemma inference endpoint (if using local Gemma) | `.env` file |
+| `GEMMA_API_KEY` | API key for Gemma endpoint (if required) | `.env` file |
+| `DATABASE_URL` | Persistence connection string (default: sqlite:///rpg.db) | `.env` file |
 
 `.env` is in `.gitignore`. Use `python-dotenv` (or equivalent) to load it. Never hard-code tokens or URLs in source files.
 

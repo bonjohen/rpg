@@ -18,7 +18,13 @@ from server.domain.entities import (
     MonsterGroup,
     Scene,
 )
-from server.domain.enums import AwarenessState, BehaviorMode, SceneState
+from server.domain.enums import (
+    AwarenessState,
+    BehaviorMode,
+    HealthState,
+    MoraleState,
+    SceneState,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -127,9 +133,9 @@ def make_goblin_patrol(
         created_at=_now(),
         behavior_mode=BehaviorMode.patrol,
         awareness_state=awareness,
-        morale_state="steady",
+        morale_state=MoraleState.steady,
         threat_table={},
-        health_state="healthy",
+        health_state=HealthState.healthy,
         is_visible=True,
     )
 
@@ -147,9 +153,9 @@ def make_wolf_pack(
         created_at=_now(),
         behavior_mode=BehaviorMode.ambush,
         awareness_state=awareness,
-        morale_state="steady",
+        morale_state=MoraleState.steady,
         threat_table={},
-        health_state="healthy",
+        health_state=HealthState.healthy,
         is_visible=False,
     )
 

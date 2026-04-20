@@ -89,10 +89,11 @@ Use scripted scenario slices (JSON or YAML fixture files). No live Telegram, no 
 
 ## Fixtures
 
-- Entity fixture builders live in `tests/fixtures/` (added in Phase 1)
-- Telegram payload fixtures live in `tests/fixtures/telegram/`
-- Scenario content fixtures live in `tests/fixtures/scenarios/`
-- LLM output regression fixtures live in `tests/fixtures/llm/`
+- Entity fixture builders live in `tests/fixtures/` (builders.py plus per-scenario fixtures)
+- Combat scenario fixtures in `tests/fixtures/combat_scenario.py`
+- Exploration scenario fixtures in `tests/fixtures/exploration_scenario.py`
+- NPC social scenario fixtures in `tests/fixtures/npc_social_scenario.py`
+- Split-party scenario fixtures in `tests/fixtures/split_party_scenario.py`
 
 ## Failure-Path Coverage
 

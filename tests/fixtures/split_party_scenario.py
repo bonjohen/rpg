@@ -30,7 +30,9 @@ from server.domain.enums import (
     ActionType,
     AwarenessState,
     BehaviorMode,
+    HealthState,
     KnowledgeFactType,
+    MoraleState,
     SceneState,
     ScopeType,
     TurnWindowState,
@@ -179,8 +181,8 @@ def make_bat_swarm() -> MonsterGroup:
         created_at=_now(),
         behavior_mode=BehaviorMode.patrol,
         awareness_state=AwarenessState.engaged,
-        morale_state="steady",
-        health_state="healthy",
+        morale_state=MoraleState.steady,
+        health_state=HealthState.healthy,
         is_visible=True,
     )
 

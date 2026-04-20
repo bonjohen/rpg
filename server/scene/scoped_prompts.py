@@ -54,16 +54,14 @@ class SubgroupPromptEngine:
         Filters characters, NPCs, monster groups, and facts to only those
         belonging to this scene.  Only includes public-scoped facts.
         """
-        characters = [
-            c for c in all_characters if c.character_id in scene.character_ids
-        ]
+        char_ids = set(scene.character_ids)
+        npc_ids = set(scene.npc_ids)
+        mg_ids = set(scene.monster_group_ids)
+
+        characters = [c for c in all_characters if c.character_id in char_ids]
         player_ids = list(scene.player_ids)
-        npcs = [n for n in all_npcs if n.npc_id in scene.npc_ids]
-        groups = [
-            g
-            for g in all_monster_groups
-            if g.monster_group_id in scene.monster_group_ids
-        ]
+        npcs = [n for n in all_npcs if n.npc_id in npc_ids]
+        groups = [g for g in all_monster_groups if g.monster_group_id in mg_ids]
 
         scene_facts = self.filter_facts_for_scene(scene.scene_id, all_facts)
         public_facts = [
