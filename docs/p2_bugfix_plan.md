@@ -140,19 +140,19 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 6.1 | Open | | | BUG-046: Route leave_channel through SideChannelEngine in `server/api/routes.py` |
-| 6.2 | Open | | | BUG-047: Fix map discovered adjacency logic in `server/api/routes.py` |
-| 6.3 | Open | | | BUG-066: Truncate narration to 4096 chars in `bot/commands.py` |
-| 6.4 | Open | | | BUG-052: Preserve YAML parse error context in `scenarios/loader.py` |
-| 6.5 | Open | | | BUG-054: Replace unsafe casts in `scenarios/archetypes.py` |
-| 6.6 | Open | | | BUG-057: Create shared httpx.AsyncClient per adapter in `models/fast/adapter.py` + `models/main/adapter.py` |
-| 6.7 | Open | | | Add tests for all 6 fixes |
-| 6.8 | Open | | | Update bug statuses in `docs/bugs.md` |
-| 6.9 | Open | | | Run pytest + ruff, fix any failures |
+| 6.1 | Completed | 2026-04-19 11:50 PM | 2026-04-20 1:20 AM | BUG-046: Route leave_channel through SideChannelEngine in `server/api/routes.py` |
+| 6.2 | Completed | 2026-04-19 11:50 PM | 2026-04-20 1:20 AM | BUG-047: Fix map discovered adjacency logic in `server/api/routes.py` |
+| 6.3 | Completed | 2026-04-20 1:20 AM | 2026-04-20 1:22 AM | BUG-066: Truncate narration to 4096 chars in `bot/commands.py` |
+| 6.4 | Completed | 2026-04-20 1:22 AM | 2026-04-20 1:24 AM | BUG-052: Preserve YAML parse error context in `scenarios/loader.py` |
+| 6.5 | Completed | 2026-04-20 1:24 AM | 2026-04-20 1:28 AM | BUG-054: Replace unsafe casts in `scenarios/archetypes.py` |
+| 6.6 | Completed | 2026-04-20 1:28 AM | 2026-04-20 1:32 AM | BUG-057: Create shared httpx.AsyncClient per adapter in `models/fast/adapter.py` + `models/main/adapter.py` |
+| 6.7 | Completed | 2026-04-20 1:32 AM | 2026-04-20 1:40 AM | Add tests for all 6 fixes |
+| 6.8 | Completed | 2026-04-20 1:40 AM | 2026-04-20 1:42 AM | Update bug statuses in `docs/bugs.md` |
+| 6.9 | Completed | 2026-04-20 1:32 AM | 2026-04-20 1:42 AM | Run pytest + ruff, fix any failures |
 
 ### Phase 6 Summary
 
-- **Changes:** TBD
+- **Changes:** Fixed 6 bugs. BUG-046: `leave_channel` routed through `SideChannelEngine.leave_channel()` with policy validation and auto-close. BUG-047: Map adjacency separates `visited_ids` from `reachable_ids`; visited scenes `discovered=True`, reachable `discovered=False`. BUG-066: Narration truncated to 4096 chars (Telegram limit) with "..." suffix. BUG-052: `_parse_yaml` returns `(dict | None, str)` tuple preserving error context. BUG-054: Replaced unsafe `list()`/`dict()` casts with `_as_str_list()` helper and `isinstance` guards — no more `type: ignore`. BUG-057: Both adapters create shared `httpx.AsyncClient` in `_get_client()` with `close()` method; existing tests updated. Updated 1 existing test fixture, 4 existing adapter tests. 20 new tests, 1471 total passing.
 - **Commit:** `P2 bug-fix Phase 6: API routes, bot safety, scenario errors, connection reuse`
 
 ## Phase 7: Datetime Hardening & Final Sweep

@@ -677,22 +677,19 @@ async def leave_channel(
 
     with orch._session_scope() as session:
         from server.storage.repository import SideChannelRepo
+        from server.scope.side_channel_engine import SideChannelEngine
 
         ch = SideChannelRepo(session).get(channel_id)
         if ch is None:
             return asdict(
                 LeaveChannelResponse(success=False, error="Channel not found.")
             )
-        if req.player_id not in ch.member_player_ids:
-            return asdict(
-                LeaveChannelResponse(
-                    success=False, error="Not a member of this channel."
-                )
-            )
 
-        ch.member_player_ids.remove(req.player_id)
-        if len(ch.member_player_ids) < 2:
-            ch.is_open = False
+        engine = SideChannelEngine()
+        result = engine.leave_channel(ch, req.player_id)
+        if not result.success:
+            return asdict(LeaveChannelResponse(success=False, error=result.reason))
+
         SideChannelRepo(session).save(ch)
 
     return asdict(LeaveChannelResponse(success=True))
@@ -790,55 +787,50 @@ async def get_map(
     char = orch.get_player_character(player_id) if player_id else None
     current_scene_id = char.scene_id or "" if char else ""
 
-    # For simplicity, treat any scene that has or had the player's character
-    # as "discovered". Without persistent visit records in the orchestrator,
-    # we consider the current scene plus scenes connected to it.
-    discovered_ids: set[str] = set()
+    # Visited: scenes the player has been in (currently just the current scene).
+    # Reachable: scenes connected to visited scenes via exits.
+    visited_ids: set[str] = set()
+    reachable_ids: set[str] = set()
     if current_scene_id:
-        discovered_ids.add(current_scene_id)
+        visited_ids.add(current_scene_id)
         scene = orch.get_scene(current_scene_id)
         if scene:
             for target_id in scene.exits.values():
-                discovered_ids.add(target_id)
+                if target_id not in visited_ids:
+                    reachable_ids.add(target_id)
 
     nodes: list[MapNode] = []
     seen_node_ids: set[str] = set()
 
-    # Add discovered nodes
-    for sid in discovered_ids:
+    # Add visited (discovered) nodes — player has been here
+    for sid in visited_ids:
         scene = orch.get_scene(sid)
         if scene and sid not in seen_node_ids:
-            is_current = sid == current_scene_id
             nodes.append(
                 MapNode(
                     scene_id=sid,
-                    name=scene.name
-                    if is_current or sid == current_scene_id
-                    else scene.name,
-                    discovered=sid == current_scene_id,
+                    name=scene.name,
+                    discovered=True,
                 )
             )
             seen_node_ids.add(sid)
 
-    # Add undiscovered adjacent nodes as "?" for scenes connected from discovered
-    for sid in list(discovered_ids):
-        scene = orch.get_scene(sid)
-        if scene:
-            for target_id in scene.exits.values():
-                if target_id not in seen_node_ids:
-                    target = orch.get_scene(target_id)
-                    nodes.append(
-                        MapNode(
-                            scene_id=target_id,
-                            name=target.name if target else "?",
-                            discovered=False,
-                        )
-                    )
-                    seen_node_ids.add(target_id)
+    # Add reachable (not yet visited) nodes — visible but not discovered
+    for sid in reachable_ids:
+        if sid not in seen_node_ids:
+            scene = orch.get_scene(sid)
+            nodes.append(
+                MapNode(
+                    scene_id=sid,
+                    name=scene.name if scene else "?",
+                    discovered=False,
+                )
+            )
+            seen_node_ids.add(sid)
 
-    # Build edges
+    # Build edges from visited scenes only
     edges: list[MapEdge] = []
-    for sid in discovered_ids:
+    for sid in visited_ids:
         scene = orch.get_scene(sid)
         if scene:
             for direction, target_id in scene.exits.items():
@@ -848,7 +840,7 @@ async def get_map(
                             from_scene_id=sid,
                             to_scene_id=target_id,
                             direction=direction,
-                            discovered=target_id in discovered_ids,
+                            discovered=target_id in visited_ids,
                         )
                     )
 

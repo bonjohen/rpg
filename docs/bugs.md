@@ -59,18 +59,18 @@
 | BUG20260419-043 | P2 | Correctness | timeout_players empty list coerced to None via `or None` | `server/orchestrator/game_loop.py:432` | **Fixed** |
 | BUG20260419-044 | P2 | Correctness | Diagnostics always reports ALL players as pending in stuck turns | `server/observability/diagnostics.py:153` | **Fixed** |
 | BUG20260419-045 | P2 | Correctness | fast_model_responsive threshold too permissive — 1 success masks 9 failures | `server/observability/diagnostics.py:221` | **Fixed** |
-| BUG20260419-046 | P2 | Correctness | leave_channel mutates entity directly, bypassing SideChannelEngine | `server/api/routes.py:588` | Open |
-| BUG20260419-047 | P2 | Correctness | Map discovered logic wrong — adjacent scenes shown as undiscovered | `server/api/routes.py:686` | Open |
+| BUG20260419-046 | P2 | Correctness | leave_channel mutates entity directly, bypassing SideChannelEngine | `server/api/routes.py:588` | Fixed |
+| BUG20260419-047 | P2 | Correctness | Map discovered logic wrong — adjacent scenes shown as undiscovered | `server/api/routes.py:686` | Fixed |
 | BUG20260419-048 | P2 | Correctness | output_repair bool/int type confusion — isinstance(True, int) passes | `models/contracts/output_repair.py:75` | Fixed |
 | BUG20260419-049 | P2 | Correctness | combat_summary contract fallback has invalid tone "medium" | `models/contracts/main_contracts.py:206` | **Fixed** |
 | BUG20260419-050 | P2 | Correctness | is_fast_tier admits unknown tasks — typos route to fast tier silently | `models/fast/router.py:44` | Fixed |
 | BUG20260419-051 | P2 | Correctness | Narration system prompt uses Python single quotes instead of JSON double quotes | `models/main/context.py:144` | Fixed |
-| BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost — user gets generic "Failed" | `scenarios/loader.py:199` | Open |
+| BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost — user gets generic "Failed" | `scenarios/loader.py:199` | Fixed |
 | BUG20260419-053 | P2 | Correctness | puzzle_patterns.create_puzzle mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Fixed |
-| BUG20260419-054 | P2 | Correctness | scenarios/archetypes.py unsafe casts from object overrides with type: ignore | `scenarios/archetypes.py:38` | Open |
+| BUG20260419-054 | P2 | Correctness | scenarios/archetypes.py unsafe casts from object overrides with type: ignore | `scenarios/archetypes.py:38` | Fixed |
 | BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | **Fixed** |
 | BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | **Fixed** |
-| BUG20260419-057 | P2 | Performance | httpx.AsyncClient created per request in both adapters — connection overhead | `models/fast/adapter.py:90` + `models/main/adapter.py:117` | Open |
+| BUG20260419-057 | P2 | Performance | httpx.AsyncClient created per request in both adapters — connection overhead | `models/fast/adapter.py:90` + `models/main/adapter.py:117` | Fixed |
 | BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log — O(n) on every open_turn | `server/orchestrator/game_loop.py:268` | **Fixed** (DB migration: uses TurnLogRepo.count_for_scene()) |
 | BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id — repeated O(n) | `server/orchestrator/game_loop.py:344` | **Fixed** (DB migration: uses CommittedActionRepo.list_for_window()) |
 | BUG20260419-060 | P2 | Performance | _get_player_character linear scan on every call — O(characters) | `server/orchestrator/game_loop.py:615` | **Fixed** (DB migration: uses CharacterRepo.get_for_player()) |
@@ -79,7 +79,7 @@
 | BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly — placeholders sent to LLM | `models/contracts/context_assembly.py:269` | Fixed |
 | BUG20260419-064 | P2 | Error Handling | model_recovery broad except Exception catches programming errors as fallback | `server/reliability/model_recovery.py:97` | Fixed |
 | BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | **Fixed** |
-| BUG20260419-066 | P2 | Error Handling | AI-generated narration sent to Telegram without length check or sanitization | `bot/commands.py:221` | Open |
+| BUG20260419-066 | P2 | Error Handling | AI-generated narration sent to Telegram without length check or sanitization | `bot/commands.py:221` | Fixed |
 | BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated identically in 5+ files | Multiple files | Fixed |
 | BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py block testability | `server/timer/integration.py:36` | Fixed |
 | BUG20260419-069 | P2 | Design | API routes access orchestrator private methods directly | `server/api/routes.py:95` | Fixed |

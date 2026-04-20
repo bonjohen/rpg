@@ -39,6 +39,13 @@ class SideChannelCloseResult:
     reason: str = ""
 
 
+@dataclass
+class SideChannelLeaveResult:
+    success: bool
+    channel: Optional[SideChannel] = None
+    reason: str = ""
+
+
 # ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
@@ -157,4 +164,28 @@ class SideChannelEngine:
 
         return SideChannelCloseResult(
             success=True, channel=channel, audit_fact=audit_fact, reason="closed"
+        )
+
+    def leave_channel(
+        self,
+        channel: SideChannel,
+        player_id: str,
+    ) -> SideChannelLeaveResult:
+        """Remove a player from a side-channel via policy validation.
+
+        If the remaining member count drops below the minimum, the channel
+        is automatically closed.
+
+        Returns:
+            SideChannelLeaveResult with the updated channel on success.
+        """
+        try:
+            self._policy.remove_member(channel, player_id)
+        except SideChannelError as exc:
+            return SideChannelLeaveResult(success=False, reason=str(exc))
+
+        return SideChannelLeaveResult(
+            success=True,
+            channel=channel,
+            reason="left" if channel.is_open else "closed",
         )

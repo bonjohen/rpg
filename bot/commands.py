@@ -260,9 +260,13 @@ async def cmd_forceresolve(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     log_entry = orchestrator.resolve_turn(scene.active_turn_window_id)
     if log_entry:
-        await update.message.reply_text(
-            f"Turn {log_entry.turn_number} resolved.\n{log_entry.narration}"
-        )
+        narration = log_entry.narration
+        _TELEGRAM_MAX = 4096
+        header = f"Turn {log_entry.turn_number} resolved.\n"
+        max_narration = _TELEGRAM_MAX - len(header) - 1  # -1 for safety
+        if len(narration) > max_narration:
+            narration = narration[: max_narration - 3] + "..."
+        await update.message.reply_text(f"{header}{narration}")
     else:
         await update.message.reply_text("Failed to resolve the turn.")
 

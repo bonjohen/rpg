@@ -65,10 +65,22 @@ class OpenAIMainAdapter:
         self._timeout = timeout_seconds
         self._api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
         self._base_url = base_url.rstrip("/")
+        self._client: httpx.AsyncClient | None = None
 
     @property
     def model(self) -> str:
         return self._model
+
+    def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(timeout=self._timeout)
+        return self._client
+
+    async def close(self) -> None:
+        """Close the shared HTTP client."""
+        if self._client is not None and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     async def generate(
         self,
@@ -114,14 +126,14 @@ class OpenAIMainAdapter:
 
         start = time.monotonic()
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.post(
-                    f"{self._base_url}/chat/completions",
-                    json=payload,
-                    headers=headers,
-                )
-                response.raise_for_status()
-                data = response.json()
+            client = self._get_client()
+            response = await client.post(
+                f"{self._base_url}/chat/completions",
+                json=payload,
+                headers=headers,
+            )
+            response.raise_for_status()
+            data = response.json()
         except httpx.TimeoutException as exc:
             latency_ms = (time.monotonic() - start) * 1000
             return GenerateResult(

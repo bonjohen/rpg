@@ -11,6 +11,13 @@ from dataclasses import dataclass, field
 from scenarios.schema import MonsterDefinition, NpcDefinition, NpcTellDefinition
 
 
+def _as_str_list(value: object, default: list[str]) -> list[str]:
+    """Safely coerce an override value to list[str], falling back to *default*."""
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    return list(default)
+
+
 # ---------------------------------------------------------------------------
 # NPC Archetypes
 # ---------------------------------------------------------------------------
@@ -34,15 +41,19 @@ class NpcArchetype:
         **overrides: object,
     ) -> NpcDefinition:
         """Create an NpcDefinition from this archetype."""
-        tags = list(
-            overrides.get("personality_tags", self.personality_tags)
-            or self.personality_tags
-        )  # type: ignore[arg-type]
-        goals = list(overrides.get("goals", self.default_goals) or self.default_goals)  # type: ignore[arg-type]
-        hints = list(
-            overrides.get("dialogue_hints", self.dialogue_hints) or self.dialogue_hints
-        )  # type: ignore[arg-type]
-        tells = list(overrides.get("tells", self.default_tells) or self.default_tells)  # type: ignore[arg-type]
+        tags = _as_str_list(overrides.get("personality_tags"), self.personality_tags)
+        goals = _as_str_list(overrides.get("goals"), self.default_goals)
+        hints = _as_str_list(overrides.get("dialogue_hints"), self.dialogue_hints)
+        tells_raw = overrides.get("tells")
+        tells = (
+            list(tells_raw) if isinstance(tells_raw, list) else list(self.default_tells)
+        )
+
+        trust_raw = overrides.get("trust_initial")
+        trust = dict(trust_raw) if isinstance(trust_raw, dict) else {}
+
+        inv_raw = overrides.get("inventory_item_ids")
+        inv = _as_str_list(inv_raw, [])
 
         return NpcDefinition(
             npc_id=npc_id,
@@ -50,10 +61,10 @@ class NpcArchetype:
             description=str(overrides.get("description", "")),
             personality_tags=tags,
             goals=goals,
-            trust_initial=dict(overrides.get("trust_initial", {}) or {}),  # type: ignore[arg-type]
+            trust_initial=trust,
             faction=str(overrides.get("faction", "")),
             scene_id=scene_id,
-            inventory_item_ids=list(overrides.get("inventory_item_ids", []) or []),  # type: ignore[arg-type]
+            inventory_item_ids=inv,
             dialogue_hints=hints,
             referee_notes=str(overrides.get("referee_notes", "")),
             tells=tells,

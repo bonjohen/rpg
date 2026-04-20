@@ -12,7 +12,7 @@ All tests mock adapter.generate() directly so no Ollama process is required.
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -77,16 +77,16 @@ class TestOllamaFastAdapter:
             "prompt_eval_count": 12,
             "eval_count": 6,
         }
-        # httpx response methods are synchronous — use MagicMock, not AsyncMock
         mock_response = MagicMock()
         mock_response.json.return_value = payload
         mock_response.raise_for_status.return_value = None
 
-        with patch("httpx.AsyncClient") as MockClient:
-            instance = MockClient.return_value.__aenter__.return_value
-            instance.post = AsyncMock(return_value=mock_response)
-            adapter = OllamaFastAdapter()
-            result = await adapter.generate("hello")
+        adapter = OllamaFastAdapter()
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+        mock_client.is_closed = False
+        adapter._client = mock_client
+        result = await adapter.generate("hello")
 
         assert result.success is True
         assert result.text == '{"intent": "action"}'
@@ -98,11 +98,12 @@ class TestOllamaFastAdapter:
     async def test_timeout_returns_failed_result(self):
         import httpx
 
-        with patch("httpx.AsyncClient") as MockClient:
-            instance = MockClient.return_value.__aenter__.return_value
-            instance.post = AsyncMock(side_effect=httpx.TimeoutException("timed out"))
-            adapter = OllamaFastAdapter()
-            result = await adapter.generate("hello")
+        adapter = OllamaFastAdapter()
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(side_effect=httpx.TimeoutException("timed out"))
+        mock_client.is_closed = False
+        adapter._client = mock_client
+        result = await adapter.generate("hello")
 
         assert result.success is False
         assert "timeout" in result.failure_reason
@@ -114,26 +115,28 @@ class TestOllamaFastAdapter:
         mock_response = AsyncMock()
         mock_response.status_code = 503
 
-        with patch("httpx.AsyncClient") as MockClient:
-            instance = MockClient.return_value.__aenter__.return_value
-            instance.post = AsyncMock(
-                side_effect=httpx.HTTPStatusError(
-                    "error", request=AsyncMock(), response=mock_response
-                )
+        adapter = OllamaFastAdapter()
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "error", request=AsyncMock(), response=mock_response
             )
-            adapter = OllamaFastAdapter()
-            result = await adapter.generate("hello")
+        )
+        mock_client.is_closed = False
+        adapter._client = mock_client
+        result = await adapter.generate("hello")
 
         assert result.success is False
         assert "http_error" in result.failure_reason
 
     @pytest.mark.asyncio
     async def test_generic_exception_returns_failed_result(self):
-        with patch("httpx.AsyncClient") as MockClient:
-            instance = MockClient.return_value.__aenter__.return_value
-            instance.post = AsyncMock(side_effect=RuntimeError("boom"))
-            adapter = OllamaFastAdapter()
-            result = await adapter.generate("hello")
+        adapter = OllamaFastAdapter()
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(side_effect=RuntimeError("boom"))
+        mock_client.is_closed = False
+        adapter._client = mock_client
+        result = await adapter.generate("hello")
 
         assert result.success is False
         assert "error" in result.failure_reason

@@ -88,8 +88,8 @@ def make_goblin_caves_manifest() -> ScenarioManifest:
         "goblin_caves.yaml",
     )
     loader = ScenarioLoader()
-    data = loader._parse_yaml(os.path.abspath(yaml_path))
-    assert data is not None, f"Failed to parse {yaml_path}"
+    data, err = loader._parse_yaml(os.path.abspath(yaml_path))
+    assert data is not None, f"Failed to parse {yaml_path}: {err}"
     return loader._deserialize(data)
 
 

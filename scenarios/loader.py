@@ -86,11 +86,14 @@ class ScenarioLoader:
     def load_from_yaml(self, yaml_path: str) -> ScenarioLoadResult:
         """Parse, validate, and convert a YAML scenario file."""
         # 1. Parse YAML
-        data = self._parse_yaml(yaml_path)
+        data, parse_error = self._parse_yaml(yaml_path)
         if data is None:
+            msg = f"Failed to parse YAML file: {yaml_path}"
+            if parse_error:
+                msg += f" — {parse_error}"
             return ScenarioLoadResult(
                 success=False,
-                errors=[f"Failed to parse YAML file: {yaml_path}"],
+                errors=[msg],
             )
 
         # 2. Deserialize
@@ -189,12 +192,12 @@ class ScenarioLoader:
     # YAML parsing
     # ------------------------------------------------------------------
 
-    def _parse_yaml(self, yaml_path: str) -> dict | None:
+    def _parse_yaml(self, yaml_path: str) -> tuple[dict | None, str]:
         try:
             with open(yaml_path, "r", encoding="utf-8") as f:
-                return yaml.safe_load(f)
-        except (OSError, yaml.YAMLError):
-            return None
+                return yaml.safe_load(f), ""
+        except (OSError, yaml.YAMLError) as exc:
+            return None, str(exc)
 
     # ------------------------------------------------------------------
     # Deserialization
