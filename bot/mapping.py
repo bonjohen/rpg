@@ -85,6 +85,16 @@ class BotRegistry:
         """Return True if the user has a player mapping."""
         return telegram_user_id in self._user_to_player
 
+    def get_user_id_for_player(self, player_id: str) -> int | None:
+        """Reverse lookup: return the Telegram user_id for a game player_id.
+
+        Returns None if no mapping exists.
+        """
+        for tg_uid, pid in self._user_to_player.items():
+            if pid == player_id:
+                return tg_uid
+        return None
+
     def is_known_chat(self, telegram_chat_id: int) -> bool:
         """Return True if the chat has a campaign mapping."""
         return telegram_chat_id in self._chat_to_campaign

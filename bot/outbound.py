@@ -126,11 +126,10 @@ async def send_private_by_player_id(
     Iterates the registry's reverse map.  Raises UnknownUserError if no
     Telegram user is mapped to this player_id.
     """
-    # Build reverse map on the fly (registry is small; no caching needed)
-    for tg_uid, pid in registry._user_to_player.items():
-        if pid == player_id:
-            await send_private(bot, registry, tg_uid, text, parse_mode)
-            return
+    tg_uid = registry.get_user_id_for_player(player_id)
+    if tg_uid is not None:
+        await send_private(bot, registry, tg_uid, text, parse_mode)
+        return
     raise UnknownUserError(
         f"Cannot send private message: player_id {player_id!r} not found in registry."
     )

@@ -16,6 +16,7 @@ Key design rules (from architecture.md):
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 
 from server.domain.entities import (
@@ -290,18 +291,24 @@ class ScopeEngine:
             player_id, facts, scopes_by_id, grants_by_fact_id, side_channels_by_id
         )
         # Extra safety: strip referee_only even if filter_facts_for_player
-        # somehow included one (should not happen, but belt-and-suspenders)
-        return [
-            f
-            for f in candidate
-            if scopes_by_id.get(
-                f.owner_scope_id,
-                ConversationScope(
-                    scope_id="", campaign_id="", scope_type=ScopeType.referee_only
-                ),
-            ).scope_type
-            != ScopeType.referee_only
-        ]
+        # somehow included one (should not happen, but belt-and-suspenders).
+        # Facts with missing scopes are also excluded — a missing scope
+        # indicates a data-loading bug and should not leak to the player.
+        result = []
+        for f in candidate:
+            scope = scopes_by_id.get(f.owner_scope_id)
+            if scope is None:
+                logging.getLogger(__name__).warning(
+                    "Fact %r references unknown scope %r — "
+                    "excluding from private context",
+                    f.fact_id,
+                    f.owner_scope_id,
+                )
+                continue
+            if scope.scope_type == ScopeType.referee_only:
+                continue
+            result.append(f)
+        return result
 
     def assemble_referee_context(
         self,

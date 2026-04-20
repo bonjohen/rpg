@@ -47,7 +47,12 @@ if TYPE_CHECKING:
 
 router = APIRouter()
 
-# The orchestrator is injected at app creation time and stored here.
+# Startup-injection pattern: the orchestrator is set once at app creation
+# time via set_orchestrator() (called by create_api_app in app.py).  Route
+# handlers retrieve it through _orch(), which raises 503 if the app was
+# not properly initialised.  Tests create a fresh TestClient per test via
+# create_api_app(), so the module-level global is overwritten each time
+# without state leakage.
 _orchestrator: GameOrchestrator | None = None
 
 

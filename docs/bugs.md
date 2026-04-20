@@ -83,9 +83,9 @@
 | BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated identically in 5+ files | Multiple files | Fixed |
 | BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py block testability | `server/timer/integration.py:36` | Fixed |
 | BUG20260419-069 | P2 | Design | API routes access orchestrator private methods directly | `server/api/routes.py:95` | Fixed |
-| BUG20260419-070 | P2 | Design | Orchestrator stored in module-level global — prevents DI and testing | `server/api/routes.py:51` | Open |
-| BUG20260419-071 | P2 | Design | Scope engine fallback creates fake ConversationScope with empty IDs | `server/scope/engine.py:295` | Open |
-| BUG20260419-072 | P2 | Design | bot/outbound.py accesses BotRegistry private _user_to_player dict | `bot/outbound.py:130` | Open |
+| BUG20260419-070 | P2 | Design | Orchestrator stored in module-level global — prevents DI and testing | `server/api/routes.py:51` | Fixed |
+| BUG20260419-071 | P2 | Design | Scope engine fallback creates fake ConversationScope with empty IDs | `server/scope/engine.py:295` | Fixed |
+| BUG20260419-072 | P2 | Design | bot/outbound.py accesses BotRegistry private _user_to_player dict | `bot/outbound.py:130` | Fixed |
 | BUG20260419-073 | P3 | Data Model | NPC.health_state, stance_to_party, MonsterGroup.morale_state are raw strings not enums | `server/domain/entities.py:271` | Open |
 | BUG20260419-074 | P3 | Data Model | InventoryItem dual-owner fields (character + scene) not enforced by __post_init__ | `server/domain/entities.py:335` | Open |
 | BUG20260419-075 | P3 | Data Model | SideChannelEngine.create_channel created_at typed as object not datetime | `server/scope/side_channel_engine.py:60` | Open |
