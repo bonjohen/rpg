@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|
 | BUG-001 | P2 | Routing | OpenAI inference adapter requires live API key; all narration uses deterministic fallback without it | `models/main/adapter.py` | Deferred (requires OPENAI_API_KEY) |
 | BUG-002 | P3 | Clarity | Narration fallback text is functional but repetitive across turns | `models/main/fallback.py` | Open |
-| BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | — | Deferred (post-Phase 20) |
+| BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | — | **Closed** (DB Phases 1–7: all entity state persisted via SQLAlchemy repos, startup recovery, optimistic locking) |
 | BUG20260419-001 | P0 | Security | Bot token accepted from client in /api/auth/validate — attacker can forge auth for any user | `server/api/routes.py:71` | Open |
 | BUG20260419-002 | P0 | Security | Path traversal in /newgame — user-supplied path passed directly to file open | `bot/commands.py:158` | Open |
 | BUG20260419-003 | P0 | Scope Leakage | Visibility grant check is overly permissive — any grant for a fact makes it visible to ALL players | `server/scope/engine.py:170` | Open |
@@ -27,7 +27,7 @@
 | BUG20260419-011 | P1 | Correctness | trigger_early_close bypasses state machine — paused-to-early_closed not in transition table | `server/timer/controller.py:232` | Open |
 | BUG20260419-012 | P1 | Correctness | Idempotency key uses hash() which is randomized per process — breaks across restarts | `server/orchestrator/game_loop.py:493` | Open |
 | BUG20260419-013 | P1 | Correctness | All scenes share one public scope — multi-scene scope separation broken | `server/orchestrator/game_loop.py:638` | Open |
-| BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | Open |
+| BUG20260419-014 | P1 | Correctness | Scene.player_ids not maintained by orchestrator — turn recovery gets zero pending players | `server/reliability/turn_recovery.py:88` | Improved (DB migration: recovery now gets players from CharacterRepo via `get_scene_players()`) |
 | BUG20260419-015 | P1 | Correctness | model_recovery returns success=True with empty dict when async fallback silently discarded | `server/reliability/model_recovery.py:117` | Open |
 | BUG20260419-016 | P1 | Correctness | Unguarded update.effective_user None access in all bot command handlers | `bot/commands.py:47` | Open |
 | BUG20260419-017 | P1 | Correctness | Unguarded update.message None access in all bot command handlers | `bot/commands.py:48` | Open |

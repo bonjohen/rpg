@@ -209,17 +209,17 @@ Open  ──>  Started  ──>  Completed
 
 | # | Status | Started (PST) | Completed (PST) | Description |
 |---|--------|---------------|------------------|-------------|
-| 7.1 | Open | | | Update `docs/architecture.md`: replace "In-memory state for playtest" with database-backed storage description, add storage layer to system diagram |
-| 7.2 | Open | | | Update `STARTUP.md`: note database persistence is active, document `DATABASE_URL` env var, document startup recovery behavior |
-| 7.3 | Open | | | Update `docs/repo_conventions.md`: add `DATABASE_URL` to environment variables table, note `*.db` in `.gitignore` |
-| 7.4 | Open | | | Update `docs/bugs.md`: close BUG-003 ("No persistent storage"), note improvements to BUG20260419-014 (scene.player_ids) |
-| 7.5 | Open | | | Verify no orchestrator code references `self.scenes`, `self.characters`, `self.players`, `self.npcs`, `self.monster_groups`, `self.items`, `self.puzzles`, `self.quests`, `self.knowledge_facts`, `self.scopes`, `self.turn_windows`, `self.committed_actions`, `self.turn_log`, `self.side_channels`, `self.campaign` as dicts — grep for all, confirm zero hits |
-| 7.6 | Open | | | Run full test suite (`pytest`), verify all 1292+ tests pass |
-| 7.7 | Open | | | Run lint (`ruff check . && ruff format --check .`), verify clean |
-| 7.8 | Open | | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 7.1 | Completed | 2026-04-19 10:05 PM | 2026-04-19 10:08 PM | Updated `docs/architecture.md`: replaced "In-memory state for playtest" with "Database-backed persistence", added Storage Layer section |
+| 7.2 | Completed | 2026-04-19 10:08 PM | 2026-04-19 10:08 PM | `STARTUP.md` already updated in Phase 6 with startup recovery details and `DATABASE_URL` context |
+| 7.3 | Completed | 2026-04-19 10:08 PM | 2026-04-19 10:08 PM | `docs/repo_conventions.md` already has `DATABASE_URL`; `.gitignore` already has `*.db` patterns (added in Phase 1) |
+| 7.4 | Completed | 2026-04-19 10:08 PM | 2026-04-19 10:10 PM | Closed BUG-003 in `docs/bugs.md`. Updated BUG20260419-014 status to "Improved" (recovery now uses CharacterRepo) |
+| 7.5 | Completed | 2026-04-19 10:10 PM | 2026-04-19 10:12 PM | Grep confirmed zero hits for all 15 old in-memory dict names across entire codebase |
+| 7.6 | Completed | 2026-04-19 10:12 PM | 2026-04-19 10:13 PM | Full test suite: 1327 passed |
+| 7.7 | Completed | 2026-04-19 10:13 PM | 2026-04-19 10:13 PM | Lint and format clean |
+| 7.8 | Completed | 2026-04-19 10:13 PM | 2026-04-19 10:15 PM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 7 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Updated `docs/architecture.md` with Storage Layer section. Closed BUG-003 in `docs/bugs.md`. Updated BUG20260419-014 status. Verified zero remaining in-memory dict references across codebase. 1327 tests pass, lint clean.
+- **Changes hosted at:** `docs/architecture.md`, `docs/bugs.md`, `docs/database_plan.md`, `docs/phase_status.md`, `STARTUP.md`
 - **Commit:** `Database Phase 7: Documentation, cleanup, BUG-003 closed`

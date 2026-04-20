@@ -31,6 +31,7 @@ Record each phase completion here. One row per phase, filled in at Phase End.
 | DB-4 | Migrate Turn Lifecycle (Open, Submit, Resolve) | Completed | 2026-04-19 08:50 PM | Split-session resolve_turn with optimistic locking, removed 3 in-memory turn dicts, working-set action effects; 1314 tests pass |
 | DB-5 | Migrate Bot Commands and API Routes | Completed | 2026-04-19 09:18 PM | Bot commands migrated from dict access to query methods; session factory injected into routes; API routes already done in DB-3/4; 1314 tests pass |
 | DB-6 | Startup Recovery and Multi-Campaign Support | Completed | 2026-04-19 10:00 PM | startup() method with table creation, campaign loading, timer reconstruction, stuck turn recovery; telegram_group_id on load_scenario; 13 new tests; 1327 tests pass |
+| DB-7 | Documentation, Cleanup, and Verification | Completed | 2026-04-19 10:15 PM | Updated architecture.md, closed BUG-003, verified zero in-memory dict references; 1327 tests pass |
 
 ## Phase Notes
 

@@ -10,16 +10,16 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Database Phase 7 — Documentation, Cleanup, and Verification** (next). Active plan: `docs/database_plan.md`.
+Current phase: **Database integration complete.** All 7 DB phases done. Active plan: `docs/database_plan.md`.
 
-All 20 original phases complete. Database integration plan (`docs/database_plan.md`, 7 phases) is now active:
-- **DB Phase 1** (complete): SQLite pragmas, optimistic locking, test fixtures.
-- **DB Phase 2** (complete): `session_factory` on orchestrator, `_session_scope()` context manager, `_run_in_session()` async helper, `create_api_app()` accepts session factory.
-- **DB Phase 3** (complete): Removed all 12 in-memory entity dicts from orchestrator, all entity reads/writes go through repos, added 20+ query methods, updated all tests. 1314 tests pass, lint clean.
-- **DB Phase 4** (complete): Migrated `open_turn()`, `submit_action()`, `resolve_turn()` to use database repos. `resolve_turn()` uses split-session pattern (load → compute → version-checked commit with `StaleStateError` retry). Refactored action effects to working-set pattern. Removed `self.turn_windows`, `self.committed_actions`, `self.turn_log` in-memory dicts. 1314 tests pass, lint clean.
-- **DB Phase 5** (complete): Bot commands migrated from dict access to query methods. Session factory injected into routes module. Added `get_turn_windows()` to orchestrator. 1314 tests pass, lint clean.
-- **DB Phase 6** (complete): Added `startup()` method (table creation, campaign loading, timer reconstruction, stuck turn recovery). Added `telegram_group_id` to `load_scenario()`. Bot commands register campaign→chat mapping. 13 new tests; 1327 tests pass, lint clean.
-- **DB Phase 7** (next): Documentation/cleanup.
+All 20 original phases and all 7 database integration phases are complete:
+- **DB Phase 1**: SQLite pragmas, optimistic locking, test fixtures.
+- **DB Phase 2**: `session_factory` on orchestrator, `_session_scope()`, `_run_in_session()`.
+- **DB Phase 3**: Removed 12 in-memory entity dicts, all reads/writes via repos, 20+ query methods.
+- **DB Phase 4**: Turn lifecycle via repos, split-session `resolve_turn()` with optimistic locking.
+- **DB Phase 5**: Bot commands and API routes fully migrated to query methods.
+- **DB Phase 6**: `startup()` with table creation, campaign loading, timer reconstruction, stuck turn recovery.
+- **DB Phase 7**: Documentation updated, BUG-003 closed, zero in-memory dict references verified. 1327 tests pass.
 
 ## Key Design Decisions (do not revisit without cause)
 

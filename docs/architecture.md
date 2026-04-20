@@ -35,7 +35,7 @@ The server owns: state storage, timer control, action validation, rules resoluti
 │  Wires: bot → turn engine → scope → timer → models      │
 │  load_scenario, add_player, open_turn, submit_action     │
 │  resolve_turn, handle_player_message, run_timer_tick     │
-│  In-memory state for playtest (production DB post-Ph.20) │
+│  Database-backed persistence (SQLite/PostgreSQL via repos)│
 ├──────────────────────────────────────────────────────────┤
 │                     Game Server                          │
 │  Turn engine (open → lock → resolve → commit)            │
@@ -150,6 +150,21 @@ All authoritative resolution remains server-side. If Gemma fails schema validati
 **CommittedAction states:** `draft → submitted → validated → rejected → resolved`
 
 States are stored explicitly. They are never inferred from message order.
+
+---
+
+## Storage Layer
+
+All entity state is persisted via a repository pattern backed by SQLAlchemy 2.0+.
+
+- **Dev/single-server:** SQLite with WAL mode, foreign keys, busy_timeout (5s), synchronous=NORMAL
+- **Production:** PostgreSQL via `DATABASE_URL` environment variable
+- **Session pattern:** Session-per-request via `_session_scope()` context manager
+- **Concurrency control:** Optimistic locking via `version` column on TurnWindow; `save_with_version_check()` raises `StaleStateError` on conflict
+- **Startup recovery:** `startup()` creates tables, loads active campaigns, reconstructs timers for open turn windows, and recovers stuck turns via `TurnRecoveryEngine`
+- **Repository classes:** One per entity (e.g. `CampaignRepo`, `SceneRepo`, `PlayerRepo`, `TurnWindowRepo`), each wrapping a SQLAlchemy session
+
+In-memory state remaining: `drafts` (action drafts), `inbox_read` (read-receipt tracking), `channel_messages` (side-channel messages), `timers` (active timer records), `triggers` (scenario trigger definitions).
 
 ---
 
