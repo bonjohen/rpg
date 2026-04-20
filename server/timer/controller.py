@@ -263,7 +263,7 @@ class TimerController:
         # elapsed = total duration - remaining (computed below)
         if timer.expires_at:
             remaining = max(0, (timer.expires_at - t).total_seconds())
-            timer.elapsed_before_pause = timer.duration_seconds - int(remaining)
+            timer.elapsed_before_pause = timer.duration_seconds - round(remaining)
         timer.paused_at = t
         timer.expires_at = None
         timer.state = TimerState.paused
@@ -280,7 +280,7 @@ class TimerController:
         _assert_timer_transition(timer, TimerState.running)
         t = now or _now_utc()
         remaining = timer.duration_seconds - timer.elapsed_before_pause
-        timer.expires_at = t + timedelta(seconds=max(1, remaining))
+        timer.expires_at = t + timedelta(seconds=max(0, remaining))
         timer.paused_at = None
         timer.state = TimerState.running
         return TimerResult(success=True, timer=timer)

@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from server.domain.entities import CommittedAction, TurnWindow
+from server.domain.enums import ActionState
 from server.engine.turn_engine import TurnEngine, ResolveResult
 from server.timer.controller import TimerController, TimerRecord
 
@@ -76,7 +77,7 @@ def process_tick(
     submitted_player_ids = {
         a.player_id
         for a in existing_actions
-        if a.state.value in {"submitted", "validated"}
+        if a.state in {ActionState.submitted, ActionState.validated}
     }
     timeout_player_ids = [
         pid for pid in expected_player_ids if pid not in submitted_player_ids

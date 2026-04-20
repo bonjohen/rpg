@@ -122,6 +122,7 @@ class DiagnosticsEngine:
         scenes: list[Scene],
         players: list[Player],
         max_age_minutes: int = 30,
+        committed_actions: list | None = None,
     ) -> list[StuckTurnInfo]:
         """Identify turn windows stuck in non-terminal states."""
         now = datetime.now(timezone.utc)
@@ -152,8 +153,16 @@ class DiagnosticsEngine:
             # Determine pending players
             scene = scene_map.get(tw.scene_id)
             scene_players = scene.player_ids if scene else []
-            # We don't have actions here, so pending = all scene players
-            pending = list(scene_players)
+            # Filter out players who have already submitted actions
+            if committed_actions:
+                submitted_ids = {
+                    a.player_id
+                    for a in committed_actions
+                    if a.turn_window_id == tw.turn_window_id
+                }
+                pending = [pid for pid in scene_players if pid not in submitted_ids]
+            else:
+                pending = list(scene_players)
 
             # Recommend action based on state and age
             if age_minutes > 60:
@@ -218,11 +227,11 @@ class DiagnosticsEngine:
             else:
                 main_latencies.append(log.latency_ms)
 
+        total = len(model_call_log)
+        failure_rate = failures / total if total else 0.0
         return ModelHealthInfo(
-            fast_model_responsive=bool(fast_latencies)
-            and failures < len(model_call_log),
-            main_model_responsive=bool(main_latencies)
-            and failures < len(model_call_log),
+            fast_model_responsive=bool(fast_latencies) and failure_rate < 0.5,
+            main_model_responsive=bool(main_latencies) and failure_rate < 0.5,
             fast_avg_latency_ms=(
                 sum(fast_latencies) / len(fast_latencies) if fast_latencies else 0.0
             ),

@@ -48,20 +48,20 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 2.1 | Open | | | BUG-040: Use `round()` instead of `int()` for elapsed_before_pause in `server/timer/controller.py` |
-| 2.2 | Open | | | BUG-041: Use `max(0, remaining)` instead of `max(1, remaining)` in `server/timer/controller.py` |
-| 2.3 | Open | | | BUG-042: Use ActionState enum instead of raw strings in `server/timer/integration.py` |
-| 2.4 | Open | | | BUG-043: Remove `or None` coercion in `server/orchestrator/game_loop.py` |
-| 2.5 | Open | | | BUG-058/059/060: Verify DB migration already resolved perf issues; close if so |
-| 2.6 | Open | | | BUG-044: Filter pending players by submitted actions in `server/observability/diagnostics.py` |
-| 2.7 | Open | | | BUG-045: Tighten fast_model_responsive threshold in `server/observability/diagnostics.py` |
-| 2.8 | Open | | | Add tests for timer fixes, diagnostics accuracy |
-| 2.9 | Open | | | Update bug statuses in `docs/bugs.md` |
-| 2.10 | Open | | | Run pytest + ruff, fix any failures |
+| 2.1 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-040: Use `round()` instead of `int()` for elapsed_before_pause in `server/timer/controller.py` |
+| 2.2 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-041: Use `max(0, remaining)` instead of `max(1, remaining)` in `server/timer/controller.py` |
+| 2.3 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-042: Use ActionState enum instead of raw strings in `server/timer/integration.py` |
+| 2.4 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-043: Remove `or None` coercion in `server/orchestrator/game_loop.py` |
+| 2.5 | Completed | 2026-04-19 11:45 PM | 2026-04-19 11:47 PM | BUG-058/059/060: Verified DB migration resolved all 3 perf issues; closed |
+| 2.6 | Completed | 2026-04-19 11:47 PM | 2026-04-19 11:50 PM | BUG-044: Filter pending players by submitted actions in `server/observability/diagnostics.py` |
+| 2.7 | Completed | 2026-04-19 11:47 PM | 2026-04-19 11:50 PM | BUG-045: Tighten fast_model_responsive threshold in `server/observability/diagnostics.py` |
+| 2.8 | Completed | 2026-04-19 11:50 PM | 2026-04-19 11:54 PM | Add tests for timer fixes, diagnostics accuracy |
+| 2.9 | Completed | 2026-04-19 11:54 PM | 2026-04-19 11:55 PM | Update bug statuses in `docs/bugs.md` |
+| 2.10 | Completed | 2026-04-19 11:55 PM | 2026-04-19 11:56 PM | Run pytest + ruff, fix any failures |
 
 ### Phase 2 Summary
 
-- **Changes:** TBD
+- **Changes:** Timer pause uses round() for accurate elapsed time. Resume with 0 remaining expires immediately (max(0,...) not max(1,...)). Timer integration uses ActionState enum instead of raw strings. Removed `or None` coercion on empty timeout_players list. Diagnostics filters pending players by submitted actions. Model health threshold tightened to < 50% failure rate. BUG-058/059/060 verified fixed by DB migration. 8 new tests, 1416 total passing.
 - **Commit:** `P2 bug-fix Phase 2: Timer arithmetic, orchestrator edge cases, diagnostics accuracy`
 
 ## Phase 3: Combat & Exploration

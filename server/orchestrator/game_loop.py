@@ -597,7 +597,7 @@ class GameOrchestrator:
 
         # Resolve
         resolve_result = self.turn_engine.resolve_window(
-            tw, actions, chars_by_player, timeout_players or None
+            tw, actions, chars_by_player, timeout_players
         )
         if not resolve_result.resolved:
             return None

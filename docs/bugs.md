@@ -53,12 +53,12 @@
 | BUG20260419-037 | P2 | Correctness | apply_action_delta returns 0 for unknown action_key — typos silently ignored | `server/npc/trust.py:160` | Open |
 | BUG20260419-038 | P2 | Correctness | Trust _derive_stance has no "suspicious" zone despite docstring claiming it | `server/npc/trust.py:189` | Open |
 | BUG20260419-039 | P2 | Correctness | remove_character unconditionally removes player_id even if other chars remain | `server/scene/membership.py:65` | Open |
-| BUG20260419-040 | P2 | Correctness | Timer pause truncation drift — int() instead of round() loses up to 1s per cycle | `server/timer/controller.py:256` | Open |
-| BUG20260419-041 | P2 | Correctness | Timer resume with 0 remaining gets free extra second — can never truly expire | `server/timer/controller.py:275` | Open |
-| BUG20260419-042 | P2 | Correctness | timer integration uses raw strings for ActionState comparison | `server/timer/integration.py:77` | Open |
-| BUG20260419-043 | P2 | Correctness | timeout_players empty list coerced to None via `or None` | `server/orchestrator/game_loop.py:432` | Open |
-| BUG20260419-044 | P2 | Correctness | Diagnostics always reports ALL players as pending in stuck turns | `server/observability/diagnostics.py:153` | Open |
-| BUG20260419-045 | P2 | Correctness | fast_model_responsive threshold too permissive — 1 success masks 9 failures | `server/observability/diagnostics.py:221` | Open |
+| BUG20260419-040 | P2 | Correctness | Timer pause truncation drift — int() instead of round() loses up to 1s per cycle | `server/timer/controller.py:256` | **Fixed** |
+| BUG20260419-041 | P2 | Correctness | Timer resume with 0 remaining gets free extra second — can never truly expire | `server/timer/controller.py:275` | **Fixed** |
+| BUG20260419-042 | P2 | Correctness | timer integration uses raw strings for ActionState comparison | `server/timer/integration.py:77` | **Fixed** |
+| BUG20260419-043 | P2 | Correctness | timeout_players empty list coerced to None via `or None` | `server/orchestrator/game_loop.py:432` | **Fixed** |
+| BUG20260419-044 | P2 | Correctness | Diagnostics always reports ALL players as pending in stuck turns | `server/observability/diagnostics.py:153` | **Fixed** |
+| BUG20260419-045 | P2 | Correctness | fast_model_responsive threshold too permissive — 1 success masks 9 failures | `server/observability/diagnostics.py:221` | **Fixed** |
 | BUG20260419-046 | P2 | Correctness | leave_channel mutates entity directly, bypassing SideChannelEngine | `server/api/routes.py:588` | Open |
 | BUG20260419-047 | P2 | Correctness | Map discovered logic wrong — adjacent scenes shown as undiscovered | `server/api/routes.py:686` | Open |
 | BUG20260419-048 | P2 | Correctness | output_repair bool/int type confusion — isinstance(True, int) passes | `models/contracts/output_repair.py:75` | Open |
@@ -71,9 +71,9 @@
 | BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | **Fixed** |
 | BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | **Fixed** |
 | BUG20260419-057 | P2 | Performance | httpx.AsyncClient created per request in both adapters — connection overhead | `models/fast/adapter.py:90` + `models/main/adapter.py:117` | Open |
-| BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log — O(n) on every open_turn | `server/orchestrator/game_loop.py:268` | Open |
-| BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id — repeated O(n) | `server/orchestrator/game_loop.py:344` | Open |
-| BUG20260419-060 | P2 | Performance | _get_player_character linear scan on every call — O(characters) | `server/orchestrator/game_loop.py:615` | Open |
+| BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log — O(n) on every open_turn | `server/orchestrator/game_loop.py:268` | **Fixed** (DB migration: uses TurnLogRepo.count_for_scene()) |
+| BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id — repeated O(n) | `server/orchestrator/game_loop.py:344` | **Fixed** (DB migration: uses CommittedActionRepo.list_for_window()) |
+| BUG20260419-060 | P2 | Performance | _get_player_character linear scan on every call — O(characters) | `server/orchestrator/game_loop.py:615` | **Fixed** (DB migration: uses CharacterRepo.get_for_player()) |
 | BUG20260419-061 | P2 | Performance | Histogram values unbounded list — percentile sort is O(n log n) per query | `server/observability/metrics.py:101` | Open |
 | BUG20260419-062 | P2 | Error Handling | SchemaValidationError reason silently discarded in all task functions | `models/main/tasks.py:107` | Open |
 | BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly — placeholders sent to LLM | `models/contracts/context_assembly.py:269` | Open |
