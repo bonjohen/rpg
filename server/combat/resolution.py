@@ -30,7 +30,7 @@ class CombatResolutionEngine:
             armor += 3
         final_damage = max(0, raw_damage - armor)
         hp = character.stats.get("hp", 0)
-        new_hp = hp - final_damage
+        new_hp = max(0, hp - final_damage)
         character.stats["hp"] = new_hp
         if new_hp <= 0:
             character.is_alive = False
@@ -104,6 +104,14 @@ class CombatResolutionEngine:
             fired.append("poisoned")
 
         return character, fired
+
+    def clear_turn_effects(self, character: Character) -> Character:
+        """Remove temporary status effects that expire at end of turn."""
+        turn_effects = ["defended", "assisted"]
+        character.status_effects = [
+            e for e in character.status_effects if e not in turn_effects
+        ]
+        return character
 
     def check_defeat(self, character: Character) -> bool:
         return character.stats.get("hp", 0) <= 0

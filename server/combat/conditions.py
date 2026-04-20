@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from server.domain.entities import Character, MonsterGroup, Scene
-from server.domain.enums import AwarenessState
+from server.domain.enums import AwarenessState, MoraleState
 
 
 @dataclass
@@ -71,7 +71,9 @@ class CombatConditionEngine:
 
         # Flee: all remaining groups routed
         alive_groups = [g for g in scene_groups if g.count > 0]
-        if alive_groups and all(g.morale_state == "routed" for g in alive_groups):
+        if alive_groups and all(
+            g.morale_state == MoraleState.routed for g in alive_groups
+        ):
             return CombatExitResult(
                 exited=True,
                 exit_type="flee",

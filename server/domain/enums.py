@@ -109,3 +109,10 @@ class PuzzleStatus(str, Enum):
     in_progress = "in_progress"
     solved = "solved"
     bypassed = "bypassed"
+
+
+class MoraleState(str, Enum):
+    steady = "steady"
+    shaken = "shaken"
+    routed = "routed"
+    broken = "broken"

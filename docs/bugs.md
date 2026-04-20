@@ -17,10 +17,10 @@
 | BUG20260419-001 | P0 | Security | Bot token accepted from client in /api/auth/validate — attacker can forge auth for any user | `server/api/routes.py:71` | **Fixed** |
 | BUG20260419-002 | P0 | Security | Path traversal in /newgame — user-supplied path passed directly to file open | `bot/commands.py:158` | **Fixed** |
 | BUG20260419-003 | P0 | Scope Leakage | Visibility grant check is overly permissive — any grant for a fact makes it visible to ALL players | `server/scope/engine.py:170` | **Fixed** |
-| BUG20260419-004 | P1 | Correctness | HP not clamped to zero — negative HP causes inflated healing and negative display | `server/combat/resolution.py:33` | Open |
-| BUG20260419-005 | P1 | Correctness | resolve_attack() does not apply damage to target — caller must separately apply, but coupling is implicit | `server/combat/actions.py:111` | Open |
-| BUG20260419-006 | P1 | Correctness | Damage pipeline split across actions.py and resolution.py with inconsistent defense models | `server/combat/actions.py` + `server/combat/resolution.py` | Open |
-| BUG20260419-007 | P1 | Correctness | "defended" status effect never removed at end of turn — permanent +3 armor | `server/combat/resolution.py:29` | Open |
+| BUG20260419-004 | P1 | Correctness | HP not clamped to zero — negative HP causes inflated healing and negative display | `server/combat/resolution.py:33` | **Fixed** |
+| BUG20260419-005 | P1 | Correctness | resolve_attack() does not apply damage to target — caller must separately apply, but coupling is implicit | `server/combat/actions.py:111` | **Fixed** |
+| BUG20260419-006 | P1 | Correctness | Damage pipeline split across actions.py and resolution.py with inconsistent defense models | `server/combat/actions.py` + `server/combat/resolution.py` | **Fixed** |
+| BUG20260419-007 | P1 | Correctness | "defended" status effect never removed at end of turn — permanent +3 armor | `server/combat/resolution.py:29` | **Fixed** |
 | BUG20260419-008 | P1 | Correctness | NPC mutation in social engine has no rollback — failed outcomes still permanently reduce trust | `server/npc/social.py:106` | Open |
 | BUG20260419-009 | P1 | Correctness | transfer_character claims atomicity but rollback can silently fail | `server/scene/membership.py:106` | Open |
 | BUG20260419-010 | P1 | Correctness | Running timer with expires_at=None returns "not expired, 0 remaining" instead of error | `server/timer/controller.py:208` | Open |
@@ -37,7 +37,7 @@
 | BUG20260419-021 | P1 | Contract Drift | ruling_proposal contract fields mismatch schemas.py (reason vs reasoning, etc.) | `models/contracts/main_contracts.py:238` | Open |
 | BUG20260419-022 | P1 | Contract Drift | npc_dialogue contract has internal_thought field that could leak NPC private state | `models/contracts/main_contracts.py:143` | Open |
 | BUG20260419-023 | P1 | Correctness | OpenAI adapter returns success=True on empty choices array | `models/main/adapter.py:157` | Open |
-| BUG20260419-024 | P1 | Correctness | Morale state raw strings — typo silently prevents combat from ending | `server/combat/conditions.py:74` | Open |
+| BUG20260419-024 | P1 | Correctness | Morale state raw strings — typo silently prevents combat from ending | `server/combat/conditions.py:74` | **Fixed** |
 | BUG20260419-025 | P2 | Correctness | Side channel audit fact_id collision — same player, same channel, multiple messages | `server/scope/side_channel_audit.py:56` | Open |
 | BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels within campaign | `server/scope/side_channel_engine.py:89` | Open |
 | BUG20260419-027 | P2 | Correctness | Naive datetime stripping (replace(tzinfo=None)) used in 10+ files — fragile | Multiple files | Open |

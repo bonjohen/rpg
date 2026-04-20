@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from server.domain.entities import Character, MonsterGroup, Scene
+from server.domain.enums import MoraleState
 from server.domain.enums import AwarenessState, BehaviorMode
 
 
@@ -35,7 +36,7 @@ class MonsterBehaviorEngine:
         alive_chars = [c for c in characters if c.is_alive]
 
         # Routed groups always flee
-        if group.morale_state == "routed":
+        if group.morale_state == MoraleState.routed:
             return MonsterActionDecision(
                 monster_group_id=group.monster_group_id,
                 action_type="flee",
@@ -173,12 +174,12 @@ class MoraleEngine:
 
         ratio = group.count / original_count
 
-        if group.morale_state == "steady" and ratio <= 0.5:
-            group.morale_state = "shaken"
+        if group.morale_state == MoraleState.steady and ratio <= 0.5:
+            group.morale_state = MoraleState.shaken
 
-        if group.morale_state == "shaken":
+        if group.morale_state == MoraleState.shaken:
             if ratio <= 0.25 or "leader_dead" in group.special_rules:
-                group.morale_state = "routed"
+                group.morale_state = MoraleState.routed
                 group.behavior_mode = BehaviorMode.flee
 
         return group

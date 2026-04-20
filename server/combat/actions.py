@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from server.combat.resolution import CombatResolutionEngine
 from server.domain.entities import Character, InventoryItem, MonsterGroup, Scene
 
 
@@ -70,6 +71,9 @@ class CombatMoveResult:
 class CombatActionEngine:
     """Resolves individual combat actions. Stateless."""
 
+    def __init__(self, resolution_engine: CombatResolutionEngine | None = None):
+        self._resolution = resolution_engine or CombatResolutionEngine()
+
     def resolve_attack(
         self,
         attacker: Character,
@@ -109,9 +113,13 @@ class CombatActionEngine:
                     )
                 defense = 2  # base monster defense
                 damage = max(0, attack_power - defense)
+                original_count = group.count
+                _, result = self._resolution.apply_damage_to_group(
+                    group, damage, original_count
+                )
                 return AttackResult(
-                    hit=damage > 0,
-                    damage_dealt=damage,
+                    hit=result.final_damage > 0,
+                    damage_dealt=result.final_damage,
                     target_id=target_id,
                     target_new_health=f"{group.count} remaining",
                 )
@@ -119,16 +127,14 @@ class CombatActionEngine:
         # Try characters (PvP or friendly fire)
         for char in target_characters:
             if char.character_id == target_id:
-                defense = char.stats.get("defense", 0)
-                if "defended" in char.status_effects:
-                    defense += 3
-                damage = max(0, attack_power - defense)
-                new_hp = char.stats.get("hp", 0) - damage
+                _, result = self._resolution.apply_damage_to_character(
+                    char, attack_power
+                )
                 return AttackResult(
-                    hit=damage > 0,
-                    damage_dealt=damage,
+                    hit=result.final_damage > 0,
+                    damage_dealt=result.final_damage,
                     target_id=target_id,
-                    target_new_health=f"{new_hp} HP",
+                    target_new_health=f"{result.new_hp} HP",
                 )
 
         return AttackResult(

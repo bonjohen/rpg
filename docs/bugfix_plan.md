@@ -67,17 +67,17 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 3.1 | Open | | | BUG-004: Clamp HP to zero in `server/combat/resolution.py` apply_damage_to_character |
-| 3.2 | Open | | | BUG-005/006: Refactor `server/combat/actions.py` resolve_attack to delegate damage to CombatResolutionEngine |
-| 3.3 | Open | | | BUG-007: Add `clear_turn_effects` method to resolution.py; remove "defended" status at turn boundary |
-| 3.4 | Open | | | BUG-024: Add `MoraleState` enum to `server/domain/enums.py`; update `conditions.py` and `entities.py` |
-| 3.5 | Open | | | Add tests for HP clamp, damage delegation, status cleanup, morale enum |
-| 3.6 | Open | | | Update BUG-004, 005, 006, 007, 024 status in `docs/bugs.md` |
-| 3.7 | Open | | | Run pytest + ruff, fix any failures |
+| 3.1 | Completed | 2026-04-19 11:22 PM | 2026-04-19 11:23 PM | BUG-004: Clamp HP to zero in `server/combat/resolution.py` apply_damage_to_character |
+| 3.2 | Completed | 2026-04-19 11:23 PM | 2026-04-19 11:28 PM | BUG-005/006: Refactor `server/combat/actions.py` resolve_attack to delegate damage to CombatResolutionEngine |
+| 3.3 | Completed | 2026-04-19 11:23 PM | 2026-04-19 11:24 PM | BUG-007: Add `clear_turn_effects` method to resolution.py; remove "defended" status at turn boundary |
+| 3.4 | Completed | 2026-04-19 11:24 PM | 2026-04-19 11:28 PM | BUG-024: Add `MoraleState` enum to `server/domain/enums.py`; update `conditions.py` and `monsters.py` |
+| 3.5 | Completed | 2026-04-19 11:28 PM | 2026-04-19 11:32 PM | Add tests for HP clamp, damage delegation, status cleanup, morale enum |
+| 3.6 | Completed | 2026-04-19 11:32 PM | 2026-04-19 11:33 PM | Update BUG-004, 005, 006, 007, 024 status in `docs/bugs.md` |
+| 3.7 | Completed | 2026-04-19 11:33 PM | 2026-04-19 11:35 PM | Run pytest + ruff, fix any failures |
 
 ### Phase 3 Summary
 
-- **Changes:** TBD
+- **Changes:** Clamped HP to zero in resolution engine. Refactored resolve_attack to delegate damage application to CombatResolutionEngine (single defense model). Added clear_turn_effects for "defended"/"assisted" cleanup. Added MoraleState enum, updated conditions.py and monsters.py. 11 new tests, 1369 total passing.
 - **Commit:** `Bug-fix Phase 3: Combat pipeline — HP clamp, damage delegation, status cleanup, morale enum`
 
 ## Phase 4: Contract Drift

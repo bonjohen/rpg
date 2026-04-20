@@ -786,7 +786,6 @@ class TestGoblinPatrolScenario:
 
         condition_engine = CombatConditionEngine()
         action_engine = CombatActionEngine()
-        resolution_engine = CombatResolutionEngine()
         morale_engine = MoraleEngine()
         monster_engine = MonsterBehaviorEngine()
         summary_builder = BattlefieldSummaryBuilder()
@@ -800,10 +799,7 @@ class TestGoblinPatrolScenario:
             kira, GOBLIN_PATROL_ID, [goblins], []
         )
         assert attack_result.hit is True
-        # Apply damage to group
-        _, dmg = resolution_engine.apply_damage_to_group(
-            goblins, attack_result.damage_dealt, original_count
-        )
+        # resolve_attack now applies damage internally via resolution engine
         assert goblins.count == 2  # one goblin killed (damage 6 >= 3)
 
         # Update threat
@@ -818,12 +814,7 @@ class TestGoblinPatrolScenario:
         assert decision.target_player_id == PLAYER_KIRA_ID
 
         # --- Round 2: Dain attacks goblins ---
-        attack_result2 = action_engine.resolve_attack(
-            dain, GOBLIN_PATROL_ID, [goblins], []
-        )
-        resolution_engine.apply_damage_to_group(
-            goblins, attack_result2.damage_dealt, original_count
-        )
+        action_engine.resolve_attack(dain, GOBLIN_PATROL_ID, [goblins], [])
         assert goblins.count == 1  # another goblin killed
 
         # Morale check: 1/3 ≈ 0.33 → shaken (<=0.5)
@@ -831,12 +822,7 @@ class TestGoblinPatrolScenario:
         assert goblins.morale_state == "shaken"
 
         # --- Round 3: Kira finishes off last goblin ---
-        attack_result3 = action_engine.resolve_attack(
-            kira, GOBLIN_PATROL_ID, [goblins], []
-        )
-        resolution_engine.apply_damage_to_group(
-            goblins, attack_result3.damage_dealt, original_count
-        )
+        action_engine.resolve_attack(kira, GOBLIN_PATROL_ID, [goblins], [])
         assert goblins.count == 0
 
         # Morale: 0/3 → routed (shaken + <=0.25)
