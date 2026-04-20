@@ -288,6 +288,7 @@ class ExplorationEngine:
         new_facts: list[KnowledgeFact] = []
 
         for item in hidden_items:
+            item.is_hidden = False
             fact_payload = (
                 item.properties.get("found_note") or f"You find a hidden {item.name}."
             )

@@ -800,32 +800,25 @@ class TestGoblinPatrolScenario:
         )
         assert attack_result.hit is True
         # resolve_attack now applies damage internally via resolution engine
-        assert goblins.count == 2  # one goblin killed (damage 6 >= 3)
+        # damage=6 (8 attack - 2 defense), kills = 6 // 3 = 2
+        assert goblins.count == 1
 
         # Update threat
         monster_engine.update_threat(goblins, PLAYER_KIRA_ID, 10)
 
-        # Check morale
+        # Check morale: 1/3 ≈ 0.33 → shaken (<=0.5)
         morale_engine.check_morale(goblins, original_count)
-        assert goblins.morale_state == "steady"  # 2/3 > 0.5
+        assert goblins.morale_state == "shaken"
 
         # Monster turn: attacks highest threat (Kira)
         decision = monster_engine.decide_action(goblins, [kira, dain])
         assert decision.target_player_id == PLAYER_KIRA_ID
 
-        # --- Round 2: Dain attacks goblins ---
+        # --- Round 2: Dain finishes off last goblin ---
         action_engine.resolve_attack(dain, GOBLIN_PATROL_ID, [goblins], [])
-        assert goblins.count == 1  # another goblin killed
-
-        # Morale check: 1/3 ≈ 0.33 → shaken (<=0.5)
-        morale_engine.check_morale(goblins, original_count)
-        assert goblins.morale_state == "shaken"
-
-        # --- Round 3: Kira finishes off last goblin ---
-        action_engine.resolve_attack(kira, GOBLIN_PATROL_ID, [goblins], [])
         assert goblins.count == 0
 
-        # Morale: 0/3 → routed (shaken + <=0.25)
+        # Morale: 0/3 → routed
         morale_engine.check_morale(goblins, original_count)
         assert goblins.morale_state == "routed"
 
@@ -838,11 +831,11 @@ class TestGoblinPatrolScenario:
         summary = summary_builder.build(
             [kira, dain],
             [goblins],
-            3,
+            2,
             action_results=["Kira attacks Goblin Patrol — 6 damage"],
             combat_status="Victory!",
         )
-        assert summary.round_number == 3
+        assert summary.round_number == 2
         assert summary.status_line == "Victory!"
         assert any("Kira" in line for line in summary.combatant_lines)
         assert any("Dain" in line for line in summary.combatant_lines)

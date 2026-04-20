@@ -42,13 +42,13 @@
 | BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels within campaign | `server/scope/side_channel_engine.py:89` | Open |
 | BUG20260419-027 | P2 | Correctness | Naive datetime stripping (replace(tzinfo=None)) used in 10+ files — fragile | Multiple files | Open |
 | BUG20260419-028 | P2 | Correctness | replay_turn() silently drops missing action IDs | `server/engine/turn_engine.py:486` | Open |
-| BUG20260419-029 | P2 | Correctness | search() does not flip item.is_hidden=False — items rediscovered every search | `server/exploration/actions.py:301` | Open |
-| BUG20260419-030 | P2 | Correctness | Trigger on_enter/on_exit ambiguity — caller must split evaluation correctly | `server/exploration/triggers.py:231` | Open |
-| BUG20260419-031 | P2 | Correctness | Trigger _apply() always scopes facts privately regardless of fact content | `server/exploration/triggers.py:281` | Open |
-| BUG20260419-032 | P2 | Correctness | Clue discover() allows double-discovery — no idempotency guard | `server/exploration/clues.py:282` | Open |
-| BUG20260419-033 | P2 | Correctness | Monster damage: damage=3+ kills exactly 1 unit regardless of magnitude | `server/combat/resolution.py:51` | Open |
-| BUG20260419-034 | P2 | Correctness | Combat move validates destination but not direction | `server/combat/actions.py:239` | Open |
-| BUG20260419-035 | P2 | Correctness | resolve_use_item heal amount from dict could be string — TypeError | `server/combat/actions.py:192` | Open |
+| BUG20260419-029 | P2 | Correctness | search() does not flip item.is_hidden=False — items rediscovered every search | `server/exploration/actions.py:301` | Fixed |
+| BUG20260419-030 | P2 | Correctness | Trigger on_enter/on_exit ambiguity — caller must split evaluation correctly | `server/exploration/triggers.py:231` | Fixed |
+| BUG20260419-031 | P2 | Correctness | Trigger _apply() always scopes facts privately regardless of fact content | `server/exploration/triggers.py:281` | Fixed |
+| BUG20260419-032 | P2 | Correctness | Clue discover() allows double-discovery — no idempotency guard | `server/exploration/clues.py:282` | Fixed |
+| BUG20260419-033 | P2 | Correctness | Monster damage: damage=3+ kills exactly 1 unit regardless of magnitude | `server/combat/resolution.py:51` | Fixed |
+| BUG20260419-034 | P2 | Correctness | Combat move validates destination but not direction | `server/combat/actions.py:239` | Fixed |
+| BUG20260419-035 | P2 | Correctness | resolve_use_item heal amount from dict could be string — TypeError | `server/combat/actions.py:192` | Fixed |
 | BUG20260419-036 | P2 | Correctness | SocialOutcome is plain class, not Enum — typos pass silently | `server/npc/social.py:60` | Open |
 | BUG20260419-037 | P2 | Correctness | apply_action_delta returns 0 for unknown action_key — typos silently ignored | `server/npc/trust.py:160` | Open |
 | BUG20260419-038 | P2 | Correctness | Trust _derive_stance has no "suspicious" zone despite docstring claiming it | `server/npc/trust.py:189` | Open |
@@ -66,7 +66,7 @@
 | BUG20260419-050 | P2 | Correctness | is_fast_tier admits unknown tasks — typos route to fast tier silently | `models/fast/router.py:44` | Open |
 | BUG20260419-051 | P2 | Correctness | Narration system prompt uses Python single quotes instead of JSON double quotes | `models/main/context.py:144` | Open |
 | BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost — user gets generic "Failed" | `scenarios/loader.py:199` | Open |
-| BUG20260419-053 | P2 | Correctness | puzzle_patterns.create_puzzle mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Open |
+| BUG20260419-053 | P2 | Correctness | puzzle_patterns.create_puzzle mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Fixed |
 | BUG20260419-054 | P2 | Correctness | scenarios/archetypes.py unsafe casts from object overrides with type: ignore | `scenarios/archetypes.py:38` | Open |
 | BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | **Fixed** |
 | BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | **Fixed** |

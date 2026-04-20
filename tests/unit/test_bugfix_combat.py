@@ -47,8 +47,8 @@ class TestBUG005006DamageDelegation:
             attacker, group.monster_group_id, [group], []
         )
         assert result.hit is True
-        # Attack 8 - monster defense 2 = 6 damage, kills 1 unit
-        assert group.count == 2
+        # Attack 8 - monster defense 2 = 6 damage, 6 // 3 = 2 kills
+        assert group.count == 1
 
     def test_defense_calculated_once_not_twice(self):
         """Verify defense is only applied once through the resolution engine."""

@@ -169,6 +169,11 @@ class ClueEngine:
         Returns:
             ClueDiscovery.
         """
+        if clue.has_been_discovered:
+            return ClueDiscovery(
+                discovered=False,
+                rejection_reason=f"Clue {clue.clue_id!r} already discovered.",
+            )
         if character.scene_id != scene.scene_id:
             return ClueDiscovery(
                 discovered=False,

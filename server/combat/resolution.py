@@ -48,8 +48,9 @@ class CombatResolutionEngine:
         damage: int,
         original_count: int,
     ) -> tuple[MonsterGroup, DamageResult]:
-        # Each hit of damage >= 3 kills one unit
-        kills = 1 if damage >= 3 else 0
+        # Scale kills by damage magnitude (hp_per_unit = 3)
+        hp_per_unit = 3
+        kills = max(1, damage // hp_per_unit) if damage >= hp_per_unit else 0
         group.count = max(0, group.count - kills)
 
         # Update health state

@@ -194,7 +194,7 @@ class CombatActionEngine:
 
         effect_type = item.properties.get("effect", "")
         if effect_type == "heal":
-            amount = item.properties.get("amount", 0)
+            amount = int(item.properties.get("amount", 0))
             hp = character.stats.get("hp", 0)
             max_hp = character.stats.get("max_hp", hp)
             heal = min(amount, max_hp - hp)
@@ -239,9 +239,18 @@ class CombatActionEngine:
         character: Character,
         scene: Scene,
         destination: Scene,
+        direction: str = "",
     ) -> CombatMoveResult:
-        # Check the exit exists
+        # Validate direction if provided
         valid_exits = scene.exits or {}
+        if direction and valid_exits.get(direction) != destination.scene_id:
+            return CombatMoveResult(
+                success=False,
+                character=character,
+                from_scene_id=scene.scene_id,
+                to_scene_id=destination.scene_id,
+                rejection_reason=f"No exit in direction {direction!r} to destination",
+            )
         if destination.scene_id not in valid_exits.values():
             return CombatMoveResult(
                 success=False,

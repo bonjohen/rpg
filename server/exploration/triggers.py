@@ -30,7 +30,6 @@ from server.domain.entities import (
 )
 from server.domain.enums import (
     ActionType,
-    KnowledgeFactType,
 )
 from server.domain.helpers import new_id, utc_now
 from server.exploration.actions import ObjectState
@@ -72,9 +71,9 @@ class TriggerEffect:
     # Object state changes: {object_id: new_state_label}
     object_state_changes: dict[str, str] = field(default_factory=dict)
     # New KnowledgeFacts to create (owner_scope_id filled in by engine)
-    new_fact_payloads: list[tuple[KnowledgeFactType, str]] = field(
-        default_factory=list
-    )  # list of (fact_type, payload_text)
+    # Each entry is (fact_type, payload_text) or (fact_type, payload_text, scope_override)
+    # where scope_override is "public" or "private" to force a specific scope.
+    new_fact_payloads: list[tuple] = field(default_factory=list)
     # Trap-specific: damage expression (purely descriptive; game system resolves)
     trap_damage: str = ""
 
@@ -127,6 +126,8 @@ class ExplorationContext:
     scene_item_ids: set[str] = field(default_factory=set)
     # Current object states: {object_id: state_label}
     object_states: dict[str, str] = field(default_factory=dict)
+    # Direction of movement (for on_enter/on_exit disambiguation)
+    direction: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -264,13 +265,20 @@ class TriggerEngine:
         effect = trigger.effect
         new_facts: list[KnowledgeFact] = []
 
-        for fact_type, payload in effect.new_fact_payloads:
-            # Use private scope for private narrative facts, public otherwise
-            scope_id = (
-                trigger.private_scope_id
-                if trigger.private_scope_id
-                else trigger.public_scope_id
-            )
+        for entry in effect.new_fact_payloads:
+            fact_type, payload = entry[0], entry[1]
+            scope_override = entry[2] if len(entry) > 2 else None
+            # Per-fact scope override, or fall back to trigger default
+            if scope_override == "public":
+                scope_id = trigger.public_scope_id
+            elif scope_override == "private":
+                scope_id = trigger.private_scope_id
+            else:
+                scope_id = (
+                    trigger.private_scope_id
+                    if trigger.private_scope_id
+                    else trigger.public_scope_id
+                )
             if scope_id:
                 new_facts.append(
                     KnowledgeFact(

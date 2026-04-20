@@ -71,21 +71,21 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 3.1 | Open | | | BUG-029: Set `item.is_hidden = False` on search discovery in `server/exploration/actions.py` |
-| 3.2 | Open | | | BUG-032: Add idempotency guard to clue discover() in `server/exploration/clues.py` |
-| 3.3 | Open | | | BUG-030: Add direction field to ExplorationContext for trigger disambiguation in `server/exploration/triggers.py` |
-| 3.4 | Open | | | BUG-031: Support per-fact scope_override in trigger _apply() in `server/exploration/triggers.py` |
-| 3.5 | Open | | | BUG-033: Scale unit kills by damage magnitude in `server/combat/resolution.py` |
-| 3.6 | Open | | | BUG-034: Validate direction in combat move in `server/combat/actions.py` |
-| 3.7 | Open | | | BUG-035: Cast heal amount to int in `server/combat/actions.py` |
-| 3.8 | Open | | | BUG-053: Copy overrides dict before pop() in `scenarios/puzzle_patterns.py` |
-| 3.9 | Open | | | Add tests for all 8 fixes |
-| 3.10 | Open | | | Update bug statuses in `docs/bugs.md` |
-| 3.11 | Open | | | Run pytest + ruff, fix any failures |
+| 3.1 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-029: Set `item.is_hidden = False` on search discovery in `server/exploration/actions.py` |
+| 3.2 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-032: Add idempotency guard to clue discover() in `server/exploration/clues.py` |
+| 3.3 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-030: Add direction field to ExplorationContext for trigger disambiguation in `server/exploration/triggers.py` |
+| 3.4 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-031: Support per-fact scope_override in trigger _apply() in `server/exploration/triggers.py` |
+| 3.5 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-033: Scale unit kills by damage magnitude in `server/combat/resolution.py` |
+| 3.6 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-034: Validate direction in combat move in `server/combat/actions.py` |
+| 3.7 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-035: Cast heal amount to int in `server/combat/actions.py` |
+| 3.8 | Completed | 2026-04-19 11:57 PM | 2026-04-20 12:10 AM | BUG-053: Copy overrides dict before pop() in `scenarios/puzzle_patterns.py` |
+| 3.9 | Completed | 2026-04-20 12:10 AM | 2026-04-20 12:25 AM | Add tests for all 8 fixes |
+| 3.10 | Completed | 2026-04-20 12:25 AM | 2026-04-20 12:25 AM | Update bug statuses in `docs/bugs.md` |
+| 3.11 | Completed | 2026-04-20 12:10 AM | 2026-04-20 12:25 AM | Run pytest + ruff, fix any failures |
 
 ### Phase 3 Summary
 
-- **Changes:** TBD
+- **Changes:** Fixed 8 bugs across combat, exploration, and scenario systems. BUG-029: search() now sets `item.is_hidden = False`. BUG-030: ExplorationContext gains `direction` field. BUG-031: Trigger `_apply()` supports per-fact scope_override via extended tuples. BUG-032: Clue `discover()` rejects already-discovered clues. BUG-033: Damage scaling kills `damage // hp_per_unit` units instead of flat 1. BUG-034: Combat move validates direction against scene exits. BUG-035: Heal amount cast to `int()`. BUG-053: `instantiate()` copies kwargs before pop. Updated 2 existing tests for new damage scaling behavior. 12 new tests, 1428 total passing.
 - **Commit:** `P2 bug-fix Phase 3: Combat scaling, exploration state, puzzle safety`
 
 ## Phase 4: NPC/Social, Scene & Side Channels

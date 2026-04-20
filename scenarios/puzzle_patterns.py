@@ -45,6 +45,7 @@ class PuzzlePattern:
         for key, value in components.items():
             solution_text = solution_text.replace(f"{{{key}}}", value)
 
+        overrides = dict(overrides)  # copy to avoid mutating caller's dict
         puzzle_id = overrides.pop(
             "puzzle_id", f"{self.pattern_id}_{scene_id or 'puzzle'}"
         )
