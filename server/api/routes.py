@@ -7,13 +7,14 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel
 
 from sqlalchemy.orm import Session, sessionmaker
 
 from server.api.auth import validate_init_data
 from server.api.responses import (
+    AuthResult,
     ActionSubmitResponse,
     ChannelInfo,
     ChannelListResponse,
@@ -85,6 +86,17 @@ def _orch() -> GameOrchestrator:
     return _orchestrator
 
 
+async def require_auth(x_init_data: str = Header(...)) -> AuthResult:
+    """FastAPI dependency: validate Telegram WebApp initData from header."""
+    token = _bot_token or os.environ.get("BOT_TOKEN", "")
+    if not token:
+        raise HTTPException(status_code=500, detail="Bot token not configured.")
+    result = validate_init_data(x_init_data, token)
+    if not result.valid:
+        raise HTTPException(status_code=401, detail=result.error)
+    return result
+
+
 # -----------------------------------------------------------------------
 # Auth
 # -----------------------------------------------------------------------
@@ -109,7 +121,7 @@ async def validate_auth(req: ValidateAuthRequest) -> dict:
 
 
 @router.get("/api/player/{player_id}")
-async def get_player(player_id: str) -> dict:
+async def get_player(player_id: str, auth: AuthResult = Depends(require_auth)) -> dict:
     orch = _orch()
     player = orch.get_player(player_id)
     if player is None:
@@ -135,7 +147,9 @@ async def get_player(player_id: str) -> dict:
 
 
 @router.get("/api/character/{character_id}")
-async def get_character(character_id: str) -> dict:
+async def get_character(
+    character_id: str, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     char = orch._get_character(character_id)
     if char is None:
@@ -158,7 +172,9 @@ async def get_character(character_id: str) -> dict:
 
 
 @router.get("/api/character/{character_id}/inventory")
-async def get_inventory(character_id: str) -> dict:
+async def get_inventory(
+    character_id: str, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     char = orch._get_character(character_id)
     if char is None:
@@ -190,7 +206,7 @@ async def get_inventory(character_id: str) -> dict:
 
 
 @router.get("/api/scene/{scene_id}")
-async def get_scene(scene_id: str) -> dict:
+async def get_scene(scene_id: str, auth: AuthResult = Depends(require_auth)) -> dict:
     orch = _orch()
     scene = orch.get_scene(scene_id)
     if scene is None:
@@ -230,7 +246,9 @@ async def get_scene(scene_id: str) -> dict:
 
 
 @router.get("/api/scene/{scene_id}/context")
-async def get_scene_context(scene_id: str) -> dict:
+async def get_scene_context(
+    scene_id: str, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     scene = orch.get_scene(scene_id)
     if scene is None:
@@ -297,8 +315,23 @@ class ActionSubmissionRequest(BaseModel):
 
 
 @router.post("/api/action/submit")
-async def submit_action(req: ActionSubmissionRequest) -> dict:
+async def submit_action(
+    req: ActionSubmissionRequest, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
+
+    # BUG-056: Verify authenticated user matches action submitter
+    with orch._session_scope() as session:
+        from server.storage.repository import PlayerRepo
+
+        player = PlayerRepo(session).get(req.player_id)
+        if player is None or str(player.telegram_user_id) != auth.player_id:
+            return asdict(
+                ActionSubmitResponse(
+                    accepted=False,
+                    rejection_reason="Not authorized to submit actions for this player.",
+                )
+            )
 
     # Validate turn window
     tw = orch.get_turn_window(req.turn_window_id)
@@ -357,7 +390,7 @@ async def submit_action(req: ActionSubmissionRequest) -> dict:
 
 
 @router.get("/api/action/draft/{player_id}")
-async def get_draft(player_id: str) -> dict:
+async def get_draft(player_id: str, auth: AuthResult = Depends(require_auth)) -> dict:
     orch = _orch()
     draft = orch.drafts.get(player_id)
     if draft is None:
@@ -382,7 +415,9 @@ async def get_draft(player_id: str) -> dict:
 
 @router.get("/api/campaign/{campaign_id}/recap")
 async def get_recap(
-    campaign_id: str, limit: int = Query(default=10, ge=1, le=100)
+    campaign_id: str,
+    limit: int = Query(default=10, ge=1, le=100),
+    auth: AuthResult = Depends(require_auth),
 ) -> dict:
     orch = _orch()
     if orch.campaign_id is None or orch.campaign_id != campaign_id:
@@ -417,7 +452,9 @@ async def get_recap(
 
 
 @router.get("/api/player/{player_id}/inbox")
-async def get_inbox(player_id: str, since: str = "") -> dict:
+async def get_inbox(
+    player_id: str, since: str = "", auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     player = orch.get_player(player_id)
     if player is None:
@@ -471,7 +508,9 @@ async def get_inbox(player_id: str, since: str = "") -> dict:
 
 
 @router.get("/api/player/{player_id}/channels")
-async def get_channels(player_id: str) -> dict:
+async def get_channels(
+    player_id: str, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     channels: list[ChannelInfo] = []
 
@@ -504,7 +543,9 @@ async def get_channels(player_id: str) -> dict:
 
 
 @router.get("/api/channel/{channel_id}/messages")
-async def get_channel_messages(channel_id: str) -> dict:
+async def get_channel_messages(
+    channel_id: str, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
 
     with orch._session_scope() as session:
@@ -537,7 +578,9 @@ class CreateChannelRequest(BaseModel):
 
 
 @router.post("/api/channel/create")
-async def create_channel(req: CreateChannelRequest) -> dict:
+async def create_channel(
+    req: CreateChannelRequest, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     if orch.campaign_id is None:
         return asdict(
@@ -591,7 +634,9 @@ class SendMessageRequest(BaseModel):
 
 
 @router.post("/api/channel/{channel_id}/send")
-async def send_channel_message(channel_id: str, req: SendMessageRequest) -> dict:
+async def send_channel_message(
+    channel_id: str, req: SendMessageRequest, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
 
     with orch._session_scope() as session:
@@ -625,7 +670,9 @@ class LeaveChannelRequest(BaseModel):
 
 
 @router.post("/api/channel/{channel_id}/leave")
-async def leave_channel(channel_id: str, req: LeaveChannelRequest) -> dict:
+async def leave_channel(
+    channel_id: str, req: LeaveChannelRequest, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
 
     with orch._session_scope() as session:
@@ -657,7 +704,9 @@ async def leave_channel(channel_id: str, req: LeaveChannelRequest) -> dict:
 
 
 @router.get("/api/campaign/{campaign_id}/quests")
-async def get_quests(campaign_id: str) -> dict:
+async def get_quests(
+    campaign_id: str, auth: AuthResult = Depends(require_auth)
+) -> dict:
     orch = _orch()
     if orch.campaign_id is None or orch.campaign_id != campaign_id:
         raise HTTPException(status_code=404, detail="Campaign not found.")
@@ -683,7 +732,7 @@ async def get_quests(campaign_id: str) -> dict:
 
 
 @router.get("/api/player/{player_id}/clues")
-async def get_clues(player_id: str) -> dict:
+async def get_clues(player_id: str, auth: AuthResult = Depends(require_auth)) -> dict:
     orch = _orch()
     player = orch.get_player(player_id)
     if player is None:
@@ -728,7 +777,11 @@ async def get_clues(player_id: str) -> dict:
 
 
 @router.get("/api/campaign/{campaign_id}/map")
-async def get_map(campaign_id: str, player_id: str = Query(default="")) -> dict:
+async def get_map(
+    campaign_id: str,
+    player_id: str = Query(default=""),
+    auth: AuthResult = Depends(require_auth),
+) -> dict:
     orch = _orch()
     if orch.campaign_id is None or orch.campaign_id != campaign_id:
         raise HTTPException(status_code=404, detail="Campaign not found.")

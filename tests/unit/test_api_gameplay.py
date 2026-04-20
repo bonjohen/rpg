@@ -5,7 +5,12 @@ Tests action builder, inbox, channels, quests, clues, and map endpoints.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 import os
+from urllib.parse import urlencode
+
 from fastapi.testclient import TestClient
 
 from server.api.app import create_api_app
@@ -27,10 +32,23 @@ GOBLIN_CAVES_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "scenarios", "starters", "goblin_caves.yaml"
 )
 
+BOT_TOKEN = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+
 
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
+
+
+def _build_init_data(user_id: int, first_name: str, bot_token: str) -> str:
+    """Build a valid Telegram initData string with correct HMAC."""
+    user_json = json.dumps({"id": user_id, "first_name": first_name})
+    params = {"user": user_json, "auth_date": "1700000000"}
+    data_check = "\n".join(f"{k}={v}" for k, v in sorted(params.items()))
+    secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+    hash_val = hmac.new(secret_key, data_check.encode(), hashlib.sha256).hexdigest()
+    params["hash"] = hash_val
+    return urlencode(params)
 
 
 def _make_orchestrator() -> GameOrchestrator:
@@ -39,11 +57,14 @@ def _make_orchestrator() -> GameOrchestrator:
     return orch
 
 
-def _make_client(orch: GameOrchestrator | None = None) -> TestClient:
+def _make_client(
+    orch: GameOrchestrator | None = None, user_id: int = 1000
+) -> TestClient:
     if orch is None:
         orch = _make_orchestrator()
-    app = create_api_app(orch)
-    return TestClient(app)
+    app = create_api_app(orch, bot_token=BOT_TOKEN)
+    init_data = _build_init_data(user_id, "TestUser", BOT_TOKEN)
+    return TestClient(app, headers={"X-Init-Data": init_data})
 
 
 def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:

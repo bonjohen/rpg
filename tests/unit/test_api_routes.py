@@ -37,11 +37,14 @@ def _make_orchestrator() -> GameOrchestrator:
     return orch
 
 
-def _make_client(orch: GameOrchestrator | None = None) -> TestClient:
+def _make_client(
+    orch: GameOrchestrator | None = None, user_id: int = 1000
+) -> TestClient:
     if orch is None:
         orch = _make_orchestrator()
     app = create_api_app(orch, bot_token=BOT_TOKEN)
-    return TestClient(app)
+    init_data = _build_init_data(user_id, "TestUser", BOT_TOKEN)
+    return TestClient(app, headers={"X-Init-Data": init_data})
 
 
 def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:

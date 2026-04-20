@@ -90,7 +90,7 @@ class TestCmdStatus:
         text = msg.reply_text.call_args[0][0]
         assert "/join" in text
 
-    async def test_registered_user_sees_player_id(self):
+    async def test_registered_user_sees_display_name_not_uuid(self):
         registry = BotRegistry()
         registry.register_player(60, "pid-abc")
         msg = make_private_message(user_id=60)
@@ -98,4 +98,6 @@ class TestCmdStatus:
         ctx = make_context(registry=registry)
         await cmd_status(update, ctx)
         text = msg.reply_text.call_args[0][0]
-        assert "pid-abc" in text
+        # UUID should NOT be exposed; display name (first_name) should be shown
+        assert "pid-abc" not in text
+        assert "Alice" in text

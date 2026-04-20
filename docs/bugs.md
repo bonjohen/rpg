@@ -68,8 +68,8 @@
 | BUG20260419-052 | P2 | Correctness | ScenarioLoader YAML parse error context lost — user gets generic "Failed" | `scenarios/loader.py:199` | Open |
 | BUG20260419-053 | P2 | Correctness | puzzle_patterns.create_puzzle mutates caller's overrides dict via pop() | `scenarios/puzzle_patterns.py:48` | Open |
 | BUG20260419-054 | P2 | Correctness | scenarios/archetypes.py unsafe casts from object overrides with type: ignore | `scenarios/archetypes.py:38` | Open |
-| BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | Open |
-| BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | Open |
+| BUG20260419-055 | P2 | Security | API endpoints return player data without authentication | `server/api/routes.py:88` | **Fixed** |
+| BUG20260419-056 | P2 | Security | Action submission endpoint does not verify authenticated user | `server/api/routes.py:277` | **Fixed** |
 | BUG20260419-057 | P2 | Performance | httpx.AsyncClient created per request in both adapters — connection overhead | `models/fast/adapter.py:90` + `models/main/adapter.py:117` | Open |
 | BUG20260419-058 | P2 | Performance | Turn number computed by scanning entire turn_log — O(n) on every open_turn | `server/orchestrator/game_loop.py:268` | Open |
 | BUG20260419-059 | P2 | Performance | Linear scan of committed_actions by turn_window_id — repeated O(n) | `server/orchestrator/game_loop.py:344` | Open |
@@ -78,7 +78,7 @@
 | BUG20260419-062 | P2 | Error Handling | SchemaValidationError reason silently discarded in all task functions | `models/main/tasks.py:107` | Open |
 | BUG20260419-063 | P2 | Error Handling | Silent template rendering failures in context_assembly — placeholders sent to LLM | `models/contracts/context_assembly.py:269` | Open |
 | BUG20260419-064 | P2 | Error Handling | model_recovery broad except Exception catches programming errors as fallback | `server/reliability/model_recovery.py:97` | Open |
-| BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | Open |
+| BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | **Fixed** |
 | BUG20260419-066 | P2 | Error Handling | AI-generated narration sent to Telegram without length check or sanitization | `bot/commands.py:221` | Open |
 | BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated identically in 5+ files | Multiple files | Fixed |
 | BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py block testability | `server/timer/integration.py:36` | Fixed |

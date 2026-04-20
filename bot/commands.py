@@ -135,21 +135,24 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     orchestrator = _orchestrator(context)
     if orchestrator is None:
         await update.message.reply_text(
-            f"Player ID: {player_id}\nStatus: registered (no active game)"
+            f"{user.first_name}\nStatus: registered (no active game)"
         )
         return
+
+    player = orchestrator.get_player(player_id)
+    display = player.display_name if player else user.first_name
 
     scene = orchestrator.get_player_scene(player_id)
     if scene is None:
         await update.message.reply_text(
-            f"Player ID: {player_id}\nStatus: registered, not in a scene"
+            f"{display}\nStatus: registered, not in a scene"
         )
         return
 
     char = orchestrator.get_player_character(player_id)
     char_info = f"Character: {char.name}" if char else ""
     await update.message.reply_text(
-        f"Player ID: {player_id}\n{char_info}\nScene: {scene.name}\nState: {scene.state.value}"
+        f"{display}\n{char_info}\nScene: {scene.name}\nState: {scene.state.value}"
     )
 
 
