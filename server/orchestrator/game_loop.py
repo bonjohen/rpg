@@ -61,6 +61,7 @@ from server.npc.trust import TrustEngine
 from server.observability.diagnostics import DiagnosticsEngine
 from server.observability.metrics import MetricsCollector
 from server.reliability.idempotency import IdempotencyStore
+from server.reliability.turn_recovery import TurnRecoveryEngine
 from server.scene.membership import SceneMembershipEngine
 from server.domain.helpers import new_id, utc_now
 from server.scope.engine import ScopeEngine
@@ -142,6 +143,7 @@ class GameOrchestrator:
         self.scenario_loader = ScenarioLoader()
         self.metrics = MetricsCollector()
         self.idempotency = IdempotencyStore()
+        self.turn_recovery_engine = TurnRecoveryEngine()
 
         # Timer state (timer_id -> TimerRecord)
         self.timers: dict[str, object] = {}
@@ -183,10 +185,107 @@ class GameOrchestrator:
         return await loop.run_in_executor(None, _wrapper)
 
     # ------------------------------------------------------------------
+    # Startup / recovery
+    # ------------------------------------------------------------------
+
+    def startup(self) -> list[str]:
+        """Initialise database tables and recover state from prior runs.
+
+        Creates all ORM tables (idempotent), loads active campaigns,
+        reconstructs timers for open turn windows, and recovers stuck turns.
+
+        Returns a list of human-readable recovery notes (empty if nothing
+        needed recovery).
+        """
+        from server.storage.db import create_all_tables
+
+        if self.session_factory is None:
+            raise RuntimeError("No session_factory configured on GameOrchestrator")
+
+        # Ensure tables exist
+        engine = (
+            self.session_factory.kw.get("bind") or self.session_factory().get_bind()
+        )
+        create_all_tables(engine)
+
+        notes: list[str] = []
+
+        with self._session_scope() as session:
+            campaigns = CampaignRepo(session).list_active()
+
+        if not campaigns:
+            return notes
+
+        # For now, single-campaign: pick the first active campaign.
+        # Multi-campaign support is structural — the orchestrator holds one
+        # campaign_id; callers route by campaign via the bot registry.
+        campaign = campaigns[0]
+        self.campaign_id = campaign.campaign_id
+
+        # Register campaign→chat mapping in bot registry
+        if campaign.telegram_group_id:
+            self.bot_registry.register_campaign(
+                campaign.telegram_group_id, campaign.campaign_id
+            )
+
+        # Reconstruct timers for open turn windows
+        with self._session_scope() as session:
+            open_tws = TurnWindowRepo(session).list_open()
+
+        now = utc_now()
+        for tw in open_tws:
+            if tw.campaign_id != self.campaign_id:
+                continue
+            if tw.expires_at is not None and tw.expires_at > now:
+                remaining = int((tw.expires_at - now).total_seconds())
+                timer = self.timer_controller.create_timer(
+                    tw.turn_window_id, tw.campaign_id, remaining
+                )
+                timer = self.timer_controller.start(timer, now)
+                self.timers[timer.timer_id] = timer
+                notes.append(
+                    f"Reconstructed timer for TurnWindow {tw.turn_window_id} "
+                    f"({remaining}s remaining)"
+                )
+
+        # Recover stuck turns
+        with self._session_scope() as session:
+            all_tws = TurnWindowRepo(session).list_for_campaign(self.campaign_id)
+
+        stuck = self.turn_recovery_engine.find_stuck_turns(all_tws)
+        for tw in stuck:
+            scene = self.get_scene(tw.scene_id)
+            if scene is None:
+                continue
+            players = self.get_scene_players(tw.scene_id)
+            actions = self.get_committed_actions_for_window(tw.turn_window_id)
+            result = self.turn_recovery_engine.recover(
+                turn_window=tw,
+                scene=scene,
+                players=players,
+                committed_actions=actions,
+            )
+            if result.success:
+                # Persist the recovered turn window state
+                with self._session_scope() as session:
+                    TurnWindowRepo(session).save(result.turn_window)
+                notes.append(
+                    f"Recovered stuck TurnWindow {tw.turn_window_id} "
+                    f"(action={result.recovery_action})"
+                )
+
+        return notes
+
+    # ------------------------------------------------------------------
     # Scenario loading
     # ------------------------------------------------------------------
 
-    def load_scenario(self, yaml_path: str, campaign_name: str = "Playtest") -> bool:
+    def load_scenario(
+        self,
+        yaml_path: str,
+        campaign_name: str = "Playtest",
+        telegram_group_id: int = 0,
+    ) -> bool:
         """Load a scenario from YAML, persist all entities via repos."""
         result = self.scenario_loader.load_from_yaml(yaml_path)
         if not result.success:
@@ -196,7 +295,7 @@ class GameOrchestrator:
         campaign = Campaign(
             campaign_id=campaign_id,
             name=campaign_name,
-            telegram_group_id=0,
+            telegram_group_id=telegram_group_id,
             main_topic_id=None,
             created_at=utc_now(),
         )

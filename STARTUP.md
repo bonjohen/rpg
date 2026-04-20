@@ -10,16 +10,16 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 `docs/plan.md` — work one phase at a time, one task at a time.
 
-Current phase: **Database Phase 6 — Startup Recovery and Multi-Campaign Support** (next). Active plan: `docs/database_plan.md`.
+Current phase: **Database Phase 7 — Documentation, Cleanup, and Verification** (next). Active plan: `docs/database_plan.md`.
 
 All 20 original phases complete. Database integration plan (`docs/database_plan.md`, 7 phases) is now active:
 - **DB Phase 1** (complete): SQLite pragmas, optimistic locking, test fixtures.
 - **DB Phase 2** (complete): `session_factory` on orchestrator, `_session_scope()` context manager, `_run_in_session()` async helper, `create_api_app()` accepts session factory.
 - **DB Phase 3** (complete): Removed all 12 in-memory entity dicts from orchestrator, all entity reads/writes go through repos, added 20+ query methods, updated all tests. 1314 tests pass, lint clean.
 - **DB Phase 4** (complete): Migrated `open_turn()`, `submit_action()`, `resolve_turn()` to use database repos. `resolve_turn()` uses split-session pattern (load → compute → version-checked commit with `StaleStateError` retry). Refactored action effects to working-set pattern. Removed `self.turn_windows`, `self.committed_actions`, `self.turn_log` in-memory dicts. 1314 tests pass, lint clean.
-- **DB Phase 5** (complete): Bot commands migrated from dict access to query methods. Session factory injected into routes module. API routes were already migrated in Phases 3–4. Added `list_for_campaign()` to `TurnWindowRepo`, `get_turn_windows()` to orchestrator. 1314 tests pass, lint clean.
-- **DB Phase 6** (next): Startup recovery/multi-campaign.
-- **DB Phase 7** (future): Documentation/cleanup.
+- **DB Phase 5** (complete): Bot commands migrated from dict access to query methods. Session factory injected into routes module. Added `get_turn_windows()` to orchestrator. 1314 tests pass, lint clean.
+- **DB Phase 6** (complete): Added `startup()` method (table creation, campaign loading, timer reconstruction, stuck turn recovery). Added `telegram_group_id` to `load_scenario()`. Bot commands register campaign→chat mapping. 13 new tests; 1327 tests pass, lint clean.
+- **DB Phase 7** (next): Documentation/cleanup.
 
 ## Key Design Decisions (do not revisit without cause)
 
@@ -71,7 +71,7 @@ C:\Projects\rpg\
 ├── docs/                    # Design docs, plan, release readiness
 │   ├── release_readiness.md # Open bugs and release criteria
 │   └── feature_freeze.md   # Feature freeze notice
-└── tests/                   # 1314 tests (unit + integration)
+└── tests/                   # 1327 tests (unit + integration)
 ```
 
 ## Known Defects / Open Issues

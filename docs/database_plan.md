@@ -183,20 +183,20 @@ Open  ──>  Started  ──>  Completed
 
 | # | Status | Started (PST) | Completed (PST) | Description |
 |---|--------|---------------|------------------|-------------|
-| 6.1 | Open | | | Add `startup()` method to `GameOrchestrator` that: creates tables via `create_all_tables(engine)`, queries `CampaignRepo.list_active()`, and for each campaign queries open TurnWindows via `TurnWindowRepo` |
-| 6.2 | Open | | | Implement timer reconstruction: for each open TurnWindow, compute remaining time from `expires_at - utc_now()` and create a TimerRecord via `TimerController` |
-| 6.3 | Open | | | Integrate `TurnRecoveryEngine`: on startup, call `find_stuck_turns()` for each active campaign, then `recover()` for any stuck turns (within a database transaction) |
-| 6.4 | Open | | | Update `load_scenario()` to accept a `telegram_group_id` parameter so new campaigns map to their Telegram group |
-| 6.5 | Open | | | Update bot commands to derive `campaign_id` from `BotRegistry.get_campaign_for_chat()` and pass it through to orchestrator methods |
-| 6.6 | Open | | | Add startup recovery tests: create a campaign with an open turn window, simulate crash (discard orchestrator), create new orchestrator, call `startup()`, verify timer reconstructed and turn recoverable |
-| 6.7 | Open | | | Add multi-campaign test: load two scenarios with different `campaign_id`s, verify each campaign's state is isolated |
-| 6.8 | Open | | | Run full test suite and lint, fix any failures |
-| 6.9 | Open | | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 6.1 | Completed | 2026-04-19 09:25 PM | 2026-04-19 09:35 PM | Added `startup()` method: creates tables, loads active campaigns, reconstructs timers, recovers stuck turns. Added `TurnRecoveryEngine` to orchestrator |
+| 6.2 | Completed | 2026-04-19 09:25 PM | 2026-04-19 09:35 PM | Timer reconstruction in `startup()`: computes remaining time from `expires_at - now`, creates and starts TimerRecord via `TimerController` |
+| 6.3 | Completed | 2026-04-19 09:25 PM | 2026-04-19 09:35 PM | Stuck turn recovery in `startup()`: calls `find_stuck_turns()` then `recover()` for each, persists recovered TurnWindow state |
+| 6.4 | Completed | 2026-04-19 09:35 PM | 2026-04-19 09:38 PM | Added `telegram_group_id: int = 0` parameter to `load_scenario()`. Updated `cmd_newgame` to pass `chat_id` |
+| 6.5 | Completed | 2026-04-19 09:38 PM | 2026-04-19 09:40 PM | `cmd_newgame` registers campaign→chat in BotRegistry. `startup()` re-registers mapping from persisted `telegram_group_id`. Added `list_for_campaign()` to `TurnWindowRepo` |
+| 6.6 | Completed | 2026-04-19 09:40 PM | 2026-04-19 09:50 PM | Added 9 tests: startup basic (4), timer reconstruction (2), stuck turn recovery (1), group ID (2). Plus full integration crash recovery test |
+| 6.7 | Completed | 2026-04-19 09:50 PM | 2026-04-19 09:55 PM | Added 2 multi-campaign tests: state isolation and startup picks first active campaign |
+| 6.8 | Completed | 2026-04-19 09:55 PM | 2026-04-19 09:58 PM | Full test suite: 1327 passed (13 new). Lint and format clean |
+| 6.9 | Completed | 2026-04-19 09:58 PM | 2026-04-19 10:00 PM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 6 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Added `startup()` method to orchestrator (table creation, campaign loading, timer reconstruction, stuck turn recovery). Added `TurnRecoveryEngine` instance to orchestrator. Added `telegram_group_id` parameter to `load_scenario()`. Updated `cmd_newgame` to pass chat_id and register campaign→chat in BotRegistry. `startup()` re-registers campaign→chat mapping from persisted data. Added `list_for_campaign()` to `TurnWindowRepo`. Added `tests/unit/test_database_startup_recovery.py` (13 tests). Total: 1327 tests, all green, lint clean.
+- **Changes hosted at:** `server/orchestrator/game_loop.py`, `bot/commands.py`, `server/storage/repository.py`, `tests/unit/test_database_startup_recovery.py`
 - **Commit:** `Database Phase 6: Startup recovery and multi-campaign support`
 
 ---

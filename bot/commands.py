@@ -155,8 +155,13 @@ async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     scenario_path = args[0]
-    success = orchestrator.load_scenario(scenario_path)
+    chat_id = update.message.chat.id
+    success = orchestrator.load_scenario(scenario_path, telegram_group_id=chat_id)
     if success:
+        # Register campaign→chat mapping in bot registry
+        registry = _registry(context)
+        if orchestrator.campaign_id:
+            registry.register_campaign(chat_id, orchestrator.campaign_id)
         scene_count = len(orchestrator.get_scenes())
         await update.message.reply_text(
             f"Scenario loaded! {scene_count} scenes ready.\n"
