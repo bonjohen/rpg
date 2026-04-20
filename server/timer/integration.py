@@ -33,10 +33,6 @@ class TickResult:
     new_fallback_actions: list[CommittedAction] = field(default_factory=list)
 
 
-_CTRL = TimerController()
-_ENGINE = TurnEngine()
-
-
 def process_tick(
     timer: TimerRecord,
     window: TurnWindow,
@@ -44,6 +40,9 @@ def process_tick(
     expected_player_ids: list[str],
     characters_by_player: dict[str, str],
     now: datetime | None = None,
+    *,
+    controller: TimerController | None = None,
+    engine: TurnEngine | None = None,
 ) -> TickResult:
     """Evaluate one scheduler tick for a running timer.
 
@@ -60,9 +59,12 @@ def process_tick(
         if the timer expired and the window was locked + resolved.
         Otherwise all flags are False.
     """
+    ctrl = controller or TimerController()
+    eng = engine or TurnEngine()
+
     result = TickResult(timer=timer, window=window)
 
-    expiry = _CTRL.check_expiry(timer, now=now)
+    expiry = ctrl.check_expiry(timer, now=now)
     result.timer = expiry.timer
 
     if not expiry.has_expired:
@@ -81,14 +83,14 @@ def process_tick(
     ]
 
     # Lock the window
-    lock = _ENGINE.lock_window(window)
+    lock = eng.lock_window(window)
     if not lock.locked:
         return result  # window was already locked by another path
     result.window_locked = True
     result.window = lock.window
 
     # Resolve with timeout fallbacks
-    resolve = _ENGINE.resolve_window(
+    resolve = eng.resolve_window(
         lock.window,
         existing_actions,
         characters_by_player,
@@ -112,15 +114,21 @@ def process_early_close(
     existing_actions: list[CommittedAction],
     characters_by_player: dict[str, str],
     now: datetime | None = None,
+    *,
+    controller: TimerController | None = None,
+    engine: TurnEngine | None = None,
 ) -> TickResult:
     """Trigger early close (all players ready).
 
     Closes the timer, locks the window, and resolves with no timeout fallbacks
     (all players already submitted).
     """
+    ctrl = controller or TimerController()
+    eng = engine or TurnEngine()
+
     result = TickResult(timer=timer, window=window)
 
-    close = _CTRL.trigger_early_close(timer, now=now)
+    close = ctrl.trigger_early_close(timer, now=now)
     if not close.success:
         result.timer = timer
         return result
@@ -128,13 +136,13 @@ def process_early_close(
     result.early_closed = True
     result.timer = close.timer
 
-    lock = _ENGINE.lock_window(window)
+    lock = eng.lock_window(window)
     if not lock.locked:
         return result
     result.window_locked = True
     result.window = lock.window
 
-    resolve = _ENGINE.resolve_window(
+    resolve = eng.resolve_window(
         lock.window,
         existing_actions,
         characters_by_player,

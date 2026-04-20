@@ -27,12 +27,16 @@ from server.scope.engine import ScopeEngine, ScopeViolationError
 from server.scope.referee import RefereeGuard
 
 
-_ENGINE = ScopeEngine()
-_REFEREE = RefereeGuard()
-
-
 class LeakageGuard:
     """Consolidated leakage-prevention checks."""
+
+    def __init__(
+        self,
+        engine: ScopeEngine | None = None,
+        referee_guard: RefereeGuard | None = None,
+    ) -> None:
+        self._engine = engine or ScopeEngine()
+        self._referee = referee_guard or RefereeGuard()
 
     def check_public_prompt(
         self,
@@ -72,7 +76,7 @@ class LeakageGuard:
         another player or any referee_only content.
         """
         # Strip referee_only first (hard block — no exceptions)
-        _REFEREE.assert_no_referee_facts(facts, scopes_by_id, context=context)
+        self._referee.assert_no_referee_facts(facts, scopes_by_id, context=context)
 
         # Verify each fact is actually visible to this player
         for fact in facts:
@@ -85,7 +89,7 @@ class LeakageGuard:
             if scope.scope_type == ScopeType.side_channel and scope.side_channel_id:
                 side_channel = side_channels_by_id.get(scope.side_channel_id)
             grants = grants_by_fact_id.get(fact.fact_id, [])
-            if not _ENGINE.can_player_see_fact(
+            if not self._engine.can_player_see_fact(
                 player_id, fact, scope, grants, side_channel
             ):
                 raise ScopeViolationError(

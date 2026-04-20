@@ -81,7 +81,7 @@
 | BUG20260419-065 | P2 | Error Handling | Bot leaks internal player UUIDs to Telegram users | `bot/commands.py:124` | Open |
 | BUG20260419-066 | P2 | Error Handling | AI-generated narration sent to Telegram without length check or sanitization | `bot/commands.py:221` | Open |
 | BUG20260419-067 | P2 | Design | _now()/_new_id() helpers duplicated identically in 5+ files | Multiple files | Fixed |
-| BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py block testability | `server/timer/integration.py:36` | Open |
+| BUG20260419-068 | P2 | Design | Module-level singletons in timer/integration.py block testability | `server/timer/integration.py:36` | Fixed |
 | BUG20260419-069 | P2 | Design | API routes access orchestrator private methods directly | `server/api/routes.py:95` | Fixed |
 | BUG20260419-070 | P2 | Design | Orchestrator stored in module-level global — prevents DI and testing | `server/api/routes.py:51` | Open |
 | BUG20260419-071 | P2 | Design | Scope engine fallback creates fake ConversationScope with empty IDs | `server/scope/engine.py:295` | Open |
@@ -98,7 +98,7 @@
 | BUG20260419-082 | P3 | Performance | Scene scoped_prompts O(n*m) ID membership checks on lists | `server/scene/scoped_prompts.py:57` | Open |
 | BUG20260419-083 | P3 | Performance | BFS in scenario validator uses list.pop(0) — O(n^2) | `scenarios/validator.py:376` | Open |
 | BUG20260419-084 | P3 | Performance | Scope violation detection is O(n*m) substring search | `models/contracts/context_assembly.py:219` | Open |
-| BUG20260419-085 | P3 | Design | Leakage guard module-level singletons couple import to instantiation | `server/scope/leakage_guard.py:30` | Open |
+| BUG20260419-085 | P3 | Design | Leakage guard module-level singletons couple import to instantiation | `server/scope/leakage_guard.py:30` | Fixed |
 | BUG20260419-086 | P3 | Design | Deferred stdlib imports in side_channel_engine (datetime) | `server/scope/side_channel_engine.py:77` | Fixed |
 
 ## Resolved Bugs
