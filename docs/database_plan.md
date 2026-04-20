@@ -53,7 +53,7 @@ Open  ──>  Started  ──>  Completed
 | 1.8 | Completed | 2026-04-19 11:06 AM | 2026-04-19 11:06 AM | Add `*.db`, `*.db-shm`, `*.db-wal` to `.gitignore` |
 | 1.9 | Completed | 2026-04-19 11:06 AM | 2026-04-19 11:10 AM | Add 14 unit tests for SQLite pragma application, version column round-trip, `save_with_version_check` happy path and stale-state rejection, `list_open`, and db_helpers |
 | 1.10 | Completed | 2026-04-19 11:10 AM | 2026-04-19 11:12 AM | Full test suite: 1306 passed. Lint clean. |
-| 1.11 | Started | 2026-04-19 11:12 AM | | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
+| 1.11 | Completed | 2026-04-19 11:12 AM | 2026-04-19 11:15 AM | Phase End: update `docs/phase_status.md`, `STARTUP.md`, commit locally |
 
 ### Phase 1 Summary
 

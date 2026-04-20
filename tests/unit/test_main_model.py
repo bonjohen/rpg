@@ -135,6 +135,7 @@ def _fast_failure() -> FastGenerateResult:
 
 def _mock_main_adapter(result: GenerateResult) -> OpenAIMainAdapter:
     adapter = MagicMock(spec=OpenAIMainAdapter)
+    adapter.model = "gpt-5.4-mini"
     adapter.generate = AsyncMock(return_value=result)
     return adapter
 

@@ -2,11 +2,14 @@
 
 ## Open Bugs
 
-| ID | Severity | Category | Description | Status |
-|---|---|---|---|---|
-| BUG-001 | P2 | Routing | OpenAI inference adapter requires live API key; all narration uses deterministic fallback without it | Deferred (requires OPENAI_API_KEY) |
-| BUG-002 | P3 | Clarity | Narration fallback text is functional but repetitive across turns | Open |
-| BUG-003 | P3 | Enhancement | No persistent storage; all state is in-memory (by design for playtest) | Deferred (post-Phase 20) |
+See `docs/bugs.md` for the full bug tracker.
+
+| Severity | Count | Status |
+|---|---|---|
+| P0 | 3 | Open — must fix before release |
+| P1 | 21 | Open — must fix before release |
+| P2 | 48 | Open — fix if time permits |
+| P3 | 14 | Open — defer to post-release |
 
 ## Severity Definitions
 
@@ -17,8 +20,8 @@
 
 ## Release Criteria
 
-- [x] All P0 and P1 bugs resolved
-- [x] Full test suite passes (target: 1200+ tests) -- currently 1224
+- [ ] All P0 and P1 bugs resolved (3 P0 + 21 P1 = 24 remaining)
+- [x] Full test suite passes (target: 1200+ tests) -- currently 1292
 - [x] Lint clean (ruff check + ruff format)
 - [x] All 4 starter scenarios load and validate without errors
 - [ ] 10-turn scripted session completes without crashes
@@ -28,7 +31,7 @@
 
 ## Notes
 
-- No P0 or P1 bugs found during review of playtest findings or Phase 17-19 work.
-- The OpenAI adapter (BUG-001) requires a live API key; mock adapters provide full test coverage.
-- Scope enforcement has comprehensive unit tests (Phase 4) and will be validated by
-  privacy audit tests (Task 4 of this phase).
+- Bug audit on 2026-04-19 found 86 bugs across ~65 files. See `docs/bugs.md` for full details.
+- Top priorities: 3 P0 security bugs (auth bypass, path traversal, scope leakage), then 21 P1 correctness bugs (combat pipeline, bot handlers, contract drift, timer, recovery).
+- The OpenAI adapter (BUG-001) requires a live API key; Gemma adapter (`models/gemma/`) provides a local-network alternative via `GEMMA_BASE_URL`.
+- Mock adapters provide full test coverage for both main-tier backends.

@@ -38,9 +38,18 @@ All authoritative turn resolution stays server-side regardless of which tier is 
 
 ---
 
-## Main Game Model Tier: GPT-5.4 mini (OpenAI API)
+## Main Game Model Tier
 
 **Purpose:** High-quality narrative and social tasks.
+
+**Supported backends (choose one at startup):**
+
+| Backend | Adapter | Config | Notes |
+|---|---|---|---|
+| GPT-5.4 mini (OpenAI API) | `OpenAIMainAdapter` | `OPENAI_API_KEY` | Cloud; lowest latency |
+| Gemma 4 26B A4B (local) | `GemmaMainAdapter` | `GEMMA_BASE_URL`, optional `GEMMA_API_KEY` | Any OpenAI-compatible endpoint (vLLM, llama.cpp, Ollama /v1) |
+
+Both adapters implement `MainAdapter` protocol (`models/protocol.py`). Pass either to `GameOrchestrator(main_adapter=...)`.
 
 **When to route here:**
 
@@ -60,9 +69,9 @@ All authoritative turn resolution stays server-side regardless of which tier is 
 - Format repair of its own output (use fast tier for that)
 - Anything that should be deterministic (use server logic)
 
-**API:** OpenAI Chat Completions (`/v1/chat/completions`). Requires `OPENAI_API_KEY` environment variable.
+**API:** OpenAI Chat Completions (`/v1/chat/completions`). Both adapters use this protocol.
 
-**Latency target:** < 5 s for narration calls in standard play. Combat and exploration narration can tolerate slightly longer.
+**Latency target:** < 5 s for OpenAI; < 10 s for Gemma on local hardware. Combat and exploration narration can tolerate slightly longer.
 
 **Failure handling:**
 1. Validate output against expected schema.
@@ -121,7 +130,7 @@ Never pass raw unfiltered chat history to any LLM call where secrecy matters.
 Every model call must log:
 
 - `trace_id` (tied to the TurnWindow or request context)
-- `tier` (fast / openai)
+- `tier` (fast / openai / gemma)
 - `task_type`
 - `prompt_token_count`
 - `output_token_count`

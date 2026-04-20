@@ -27,7 +27,8 @@ import uuid
 
 from models.fast.adapter import OllamaFastAdapter
 from models.fast.tasks import repair_schema
-from models.main.adapter import OpenAIMainAdapter, GenerateResult
+from models.main.adapter import GenerateResult
+from models.protocol import MainAdapter
 from models.main.context import (
     ActionContext,
     NpcContext,
@@ -74,7 +75,7 @@ from models.fast.instrumentation import ModelCallLog
 
 
 async def narrate_scene(
-    adapter: OpenAIMainAdapter,
+    adapter: MainAdapter,
     scene: SceneContext,
     committed_actions: list[ActionContext],
     recent_history: RecentHistory | None = None,
@@ -102,7 +103,7 @@ async def narrate_scene(
     result = await adapter.generate(
         prompt, system=system, expect_json=True, temperature=0.7
     )
-    log = _make_log(trace_id, task_type, result)
+    log = _make_log(trace_id, task_type, result, tier=_adapter_tier(adapter))
 
     if result.success:
         try:
@@ -141,7 +142,7 @@ async def narrate_scene(
 
 
 async def generate_npc_dialogue(
-    adapter: OpenAIMainAdapter,
+    adapter: MainAdapter,
     npc: NpcContext,
     scene: SceneContext,
     trigger_action: ActionContext | None = None,
@@ -169,7 +170,7 @@ async def generate_npc_dialogue(
     result = await adapter.generate(
         prompt, system=system, expect_json=True, temperature=0.8
     )
-    log = _make_log(trace_id, task_type, result)
+    log = _make_log(trace_id, task_type, result, tier=_adapter_tier(adapter))
 
     if result.success:
         try:
@@ -202,7 +203,7 @@ async def generate_npc_dialogue(
 
 
 async def summarize_combat(
-    adapter: OpenAIMainAdapter,
+    adapter: MainAdapter,
     scene: SceneContext,
     combat_outcomes: list[dict],
     committed_actions: list[ActionContext],
@@ -233,7 +234,7 @@ async def summarize_combat(
     result = await adapter.generate(
         prompt, system=system, expect_json=True, temperature=0.7
     )
-    log = _make_log(trace_id, task_type, result)
+    log = _make_log(trace_id, task_type, result, tier=_adapter_tier(adapter))
 
     if result.success:
         try:
@@ -266,7 +267,7 @@ async def summarize_combat(
 
 
 async def propose_ruling(
-    adapter: OpenAIMainAdapter,
+    adapter: MainAdapter,
     action: ActionContext,
     scene: SceneContext,
     acting_player: PlayerContext,
@@ -302,7 +303,7 @@ async def propose_ruling(
     result = await adapter.generate(
         prompt, system=system, expect_json=True, temperature=0.3
     )
-    log = _make_log(trace_id, task_type, result)
+    log = _make_log(trace_id, task_type, result, tier=_adapter_tier(adapter))
 
     if result.success:
         try:
@@ -335,7 +336,7 @@ async def propose_ruling(
 
 
 async def arbitrate_social(
-    adapter: OpenAIMainAdapter,
+    adapter: MainAdapter,
     scene: SceneContext,
     players_involved: list[PlayerContext],
     npcs_involved: list[NpcContext],
@@ -367,7 +368,7 @@ async def arbitrate_social(
     result = await adapter.generate(
         prompt, system=system, expect_json=True, temperature=0.6
     )
-    log = _make_log(trace_id, task_type, result)
+    log = _make_log(trace_id, task_type, result, tier=_adapter_tier(adapter))
 
     if result.success:
         try:
@@ -400,7 +401,7 @@ async def arbitrate_social(
 
 
 async def generate_puzzle_flavor(
-    adapter: OpenAIMainAdapter,
+    adapter: MainAdapter,
     scene: SceneContext,
     puzzle_description: str,
     player_action: ActionContext,
@@ -432,7 +433,7 @@ async def generate_puzzle_flavor(
     result = await adapter.generate(
         prompt, system=system, expect_json=True, temperature=0.7
     )
-    log = _make_log(trace_id, task_type, result)
+    log = _make_log(trace_id, task_type, result, tier=_adapter_tier(adapter))
 
     if result.success:
         try:
@@ -459,6 +460,16 @@ async def generate_puzzle_flavor(
     return fallback_puzzle_flavor(puzzle_description), log
 
 
+def _adapter_tier(adapter: MainAdapter) -> str:
+    """Derive a tier label from the adapter's model name."""
+    model = adapter.model
+    if "gemma" in model:
+        return "gemma"
+    if "gpt" in model:
+        return "openai"
+    return "main"
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -468,10 +479,12 @@ def _make_log(
     trace_id: str,
     task_type: str,
     result: GenerateResult,
+    *,
+    tier: str = "main",
 ) -> ModelCallLog:
     return ModelCallLog(
         trace_id=trace_id,
-        tier="openai",
+        tier=tier,
         task_type=task_type,
         prompt_token_count=result.prompt_token_count,
         output_token_count=result.output_token_count,
