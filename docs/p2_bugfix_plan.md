@@ -95,19 +95,19 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 4.1 | Open | | | BUG-036: Convert SocialOutcome to str Enum in `server/npc/social.py` |
-| 4.2 | Open | | | BUG-037: Log warning on unknown action_key in `server/npc/trust.py` |
-| 4.3 | Open | | | BUG-038: Add "suspicious" zone to _derive_stance in `server/npc/trust.py` |
-| 4.4 | Open | | | BUG-039: Check for remaining characters before removing player_id in `server/scene/membership.py` |
-| 4.5 | Open | | | BUG-025: Use new_id() for fact_id in `server/scope/side_channel_audit.py` |
-| 4.6 | Open | | | BUG-026: Append UUID suffix to channel_id in `server/scope/side_channel_engine.py` |
-| 4.7 | Open | | | Add tests for all 6 fixes |
-| 4.8 | Open | | | Update bug statuses in `docs/bugs.md` |
-| 4.9 | Open | | | Run pytest + ruff, fix any failures |
+| 4.1 | Completed | 2026-04-20 12:30 AM | 2026-04-20 12:40 AM | BUG-036: Convert SocialOutcome to str Enum in `server/npc/social.py` |
+| 4.2 | Completed | 2026-04-20 12:30 AM | 2026-04-20 12:40 AM | BUG-037: Log warning on unknown action_key in `server/npc/trust.py` |
+| 4.3 | Completed | 2026-04-20 12:30 AM | 2026-04-20 12:40 AM | BUG-038: Add "suspicious" zone to _derive_stance in `server/npc/trust.py` |
+| 4.4 | Completed | 2026-04-20 12:30 AM | 2026-04-20 12:40 AM | BUG-039: Check for remaining characters before removing player_id in `server/scene/membership.py` |
+| 4.5 | Completed | 2026-04-20 12:30 AM | 2026-04-20 12:40 AM | BUG-025: Use new_id() for fact_id in `server/scope/side_channel_audit.py` |
+| 4.6 | Completed | 2026-04-20 12:30 AM | 2026-04-20 12:40 AM | BUG-026: Append UUID suffix to channel_id in `server/scope/side_channel_engine.py` |
+| 4.7 | Completed | 2026-04-20 12:40 AM | 2026-04-20 12:45 AM | Add tests for all 6 fixes |
+| 4.8 | Completed | 2026-04-20 12:45 AM | 2026-04-20 12:45 AM | Update bug statuses in `docs/bugs.md` |
+| 4.9 | Completed | 2026-04-20 12:40 AM | 2026-04-20 12:45 AM | Run pytest + ruff, fix any failures |
 
 ### Phase 4 Summary
 
-- **Changes:** TBD
+- **Changes:** Fixed 6 bugs. BUG-036: SocialOutcome converted to `str, Enum`. BUG-037: Unknown action_key logs warning. BUG-038: `_derive_stance` adds "suspicious" zone for mean_trust in [-60, -20). BUG-039: `remove_character` preserves player_id when other characters of same player remain. BUG-025: Audit fact_ids use `new_id()`. BUG-026: Channel IDs include UUID suffix. 11 new tests, 1439 total passing.
 - **Commit:** `P2 bug-fix Phase 4: NPC type safety, scene membership, side channel uniqueness`
 
 ## Phase 5: Model Contracts & Error Handling

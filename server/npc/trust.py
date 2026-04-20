@@ -19,10 +19,13 @@ hard scenario events (e.g. a scripted betrayal).
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Optional
 
 from server.domain.entities import NPC
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -158,6 +161,10 @@ class TrustEngine:
             TrustDeltaResult.
         """
         base = _BASE_DELTAS.get(action_key, 0)
+        if action_key not in _BASE_DELTAS:
+            logger.warning(
+                "Unknown trust action_key %r — defaulting to delta 0", action_key
+            )
         delta = int(round(base * personality_modifier))
         return self.apply_delta(npc, player_id, delta, reason=reason or action_key)
 
@@ -198,10 +205,10 @@ class TrustEngine:
 
         if mean_trust >= _FRIENDLY_THRESHOLD:
             return "friendly"
-        if mean_trust >= 20:
+        if mean_trust >= -20:
             return "neutral"
         if mean_trust >= _HOSTILE_THRESHOLD:
-            return "neutral"
+            return "suspicious"
         # Should not reach here given min_trust check above, but guard it
         return "hostile"
 

@@ -38,8 +38,8 @@
 | BUG20260419-022 | P1 | Contract Drift | npc_dialogue contract has internal_thought field that could leak NPC private state | `models/contracts/main_contracts.py:143` | **Fixed** |
 | BUG20260419-023 | P1 | Correctness | OpenAI adapter returns success=True on empty choices array | `models/main/adapter.py:157` | **Fixed** |
 | BUG20260419-024 | P1 | Correctness | Morale state raw strings — typo silently prevents combat from ending | `server/combat/conditions.py:74` | **Fixed** |
-| BUG20260419-025 | P2 | Correctness | Side channel audit fact_id collision — same player, same channel, multiple messages | `server/scope/side_channel_audit.py:56` | Open |
-| BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels within campaign | `server/scope/side_channel_engine.py:89` | Open |
+| BUG20260419-025 | P2 | Correctness | Side channel audit fact_id collision — same player, same channel, multiple messages | `server/scope/side_channel_audit.py:56` | Fixed |
+| BUG20260419-026 | P2 | Correctness | Side channel_id collision on duplicate labels within campaign | `server/scope/side_channel_engine.py:89` | Fixed |
 | BUG20260419-027 | P2 | Correctness | Naive datetime stripping (replace(tzinfo=None)) used in 10+ files — fragile | Multiple files | Open |
 | BUG20260419-028 | P2 | Correctness | replay_turn() silently drops missing action IDs | `server/engine/turn_engine.py:486` | Open |
 | BUG20260419-029 | P2 | Correctness | search() does not flip item.is_hidden=False — items rediscovered every search | `server/exploration/actions.py:301` | Fixed |
@@ -49,10 +49,10 @@
 | BUG20260419-033 | P2 | Correctness | Monster damage: damage=3+ kills exactly 1 unit regardless of magnitude | `server/combat/resolution.py:51` | Fixed |
 | BUG20260419-034 | P2 | Correctness | Combat move validates destination but not direction | `server/combat/actions.py:239` | Fixed |
 | BUG20260419-035 | P2 | Correctness | resolve_use_item heal amount from dict could be string — TypeError | `server/combat/actions.py:192` | Fixed |
-| BUG20260419-036 | P2 | Correctness | SocialOutcome is plain class, not Enum — typos pass silently | `server/npc/social.py:60` | Open |
-| BUG20260419-037 | P2 | Correctness | apply_action_delta returns 0 for unknown action_key — typos silently ignored | `server/npc/trust.py:160` | Open |
-| BUG20260419-038 | P2 | Correctness | Trust _derive_stance has no "suspicious" zone despite docstring claiming it | `server/npc/trust.py:189` | Open |
-| BUG20260419-039 | P2 | Correctness | remove_character unconditionally removes player_id even if other chars remain | `server/scene/membership.py:65` | Open |
+| BUG20260419-036 | P2 | Correctness | SocialOutcome is plain class, not Enum — typos pass silently | `server/npc/social.py:60` | Fixed |
+| BUG20260419-037 | P2 | Correctness | apply_action_delta returns 0 for unknown action_key — typos silently ignored | `server/npc/trust.py:160` | Fixed |
+| BUG20260419-038 | P2 | Correctness | Trust _derive_stance has no "suspicious" zone despite docstring claiming it | `server/npc/trust.py:189` | Fixed |
+| BUG20260419-039 | P2 | Correctness | remove_character unconditionally removes player_id even if other chars remain | `server/scene/membership.py:65` | Fixed |
 | BUG20260419-040 | P2 | Correctness | Timer pause truncation drift — int() instead of round() loses up to 1s per cycle | `server/timer/controller.py:256` | **Fixed** |
 | BUG20260419-041 | P2 | Correctness | Timer resume with 0 remaining gets free extra second — can never truly expire | `server/timer/controller.py:275` | **Fixed** |
 | BUG20260419-042 | P2 | Correctness | timer integration uses raw strings for ActionState comparison | `server/timer/integration.py:77` | **Fixed** |

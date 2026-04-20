@@ -8,10 +8,9 @@ the LLM.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from server.domain.entities import KnowledgeFact, SideChannel
 from server.domain.enums import KnowledgeFactType
+from server.domain.helpers import new_id, utc_now
 
 
 class SideChannelAuditor:
@@ -29,7 +28,7 @@ class SideChannelAuditor:
         """Record that a side-channel was created."""
         members = ", ".join(channel.member_player_ids)
         return KnowledgeFact(
-            fact_id=fact_id or f"fact-sc-create-{channel.side_channel_id}",
+            fact_id=fact_id or new_id(),
             campaign_id=campaign_id,
             scene_id=scene_id,
             owner_scope_id=referee_scope_id or f"scope-referee-{campaign_id}",
@@ -38,7 +37,7 @@ class SideChannelAuditor:
                 f"[side_channel_audit] Created channel '{channel.label}' "
                 f"with members: {members}"
             ),
-            revealed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            revealed_at=utc_now(),
         )
 
     def record_message(
@@ -53,8 +52,7 @@ class SideChannelAuditor:
     ) -> KnowledgeFact:
         """Record that a message was sent in a side-channel."""
         return KnowledgeFact(
-            fact_id=fact_id
-            or f"fact-sc-msg-{channel.side_channel_id}-{sender_player_id}",
+            fact_id=fact_id or new_id(),
             campaign_id=campaign_id,
             scene_id=scene_id,
             owner_scope_id=referee_scope_id or f"scope-referee-{campaign_id}",
@@ -63,7 +61,7 @@ class SideChannelAuditor:
                 f"[side_channel_audit] Message sent in '{channel.label}' "
                 f"by {sender_player_id}"
             ),
-            revealed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            revealed_at=utc_now(),
         )
 
     def record_closure(
@@ -78,7 +76,7 @@ class SideChannelAuditor:
     ) -> KnowledgeFact:
         """Record that a side-channel was closed."""
         return KnowledgeFact(
-            fact_id=fact_id or f"fact-sc-close-{channel.side_channel_id}",
+            fact_id=fact_id or new_id(),
             campaign_id=campaign_id,
             scene_id=scene_id,
             owner_scope_id=referee_scope_id or f"scope-referee-{campaign_id}",
@@ -87,5 +85,5 @@ class SideChannelAuditor:
                 f"[side_channel_audit] Channel '{channel.label}' closed "
                 f"by {closer_player_id}"
             ),
-            revealed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            revealed_at=utc_now(),
         )

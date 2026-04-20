@@ -51,12 +51,19 @@ class SceneMembershipEngine:
         return MembershipChangeResult(success=True, scene=scene, character=character)
 
     def remove_character(
-        self, scene: Scene, character: Character
+        self,
+        scene: Scene,
+        character: Character,
+        all_scene_characters: list[Character] | None = None,
     ) -> MembershipChangeResult:
         """Remove a character from a scene.
 
         Updates scene.character_ids, scene.player_ids, and character.scene_id.
         Rejects if the character is not in this scene.
+
+        If ``all_scene_characters`` is provided, player_id is only removed
+        from scene.player_ids when no other character of the same player
+        remains in the scene.
         """
         if character.character_id not in scene.character_ids:
             return MembershipChangeResult(
@@ -67,9 +74,16 @@ class SceneMembershipEngine:
                 f"scene {scene.scene_id!r}.",
             )
         scene.character_ids.remove(character.character_id)
-        # Remove player_id — re-added by add_character if another character
-        # of the same player remains (simple single-character-per-player model).
-        if character.player_id in scene.player_ids:
+        # Only remove player_id if no other character of the same player remains
+        player_has_other = False
+        if all_scene_characters is not None:
+            player_has_other = any(
+                c.player_id == character.player_id
+                and c.character_id != character.character_id
+                and c.character_id in scene.character_ids
+                for c in all_scene_characters
+            )
+        if not player_has_other and character.player_id in scene.player_ids:
             scene.player_ids.remove(character.player_id)
         character.scene_id = None
         return MembershipChangeResult(success=True, scene=scene, character=character)

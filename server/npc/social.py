@@ -29,6 +29,7 @@ No imports from server.storage.  No I/O.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 
 from server.domain.entities import KnowledgeFact, NPC
 from server.domain.enums import KnowledgeFactType
@@ -43,8 +44,11 @@ from server.npc.trust import TrustDeltaResult, TrustEngine
 # ---------------------------------------------------------------------------
 
 
-class SocialOutcome:
-    """Possible outcomes of a social action."""
+class SocialOutcome(str, Enum):
+    """Possible outcomes of a social action.
+
+    Inherits from ``str`` so existing ``== "success"`` comparisons still work.
+    """
 
     SUCCESS = "success"  # NPC cooperates / accepts / reveals info
     PARTIAL = "partial"  # NPC partially complies

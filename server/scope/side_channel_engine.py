@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from server.domain.entities import ConversationScope, KnowledgeFact, SideChannel
 from server.domain.enums import KnowledgeFactType, ScopeType
+from server.domain.helpers import new_id
 from server.scope.side_channel import SideChannelError, SideChannelPolicy
 
 
@@ -86,7 +87,7 @@ class SideChannelEngine:
         ts = created_at or datetime.now(timezone.utc).replace(tzinfo=None)
 
         channel = SideChannel(
-            side_channel_id=channel_id or f"sc-{campaign_id}-{label}",
+            side_channel_id=channel_id or f"sc-{campaign_id}-{label}-{new_id()[:8]}",
             campaign_id=campaign_id,
             created_at=ts,
             created_by_player_id=creator_player_id,
