@@ -25,17 +25,33 @@ _SCENARIOS_ROOT = Path(__file__).resolve().parent.parent / "scenarios"
 logger = logging.getLogger(__name__)
 
 _HELP_TEXT = (
-    "Available commands:\n"
-    "  /start       — Start a conversation with the bot\n"
-    "  /join        — Register as a player (send this in the group)\n"
-    "  /help        — Show this message\n"
-    "  /status      — Show your current game status\n"
-    "  /newgame     — Load a scenario (admin)\n"
-    "  /nextturn    — Open next turn (admin/debug)\n"
-    "  /forceresolve — Force-resolve current turn (admin/debug)\n"
-    "  /diagnostics — Show diagnostics report (admin)\n"
-    "  /scene       — Show current scene\n"
-    "  /who         — Show who is in which scene\n"
+    "--- Getting Started ---\n"
+    "  /start  — Say hello to the bot (required before playing)\n"
+    "  /join   — Join the current game and enter the starting scene\n"
+    "            (send this in the group, not in a DM)\n"
+    "  /help   — Show this message\n"
+    "\n"
+    "--- Playing ---\n"
+    "  /status — Show your character, scene, and game state\n"
+    "  /scene  — Describe your current scene and its exits\n"
+    "  /who    — Show which players are in which scenes\n"
+    "\n"
+    "During a turn, type your action as a regular message in the\n"
+    "group chat. The bot will interpret it and submit it for you.\n"
+    "Use /ready or /pass via inline buttons when they appear.\n"
+    "\n"
+    "--- Game Master / Admin ---\n"
+    "  /newgame <path>  — Load a scenario and start a campaign\n"
+    "                     e.g. /newgame scenarios/starters/goblin_caves.yaml\n"
+    "  /nextturn        — Open the next turn in your scene\n"
+    "  /forceresolve    — Force-resolve the current turn\n"
+    "  /diagnostics     — Show a diagnostics report\n"
+    "\n"
+    "--- Tips ---\n"
+    "  - DM the bot for private actions and secret communication\n"
+    "  - The bot will DM you hidden clues and private referee info\n"
+    "  - Available scenarios: goblin_caves, haunted_manor,\n"
+    "    forest_ambush, merchant_quarter\n"
 )
 
 
@@ -98,17 +114,44 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
 
-    # Stub: in Phase 3 we create a minimal player record and register it.
-    # Full character creation happens in later phases.
+    orchestrator = _orchestrator(context)
+    if orchestrator is None or orchestrator.campaign_id is None:
+        await update.message.reply_text(ONBOARDING_MESSAGES["no_active_game"])
+        return
+
     import uuid
 
     player_id = str(uuid.uuid4())
+    display_name = user.full_name or user.first_name
+
+    try:
+        player, character = orchestrator.add_player(
+            player_id=player_id,
+            display_name=display_name,
+            telegram_user_id=user.id,
+        )
+    except Exception:
+        logger.exception("Failed to add player telegram_user_id=%s", user.id)
+        await update.message.reply_text(
+            "Something went wrong joining the game. Please try again."
+        )
+        return
+
     registry.register_player(user.id, player_id)
 
-    logger.info("Player joined: telegram_user_id=%s player_id=%s", user.id, player_id)
+    scene = orchestrator.get_player_scene(player_id)
+    scene_info = f" You're in: {scene.name}." if scene else ""
+
+    logger.info(
+        "Player joined: telegram_user_id=%s player_id=%s char=%s",
+        user.id,
+        player_id,
+        character.name,
+    )
     await update.message.reply_text(
-        f"Welcome, {user.first_name}! You've been registered as a player.\n"
-        "You can now DM me directly for private game actions."
+        f"Welcome, {display_name}! Your character has been created.{scene_info}\n"
+        "Use /scene to look around, or /help for all commands.\n"
+        "DM me directly for private actions."
     )
 
 

@@ -302,6 +302,16 @@ class GameOrchestrator:
         )
 
         with self._session_scope() as session:
+            # Deactivate any existing campaign for this group
+            if telegram_group_id:
+                existing = CampaignRepo(session).get_by_telegram_group(
+                    telegram_group_id
+                )
+                if existing is not None:
+                    existing.is_active = False
+                    existing.telegram_group_id = 0
+                    CampaignRepo(session).save(existing)
+
             CampaignRepo(session).save(campaign)
             for scene in result.scenes:
                 SceneRepo(session).save(scene)

@@ -20,6 +20,7 @@ def make_user(
     user = MagicMock()
     user.id = user_id
     user.first_name = first_name
+    user.full_name = first_name
     user.username = username
     return user
 
@@ -87,15 +88,19 @@ def make_update(
 def make_context(
     registry=None,
     config=None,
+    orchestrator=None,
 ) -> MagicMock:
     """Build a fake PTB ContextTypes.DEFAULT_TYPE."""
     from bot.mapping import BotRegistry
 
     ctx = MagicMock()
     ctx.application = MagicMock()
-    ctx.application.bot_data = {
+    bot_data = {
         "registry": registry or BotRegistry(),
         "config": config,
     }
+    if orchestrator is not None:
+        bot_data["orchestrator"] = orchestrator
+    ctx.application.bot_data = bot_data
     ctx.application.bot = AsyncMock()
     return ctx

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
 
 from bot.commands import cmd_help, cmd_join, cmd_start, cmd_status
 from bot.mapping import BotRegistry
@@ -11,6 +12,23 @@ from tests.fixtures.telegram_builders import (
     make_private_message,
     make_update,
 )
+
+
+def _make_mock_orchestrator():
+    """Build a mock orchestrator that supports add_player and get_player_scene."""
+    orch = MagicMock()
+    orch.campaign_id = "test-campaign"
+
+    scene = MagicMock()
+    scene.name = "Entrance Hall"
+
+    player = MagicMock()
+    char = MagicMock()
+    char.name = "Alice"
+
+    orch.add_player = MagicMock(return_value=(player, char))
+    orch.get_player_scene = MagicMock(return_value=scene)
+    return orch
 
 
 class TestCmdStart:
@@ -49,11 +67,13 @@ class TestCmdJoin:
 
     async def test_join_from_group_registers_player(self):
         registry = BotRegistry()
+        orch = _make_mock_orchestrator()
         msg = make_group_message(user_id=20)
         update = make_update(msg)
-        ctx = make_context(registry=registry)
+        ctx = make_context(registry=registry, orchestrator=orch)
         await cmd_join(update, ctx)
         assert registry.is_known_player(20)
+        orch.add_player.assert_called_once()
         msg.reply_text.assert_called_once()
         assert "Welcome" in msg.reply_text.call_args[0][0]
 
