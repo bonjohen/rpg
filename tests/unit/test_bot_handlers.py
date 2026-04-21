@@ -63,7 +63,9 @@ class TestGroupMessageDispatch:
         )
 
         config = _make_config()
-        msg = make_group_message(text="I search the fire pit", user_id=100, thread_id=42)
+        msg = make_group_message(
+            text="I search the fire pit", user_id=100, thread_id=42
+        )
         update = make_update(msg)
         ctx = make_context(registry=registry, orchestrator=orch, config=config)
 
@@ -243,6 +245,8 @@ class TestPrivateMessageDispatch:
         update = make_update(msg)
         ctx = make_context(registry=registry)
 
-        with patch("bot.handlers.send_onboarding_prompt", new_callable=AsyncMock) as mock_onb:
+        with patch(
+            "bot.handlers.send_onboarding_prompt", new_callable=AsyncMock
+        ) as mock_onb:
             await _handle_private_message(update, ctx)
             mock_onb.assert_called_once()

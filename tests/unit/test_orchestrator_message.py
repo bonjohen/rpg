@@ -39,7 +39,9 @@ def _make_orchestrator(fast_adapter=None) -> GameOrchestrator:
         title="Test Scenario",
         starting_scene_id="scene1",
         scenes=[
-            SceneDefinition(scene_id="scene1", name="Test Scene", description="A test."),
+            SceneDefinition(
+                scene_id="scene1", name="Test Scene", description="A test."
+            ),
         ],
     )
     loader = ScenarioLoader()
@@ -65,10 +67,16 @@ def _mock_classify(intent: str = "action", confidence: str = "high"):
     return AsyncMock(return_value=(result, log))
 
 
-def _mock_extract(action_type: str = "search", target: str = "", item_ids: list | None = None):
+def _mock_extract(
+    action_type: str = "search", target: str = "", item_ids: list | None = None
+):
     """Return a mock extract_action_packet coroutine result."""
     result = ActionPacketResult(
-        action_type=action_type, target=target, item_ids=item_ids or [], notes="", raw="{}"
+        action_type=action_type,
+        target=target,
+        item_ids=item_ids or [],
+        notes="",
+        raw="{}",
     )
     log = MagicMock()
     return AsyncMock(return_value=(result, log))
@@ -169,6 +177,8 @@ class TestHandlePlayerMessage:
         fast = MagicMock()
         orch = _make_orchestrator(fast_adapter=fast)
         pid = _add_player(orch)
+        # Add a second player so the first submission doesn't auto-resolve
+        _add_player(orch, "player-2")
         orch.open_turn("scene1")
 
         with (

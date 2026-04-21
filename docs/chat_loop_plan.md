@@ -68,12 +68,12 @@ Open  ──>  Started  ──>  Completed
 | 2.4 | Completed | 2026-04-20 05:03 PM | 2026-04-20 05:12 PM | Write tests in `tests/unit/test_bot_handlers.py`: 9 tests per test plan §3.1 (dispatch to orchestrator, response routing, error handling, unknown user). |
 | 2.5 | Completed | 2026-04-20 05:03 PM | 2026-04-20 05:15 PM | Write tests in `tests/unit/test_orchestrator_message.py`: 9 tests per test plan §3.2 (action/question/chat intent, dedup, cross-turn dedup, fallback). |
 | 2.6 | Completed | 2026-04-20 05:15 PM | 2026-04-20 05:18 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 2.7 | Started | 2026-04-20 05:18 PM | | Stage and commit: "Phase 2: Bot handler dispatch and orchestrator wiring" |
+| 2.7 | Completed | 2026-04-20 05:18 PM | 2026-04-20 05:20 PM | Stage and commit: "Phase 2: Bot handler dispatch and orchestrator wiring" |
 
 ### Phase 2 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Wired `_handle_group_message` and `_handle_private_message` in `bot/handlers.py` to dispatch to `orchestrator.handle_player_message()`. Fixed idempotency key in `game_loop.py` to include `turn_window_id` (PDR §5). Added graceful error handling for `UnknownUserError` and orchestrator exceptions. 18 new tests across `test_bot_handlers.py` and `test_orchestrator_message.py`. 1503 tests pass.
+- **Changes hosted at:** local commit `f5e010a`
 - **Commit:** `Phase 2: Bot handler dispatch and orchestrator wiring`
 
 ---
@@ -85,14 +85,14 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 3.1 | Open | | | Add `ensure_turn_open(scene_id) -> TurnWindow` to orchestrator. Check for existing active turn inside DB session (race condition guard). If none, call `open_turn()`. Return the turn window. |
-| 3.2 | Open | | | Add race condition guard inside `open_turn()`: within the session, check if `scene.active_turn_window_id` already set → return existing TurnWindow if found. |
-| 3.3 | Open | | | Wire `ensure_turn_open` into `_handle_as_action()`: call before `submit_action()`. |
-| 3.4 | Open | | | Enforce ordering invariant: when auto-opening, the handler must post scene description + turn-control message BEFORE acknowledging the action. Update handler in `bot/handlers.py` to post scene context when `ensure_turn_open` creates a new turn. |
-| 3.5 | Open | | | Add auto-resolve on all-ready: after `submit_action()` returns, check turn window state. If `all_ready`, trigger resolution pipeline (resolve → narrate → deliver). Wire in handler. |
-| 3.6 | Open | | | Write tests in `tests/unit/test_auto_turn.py`: 7 tests per test plan §3.3 (create when none, return existing, race guard, auto-resolve, scene posted first, nextturn still works). |
-| 3.7 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 3.8 | Open | | | Stage and commit: "Phase 3: Auto-turn management with ordering invariant" |
+| 3.1 | Completed | 2026-04-20 05:22 PM | 2026-04-20 05:28 PM | Add `ensure_turn_open(scene_id) -> TurnWindow` to orchestrator. Check for existing active turn inside DB session (race condition guard). If none, call `open_turn()`. Return the turn window. |
+| 3.2 | Completed | 2026-04-20 05:22 PM | 2026-04-20 05:28 PM | Add race condition guard inside `open_turn()`: within the session, check if `scene.active_turn_window_id` already set → return existing TurnWindow if found. |
+| 3.3 | Completed | 2026-04-20 05:28 PM | 2026-04-20 05:34 PM | Wire `ensure_turn_open` into `_handle_as_action()`: call before `submit_action()`. |
+| 3.4 | Completed | 2026-04-20 05:28 PM | 2026-04-20 05:34 PM | Enforce ordering invariant: when auto-opening, the handler must post scene description + turn-control message BEFORE acknowledging the action. Update handler in `bot/handlers.py` to post scene context when `ensure_turn_open` creates a new turn. |
+| 3.5 | Completed | 2026-04-20 05:28 PM | 2026-04-20 05:36 PM | Add auto-resolve on all-ready: after `submit_action()` returns, check turn window state. If `all_ready`, trigger resolution pipeline (resolve → narrate → deliver). Wire in handler. |
+| 3.6 | Completed | 2026-04-20 05:36 PM | 2026-04-20 05:42 PM | Write tests in `tests/unit/test_auto_turn.py`: 7 tests per test plan §3.3 (create when none, return existing, race guard, auto-resolve, scene posted first, nextturn still works). |
+| 3.7 | Completed | 2026-04-20 05:42 PM | 2026-04-20 05:48 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 3.8 | Started | 2026-04-20 05:48 PM | | Stage and commit: "Phase 3: Auto-turn management with ordering invariant" |
 
 ### Phase 3 Summary
 

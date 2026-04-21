@@ -93,6 +93,8 @@ class DispatchResult:
     response_text: str = ""
     scope: str = "public"
     action_submitted: bool = False
+    turn_resolved: bool = False
+    turn_log_entry: object | None = None  # TurnLogEntry when turn_resolved
     error: str = ""
 
 
@@ -418,6 +420,23 @@ class GameOrchestrator:
     # Turn management
     # ------------------------------------------------------------------
 
+    def ensure_turn_open(self, scene_id: str) -> TurnWindow | None:
+        """Return the active turn for a scene, opening one if needed.
+
+        Race-safe: checks for an existing turn inside the DB session before
+        creating a new one.  Returns the TurnWindow (existing or new).
+        """
+        with self._session_scope() as session:
+            scene = SceneRepo(session).get(scene_id)
+            if scene is None:
+                return None
+            if scene.active_turn_window_id:
+                tw = TurnWindowRepo(session).get(scene.active_turn_window_id)
+                if tw and tw.state == TurnWindowState.open:
+                    return tw
+        # No active turn — open one
+        return self.open_turn(scene_id)
+
     def open_turn(self, scene_id: str, duration_seconds: int = 90) -> TurnWindow | None:
         """Create a new TurnWindow for a scene and persist it."""
         if self.campaign_id is None:
@@ -427,6 +446,12 @@ class GameOrchestrator:
             scene = SceneRepo(session).get(scene_id)
             if scene is None:
                 return None
+
+            # Race condition guard: re-check inside session
+            if scene.active_turn_window_id:
+                existing = TurnWindowRepo(session).get(scene.active_turn_window_id)
+                if existing and existing.state == TurnWindowState.open:
+                    return existing
 
             # Find or create public scope for this scene
             public_scope_id = self._get_or_create_public_scope_in_session(
@@ -741,13 +766,20 @@ class GameOrchestrator:
     async def _handle_as_action(
         self, player_id: str, text: str, is_private: bool
     ) -> DispatchResult:
-        """Extract action packet and submit."""
+        """Extract action packet and submit.
+
+        Auto-opens a turn if none is active (Phase 3 auto-turn management).
+        """
         result = DispatchResult()
 
         character = self.get_player_character(player_id)
         if character is None:
             result.error = "No character found."
             return result
+
+        # Auto-open turn if needed
+        if character.scene_id:
+            self.ensure_turn_open(character.scene_id)
 
         # Try to extract action packet via fast model
         available_types = [at.value for at in ActionType]
@@ -780,6 +812,17 @@ class GameOrchestrator:
             result.response_text = (
                 f"Action submitted: {action.declared_action_type.value}"
             )
+
+            # Auto-resolve if all players are ready
+            scene = self.get_player_scene(player_id)
+            if scene and scene.active_turn_window_id:
+                with self._session_scope() as session:
+                    tw = TurnWindowRepo(session).get(scene.active_turn_window_id)
+                    if tw and tw.state == TurnWindowState.all_ready:
+                        log_entry = self.resolve_turn(scene.active_turn_window_id)
+                        if log_entry:
+                            result.turn_resolved = True
+                            result.turn_log_entry = log_entry
         else:
             result.error = (
                 "Could not submit action. No active turn or already submitted."

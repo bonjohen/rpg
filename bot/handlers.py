@@ -149,7 +149,9 @@ async def _handle_private_message(
 
     orchestrator = context.application.bot_data.get("orchestrator")
     if orchestrator is None:
-        await message.reply_text("No active game. Ask the GM to start one with /newgame.")
+        await message.reply_text(
+            "No active game. Ask the GM to start one with /newgame."
+        )
         return
 
     try:
@@ -173,5 +175,8 @@ async def _handle_private_message(
 
     if result.response_text:
         await send_private(
-            context.application.bot, registry, parsed.telegram_user_id, result.response_text
+            context.application.bot,
+            registry,
+            parsed.telegram_user_id,
+            result.response_text,
         )
