@@ -85,6 +85,40 @@ def make_update(
     return update
 
 
+def make_callback_query(
+    data: str = "turn:ready",
+    user_id: int = 100,
+    message_id: int = 42,
+    chat_id: int = -1001234567890,
+) -> MagicMock:
+    """Build a fake CallbackQuery for inline keyboard button tests."""
+    query = MagicMock()
+    query.data = data
+    query.from_user = make_user(user_id=user_id)
+    query.answer = AsyncMock()
+
+    # The message the button was on
+    query.message = MagicMock()
+    query.message.message_id = message_id
+    query.message.chat_id = chat_id
+
+    return query
+
+
+def make_callback_update(
+    query: MagicMock,
+    update_id: int = 1,
+) -> MagicMock:
+    """Wrap a fake callback query in a fake Update."""
+    update = MagicMock()
+    update.update_id = update_id
+    update.callback_query = query
+    update.effective_user = query.from_user
+    update.effective_message = query.message
+    update.message = None
+    return update
+
+
 def make_context(
     registry=None,
     config=None,

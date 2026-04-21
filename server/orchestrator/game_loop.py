@@ -151,6 +151,10 @@ class GameOrchestrator:
         # Timer state (timer_id -> TimerRecord)
         self.timers: dict[str, object] = {}
 
+        # Turn-control message IDs (turn_window_id -> Telegram message_id)
+        # Telegram-specific, not persisted — used to edit inline keyboard messages
+        self.turn_control_message_ids: dict[str, int] = {}
+
     # ------------------------------------------------------------------
     # Database session helpers
     # ------------------------------------------------------------------

@@ -64,6 +64,7 @@ async def deliver_turn_results(
     config: BotConfig,
     registry: BotRegistry,
     private_facts: list[tuple[str, str]] | None = None,
+    control_message_id: int | None = None,
 ) -> None:
     """Post turn results to Telegram.
 
@@ -76,6 +77,17 @@ async def deliver_turn_results(
         registry: Player-Telegram ID mapping.
         private_facts: List of (player_id, fact_text) tuples for private delivery.
     """
+    # Finalize turn-control message (remove keyboard, show resolved)
+    if control_message_id is not None:
+        try:
+            from bot.turn_controls import finalize_turn_control
+
+            await finalize_turn_control(
+                bot, config, control_message_id, turn_log_entry.turn_number
+            )
+        except Exception:
+            logger.exception("Failed to finalize turn-control message")
+
     # Post public narration
     try:
         header = f"Turn {turn_log_entry.turn_number} resolved.\n\n"

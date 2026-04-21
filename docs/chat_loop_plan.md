@@ -115,12 +115,12 @@ Open  ──>  Started  ──>  Completed
 | 4.4 | Completed | 2026-04-20 05:58 PM | 2026-04-20 06:10 PM | Write tests in `tests/unit/test_narration_pipeline.py`: 7 tests per test plan §3.4 (main model called, context assembler used, no referee facts, fallback on failure/timeout, combat uses summarize_combat, NPC dialogue). |
 | 4.5 | Completed | 2026-04-20 05:58 PM | 2026-04-20 06:10 PM | Write tests in `tests/unit/test_delivery.py`: 7 tests per test plan §3.5 (public sent, private facts to owner only, partial failure continues, control message edited, empty turn no DMs). |
 | 4.6 | Completed | 2026-04-20 06:10 PM | 2026-04-20 06:14 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 4.7 | Started | 2026-04-20 06:14 PM | | Stage and commit: "Phase 4: Rich narration via main model and result delivery" |
+| 4.7 | Completed | 2026-04-20 06:14 PM | 2026-04-20 06:16 PM | Stage and commit: "Phase 4: Rich narration via main model and result delivery" |
 
 ### Phase 4 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Created `bot/delivery.py` with `generate_narration()` (calls `narrate_scene()` via main model, falls back to basic narration on failure) and `deliver_turn_results()` (posts public narration, sends private facts to DMs with partial failure resilience). 13 new tests. 1523 total passing.
+- **Changes hosted at:** local commit `9362ed6`
 - **Commit:** `Phase 4: Rich narration via main model and result delivery`
 
 ---
@@ -132,19 +132,19 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 5.1 | Open | | | Add turn-control message posting when a turn opens: scene description + "What do you do?" + InlineKeyboard [[Ready][Pass]]. Store `message_id` in orchestrator's in-memory state (not on TurnWindow entity — it's Telegram-specific). Post via `send_public()` or `bot.send_message()` with `reply_markup`. |
-| 5.2 | Open | | | Add `CallbackQueryHandler` in `bot/handlers.py` for Ready/Pass button presses. Look up player, submit hold action with appropriate state, answer callback query. Reject presses from non-players or after turn resolved. |
-| 5.3 | Open | | | Update control message on each action submission: edit text to show "Waiting for: {remaining players}". |
-| 5.4 | Open | | | On turn resolution, edit control message to show "Turn N resolved." and remove keyboard. Wire into `deliver_turn_results`. |
-| 5.5 | Open | | | Add `make_callback_query()` to `tests/fixtures/telegram_builders.py`. |
-| 5.6 | Open | | | Write tests in `tests/unit/test_callback_queries.py`: 7 tests per test plan §3.7 (control message posted, ready/pass submit actions, non-player rejected, post-resolve rejected, message updates, callback answered). |
-| 5.7 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 5.8 | Open | | | Stage and commit: "Phase 5: Inline keyboard turn controls" |
+| 5.1 | Completed | 2026-04-20 07:30 PM | 2026-04-20 07:38 PM | Add turn-control message posting when a turn opens: scene description + "What do you do?" + InlineKeyboard [[Ready][Pass]]. Store `message_id` in orchestrator's in-memory state (not on TurnWindow entity — it's Telegram-specific). Post via `send_public()` or `bot.send_message()` with `reply_markup`. |
+| 5.2 | Completed | 2026-04-20 07:38 PM | 2026-04-20 07:48 PM | Add `CallbackQueryHandler` in `bot/handlers.py` for Ready/Pass button presses. Look up player, submit hold action with appropriate state, answer callback query. Reject presses from non-players or after turn resolved. |
+| 5.3 | Completed | 2026-04-20 07:48 PM | 2026-04-20 07:55 PM | Update control message on each action submission: edit text to show "Waiting for: {remaining players}". |
+| 5.4 | Completed | 2026-04-20 07:55 PM | 2026-04-20 08:00 PM | On turn resolution, edit control message to show "Turn N resolved." and remove keyboard. Wire into `deliver_turn_results`. |
+| 5.5 | Completed | 2026-04-20 08:00 PM | 2026-04-20 08:05 PM | Add `make_callback_query()` to `tests/fixtures/telegram_builders.py`. |
+| 5.6 | Completed | 2026-04-20 08:05 PM | 2026-04-20 08:15 PM | Write tests in `tests/unit/test_callback_queries.py`: 7 tests per test plan §3.7 (control message posted, ready/pass submit actions, non-player rejected, post-resolve rejected, message updates, callback answered). |
+| 5.7 | Completed | 2026-04-20 08:15 PM | 2026-04-20 08:20 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 5.8 | Started | 2026-04-20 08:20 PM | | Stage and commit: "Phase 5: Inline keyboard turn controls" |
 
 ### Phase 5 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** New `bot/turn_controls.py` with `post_turn_control()`, `update_turn_control()`, `finalize_turn_control()`, and `build_turn_keyboard()`. Added `CallbackQueryHandler` in `bot/handlers.py` for Ready/Pass button presses with non-player rejection, post-resolve rejection, control message updates, and auto-resolve wiring. Added `turn_control_message_ids` dict to `GameOrchestrator`. Extended `deliver_turn_results()` with `control_message_id` parameter. New test fixtures `make_callback_query()` and `make_callback_update()` in `tests/fixtures/telegram_builders.py`. 7 new tests in `tests/unit/test_callback_queries.py`. 1530 tests pass, lint clean.
+- **Changes hosted at:** Local only
 - **Commit:** `Phase 5: Inline keyboard turn controls`
 
 ---
