@@ -125,14 +125,19 @@ async def _handle_group_message(
         if result.response_text:
             await send_public(context.application.bot, config, result.response_text)
 
+        # Schedule timer and post control message for newly opened turns
+        if result.turn_opened and config and result.turn_window_id:
+            await _on_turn_opened(context, config, orchestrator, result)
+
         # Update turn-control message if an action was submitted
         if result.action_submitted and config:
             await _update_control_after_action(
                 context.application.bot, config, orchestrator, player_id
             )
 
-        # Finalize control message if turn resolved
+        # Finalize control message and cancel timer if turn resolved
         if result.turn_resolved and config:
+            _cancel_timer_if_needed(orchestrator, result)
             await _finalize_control_after_resolve(
                 context.application.bot, config, orchestrator, player_id, result
             )
@@ -276,6 +281,9 @@ async def _handle_callback_query(
     if scene and scene.active_turn_window_id:
         tw = orchestrator.get_turn_window(scene.active_turn_window_id)
         if tw and tw.state == TurnWindowState.all_ready:
+            from bot.timer_jobs import cancel_turn_timer
+
+            cancel_turn_timer(orchestrator, scene.active_turn_window_id)
             log_entry = orchestrator.resolve_turn(scene.active_turn_window_id)
             if log_entry:
                 if config:
@@ -346,3 +354,52 @@ async def _finalize_control_after_resolve(
 
     turn_number = getattr(log_entry, "turn_number", 0)
     await finalize_turn_control(bot, config, msg_id, turn_number)
+
+
+async def _on_turn_opened(
+    context: ContextTypes.DEFAULT_TYPE,
+    config: BotConfig,
+    orchestrator,
+    result,
+) -> None:
+    """Post turn-control message and schedule timer for a newly opened turn."""
+    from bot.timer_jobs import schedule_turn_timer
+    from bot.turn_controls import post_turn_control
+
+    tw = orchestrator.get_turn_window(result.turn_window_id)
+    if tw is None:
+        return
+
+    scene = orchestrator.get_scene(result.scene_id)
+    if scene is None:
+        return
+
+    # Post turn-control message
+    players = orchestrator.get_scene_players(scene.scene_id)
+    player_names = [p.display_name for p in players]
+    msg_id = await post_turn_control(
+        context.bot, config, scene.name, tw.turn_number, player_names
+    )
+    if msg_id is not None:
+        orchestrator.turn_control_message_ids[tw.turn_window_id] = msg_id
+
+    # Schedule timer
+    if context.job_queue is not None and tw.expires_at is not None:
+        from server.domain.helpers import utc_now
+
+        remaining = int((tw.expires_at - utc_now()).total_seconds())
+        if remaining > 0:
+            job = schedule_turn_timer(context, tw.turn_window_id, remaining)
+            orchestrator.turn_timer_jobs[tw.turn_window_id] = job
+
+
+def _cancel_timer_if_needed(orchestrator, result) -> None:
+    """Cancel the timer job if the turn resolved early."""
+    from bot.timer_jobs import cancel_turn_timer
+
+    log_entry = result.turn_log_entry
+    if log_entry is None:
+        return
+    turn_window_id = getattr(log_entry, "turn_window_id", None)
+    if turn_window_id:
+        cancel_turn_timer(orchestrator, turn_window_id)

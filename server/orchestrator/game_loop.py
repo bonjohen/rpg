@@ -95,6 +95,9 @@ class DispatchResult:
     action_submitted: bool = False
     turn_resolved: bool = False
     turn_log_entry: object | None = None  # TurnLogEntry when turn_resolved
+    turn_opened: bool = False  # True when a new turn was opened this dispatch
+    turn_window_id: str = ""  # Active turn window ID (for timer scheduling)
+    scene_id: str = ""  # Scene where the action happened
     error: str = ""
 
 
@@ -154,6 +157,10 @@ class GameOrchestrator:
         # Turn-control message IDs (turn_window_id -> Telegram message_id)
         # Telegram-specific, not persisted — used to edit inline keyboard messages
         self.turn_control_message_ids: dict[str, int] = {}
+
+        # Scheduled timer jobs (turn_window_id -> PTB Job reference)
+        # Used to cancel timer when turn resolves early via all-ready
+        self.turn_timer_jobs: dict[str, object] = {}
 
     # ------------------------------------------------------------------
     # Database session helpers
@@ -783,7 +790,19 @@ class GameOrchestrator:
 
         # Auto-open turn if needed
         if character.scene_id:
-            self.ensure_turn_open(character.scene_id)
+            scene_before = self.get_scene(character.scene_id)
+            had_turn = (
+                scene_before is not None
+                and scene_before.active_turn_window_id is not None
+            )
+            tw = self.ensure_turn_open(character.scene_id)
+            if tw and not had_turn:
+                result.turn_opened = True
+                result.turn_window_id = tw.turn_window_id
+                result.scene_id = character.scene_id
+            elif tw:
+                result.turn_window_id = tw.turn_window_id
+                result.scene_id = character.scene_id
 
         # Try to extract action packet via fast model
         available_types = [at.value for at in ActionType]

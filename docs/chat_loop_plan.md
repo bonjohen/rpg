@@ -139,7 +139,7 @@ Open  ──>  Started  ──>  Completed
 | 5.5 | Completed | 2026-04-20 08:00 PM | 2026-04-20 08:05 PM | Add `make_callback_query()` to `tests/fixtures/telegram_builders.py`. |
 | 5.6 | Completed | 2026-04-20 08:05 PM | 2026-04-20 08:15 PM | Write tests in `tests/unit/test_callback_queries.py`: 7 tests per test plan §3.7 (control message posted, ready/pass submit actions, non-player rejected, post-resolve rejected, message updates, callback answered). |
 | 5.7 | Completed | 2026-04-20 08:15 PM | 2026-04-20 08:20 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 5.8 | Started | 2026-04-20 08:20 PM | | Stage and commit: "Phase 5: Inline keyboard turn controls" |
+| 5.8 | Completed | 2026-04-20 08:20 PM | 2026-04-20 08:22 PM | Stage and commit: "Phase 5: Inline keyboard turn controls" |
 
 ### Phase 5 Summary
 
@@ -156,17 +156,17 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 6.1 | Open | | | When a turn opens (in handler, after `ensure_turn_open` creates a new turn), schedule a job via `context.job_queue.run_once(callback, when=duration_seconds)`. Pass `turn_window_id` in `job.data`. |
-| 6.2 | Open | | | Implement timer job callback: load turn window, check if still open (skip if already resolved), call `resolve_turn()`, call `generate_narration()`, call `deliver_turn_results()`. The callback receives `CallbackContext` with `.bot` and `.application.bot_data`. |
-| 6.3 | Open | | | Cancel the scheduled job when a turn resolves early (all-ready path). Store the `Job` reference and call `job.schedule_removal()`. |
-| 6.4 | Open | | | Write tests in `tests/unit/test_timer_job.py`: 5 tests per test plan §3.8 (job scheduled, expired turn resolved, already-resolved skipped, fallback actions generated, bot context available). |
-| 6.5 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 6.6 | Open | | | Stage and commit: "Phase 6: Timer expiry auto-resolve via PTB job queue" |
+| 6.1 | Completed | 2026-04-20 08:22 PM | 2026-04-20 08:35 PM | When a turn opens (in handler, after `ensure_turn_open` creates a new turn), schedule a job via `context.job_queue.run_once(callback, when=duration_seconds)`. Pass `turn_window_id` in `job.data`. |
+| 6.2 | Completed | 2026-04-20 08:35 PM | 2026-04-20 08:40 PM | Implement timer job callback: load turn window, check if still open (skip if already resolved), call `resolve_turn()`, call `generate_narration()`, call `deliver_turn_results()`. The callback receives `CallbackContext` with `.bot` and `.application.bot_data`. |
+| 6.3 | Completed | 2026-04-20 08:35 PM | 2026-04-20 08:40 PM | Cancel the scheduled job when a turn resolves early (all-ready path). Store the `Job` reference and call `job.schedule_removal()`. |
+| 6.4 | Completed | 2026-04-20 08:40 PM | 2026-04-20 08:50 PM | Write tests in `tests/unit/test_timer_job.py`: 5 tests per test plan §3.8 (job scheduled, expired turn resolved, already-resolved skipped, fallback actions generated, bot context available). |
+| 6.5 | Completed | 2026-04-20 08:50 PM | 2026-04-20 08:52 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 6.6 | Started | 2026-04-20 08:52 PM | | Stage and commit: "Phase 6: Timer expiry auto-resolve via PTB job queue" |
 
 ### Phase 6 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** New `bot/timer_jobs.py` with `turn_timer_callback()`, `schedule_turn_timer()`, `cancel_turn_timer()`. Extended `DispatchResult` with `turn_opened`, `turn_window_id`, `scene_id` fields. Added `turn_timer_jobs` dict to `GameOrchestrator`. Wired timer scheduling into `_on_turn_opened()` helper, cancellation into early-resolve paths. Updated `_handle_as_action()` to track new turn opens. 7 new tests in `tests/unit/test_timer_job.py`. 1537 tests pass, lint clean.
+- **Changes hosted at:** Local only
 - **Commit:** `Phase 6: Timer expiry auto-resolve via PTB job queue`
 
 ---
