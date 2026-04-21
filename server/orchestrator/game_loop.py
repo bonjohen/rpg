@@ -26,7 +26,7 @@ from models.contracts.output_repair import RepairPipeline
 from models.fast.adapter import OllamaFastAdapter
 from models.fast.tasks import classify_intent, extract_action_packet
 from models.protocol import MainAdapter
-from scenarios.loader import ScenarioLoader
+from scenarios.loader import ScenarioLoadResult, ScenarioLoader
 from server.combat.conditions import CombatConditionEngine
 from server.domain.entities import (
     Campaign,
@@ -286,11 +286,14 @@ class GameOrchestrator:
         yaml_path: str,
         campaign_name: str = "Playtest",
         telegram_group_id: int = 0,
-    ) -> bool:
-        """Load a scenario from YAML, persist all entities via repos."""
+    ) -> ScenarioLoadResult | None:
+        """Load a scenario from YAML, persist all entities via repos.
+
+        Returns the ScenarioLoadResult on success (truthy), or None on failure.
+        """
         result = self.scenario_loader.load_from_yaml(yaml_path)
         if not result.success:
-            return False
+            return None
 
         campaign_id = result.campaign_id
         campaign = Campaign(
@@ -333,7 +336,7 @@ class GameOrchestrator:
         self.campaign_id = campaign_id
         self.triggers = list(result.triggers)
 
-        return True
+        return result
 
     # ------------------------------------------------------------------
     # Player management

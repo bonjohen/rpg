@@ -60,6 +60,8 @@ from server.domain.helpers import new_id, utc_now
 class ScenarioLoadResult:
     success: bool = False
     campaign_id: str = ""
+    title: str = ""
+    description: str = ""
     scenes: list[Scene] = field(default_factory=list)
     npcs: list[NPC] = field(default_factory=list)
     monster_groups: list[MonsterGroup] = field(default_factory=list)
@@ -176,6 +178,8 @@ class ScenarioLoader:
         return ScenarioLoadResult(
             success=True,
             campaign_id=campaign_id,
+            title=manifest.title,
+            description=manifest.description,
             scenes=scenes,
             npcs=npcs,
             monster_groups=monster_groups,

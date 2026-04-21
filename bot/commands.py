@@ -18,6 +18,7 @@ from telegram.ext import ContextTypes
 
 from bot.mapping import BotRegistry, UnknownUserError
 from bot.onboarding import ONBOARDING_MESSAGES, ONBOARDING_PROMPT
+from bot.outbound import send_public
 
 # Scenario files must resolve under this directory
 _SCENARIOS_ROOT = Path(__file__).resolve().parent.parent / "scenarios"
@@ -140,7 +141,6 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     registry.register_player(user.id, player_id)
 
     scene = orchestrator.get_player_scene(player_id)
-    scene_info = f" You're in: {scene.name}." if scene else ""
 
     logger.info(
         "Player joined: telegram_user_id=%s player_id=%s char=%s",
@@ -148,11 +148,35 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         player_id,
         character.name,
     )
-    await update.message.reply_text(
-        f"Welcome, {display_name}! Your character has been created.{scene_info}\n"
-        "Use /scene to look around, or /help for all commands.\n"
-        "DM me directly for private actions."
-    )
+
+    # Post full scene description (like /scene) and announce arrival
+    if scene:
+        exit_parts = []
+        for d, sid in scene.exits.items():
+            dest = orchestrator.get_scene(sid)
+            dest_name = dest.name if dest else sid
+            exit_parts.append(f"{d} -> {dest_name}")
+        exits_text = ", ".join(exit_parts) or "None"
+
+        await update.message.reply_text(
+            f"Welcome, {display_name}! Your character has been created.\n\n"
+            f"📍 {scene.name}\n\n{scene.description}\n\nExits: {exits_text}\n\n"
+            "Use /help for all commands. DM me directly for private actions."
+        )
+
+        # Announce arrival to group
+        config = context.application.bot_data.get("config")
+        if config:
+            await send_public(
+                context.application.bot,
+                config,
+                f"{display_name} has entered {scene.name}.",
+            )
+    else:
+        await update.message.reply_text(
+            f"Welcome, {display_name}! Your character has been created.\n"
+            "Use /help for all commands. DM me directly for private actions."
+        )
 
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -233,17 +257,36 @@ async def cmd_newgame(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     chat_id = update.message.chat.id
-    success = orchestrator.load_scenario(scenario_path, telegram_group_id=chat_id)
-    if success:
+    load_result = orchestrator.load_scenario(scenario_path, telegram_group_id=chat_id)
+    if load_result:
         # Register campaign→chat mapping in bot registry
         registry = _registry(context)
         if orchestrator.campaign_id:
             registry.register_campaign(chat_id, orchestrator.campaign_id)
-        scene_count = len(orchestrator.get_scenes())
-        await update.message.reply_text(
-            f"Scenario loaded! {scene_count} scenes ready.\n"
-            "Players can now /join to enter the game."
-        )
+
+        # Build narrative introduction
+        title = load_result.title or "Untitled Scenario"
+        description = load_result.description or ""
+        parts = [f"--- {title} ---"]
+        if description:
+            parts.append(f"\n{description}")
+
+        # Show starting scene teaser
+        if load_result.scenes:
+            starting_scene = load_result.scenes[0]
+            parts.append(f"\nStarting location: {starting_scene.name}")
+            if starting_scene.description:
+                parts.append(starting_scene.description.strip())
+            if starting_scene.exits:
+                exit_names = []
+                for direction, target_id in starting_scene.exits.items():
+                    dest = orchestrator.get_scene(target_id)
+                    dest_name = dest.name if dest else target_id
+                    exit_names.append(f"{direction} -> {dest_name}")
+                parts.append(f"Exits: {', '.join(exit_names)}")
+
+        parts.append("\nPlayers: send /join to enter the game.")
+        await update.message.reply_text("\n".join(parts))
     else:
         await update.message.reply_text("Failed to load scenario. Check the path.")
 

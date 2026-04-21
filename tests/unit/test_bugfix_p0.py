@@ -160,8 +160,10 @@ class TestBUG002PathTraversal:
         update.message.chat.id = 456
         update.message.reply_text = AsyncMock()
 
+        from scenarios.loader import ScenarioLoadResult
+
         orchestrator = MagicMock()
-        orchestrator.load_scenario.return_value = True
+        orchestrator.load_scenario.return_value = ScenarioLoadResult(success=True)
         orchestrator.campaign_id = "c1"
         orchestrator.get_scenes.return_value = []
 

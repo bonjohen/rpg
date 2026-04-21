@@ -39,13 +39,13 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 1.1 | Open | | | Add `title: str = ""` and `description: str = ""` fields to `ScenarioLoadResult` in `scenarios/loader.py`. Populate from manifest in `load_from_manifest()`. |
-| 1.2 | Open | | | Return `ScenarioLoadResult` from `orchestrator.load_scenario()` (currently returns `bool`). Store title/description on orchestrator or pass back to caller. |
-| 1.3 | Open | | | Rewrite `cmd_newgame` in `bot/commands.py`: post scenario title, description, starting scene description+exits. End with "Players: send /join to enter the game." |
-| 1.4 | Open | | | Rewrite `cmd_join` in `bot/commands.py`: after `add_player()`, post full scene description (reuse `/scene` format). Announce "{name} has entered {scene.name}." to group via `send_public()`. |
-| 1.5 | Open | | | Write tests in `tests/unit/test_scene_introduction.py`: 5 tests per test plan §3.6 (newgame shows title/description/scene, join shows scene, join announces arrival, load result carries metadata). |
-| 1.6 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 1.7 | Open | | | Stage and commit: "Phase 1: Scene introduction on /newgame and /join" |
+| 1.1 | Completed | 2026-04-20 04:15 PM | 2026-04-20 04:17 PM | Add `title: str = ""` and `description: str = ""` fields to `ScenarioLoadResult` in `scenarios/loader.py`. Populate from manifest in `load_from_manifest()`. |
+| 1.2 | Completed | 2026-04-20 04:17 PM | 2026-04-20 04:22 PM | Return `ScenarioLoadResult` from `orchestrator.load_scenario()` (currently returns `bool`). Store title/description on orchestrator or pass back to caller. |
+| 1.3 | Completed | 2026-04-20 04:22 PM | 2026-04-20 04:26 PM | Rewrite `cmd_newgame` in `bot/commands.py`: post scenario title, description, starting scene description+exits. End with "Players: send /join to enter the game." |
+| 1.4 | Completed | 2026-04-20 04:26 PM | 2026-04-20 04:32 PM | Rewrite `cmd_join` in `bot/commands.py`: after `add_player()`, post full scene description (reuse `/scene` format). Announce "{name} has entered {scene.name}." to group via `send_public()`. |
+| 1.5 | Completed | 2026-04-20 04:32 PM | 2026-04-20 04:40 PM | Write tests in `tests/unit/test_scene_introduction.py`: 5 tests per test plan §3.6 (newgame shows title/description/scene, join shows scene, join announces arrival, load result carries metadata). |
+| 1.6 | Completed | 2026-04-20 04:40 PM | 2026-04-20 04:48 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 1.7 | Started | 2026-04-20 04:48 PM | | Stage and commit: "Phase 1: Scene introduction on /newgame and /join" |
 
 ### Phase 1 Summary
 
