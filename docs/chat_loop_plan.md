@@ -92,12 +92,12 @@ Open  ──>  Started  ──>  Completed
 | 3.5 | Completed | 2026-04-20 05:28 PM | 2026-04-20 05:36 PM | Add auto-resolve on all-ready: after `submit_action()` returns, check turn window state. If `all_ready`, trigger resolution pipeline (resolve → narrate → deliver). Wire in handler. |
 | 3.6 | Completed | 2026-04-20 05:36 PM | 2026-04-20 05:42 PM | Write tests in `tests/unit/test_auto_turn.py`: 7 tests per test plan §3.3 (create when none, return existing, race guard, auto-resolve, scene posted first, nextturn still works). |
 | 3.7 | Completed | 2026-04-20 05:42 PM | 2026-04-20 05:48 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 3.8 | Started | 2026-04-20 05:48 PM | | Stage and commit: "Phase 3: Auto-turn management with ordering invariant" |
+| 3.8 | Completed | 2026-04-20 05:48 PM | 2026-04-20 05:50 PM | Stage and commit: "Phase 3: Auto-turn management with ordering invariant" |
 
 ### Phase 3 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Added `ensure_turn_open()` with race condition guard. Added race guard inside `open_turn()`. Wired auto-open into `_handle_as_action()`. Added auto-resolve on all-ready with `turn_resolved`/`turn_log_entry` fields on `DispatchResult`. 7 new tests. 1510 total passing.
+- **Changes hosted at:** local commit `440eed9`
 - **Commit:** `Phase 3: Auto-turn management with ordering invariant`
 
 ---
@@ -109,13 +109,13 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 4.1 | Open | | | Create `bot/delivery.py` with `generate_narration(orchestrator, turn_log_entry, scene, committed_actions) -> str`. Uses `ContextAssembler` for scoped prompts, calls `narrate_scene()` or `summarize_combat()` based on scene state, calls `generate_npc_dialogue()` if NPCs involved. Falls back to `turn_log_entry.narration` on failure. |
-| 4.2 | Open | | | Add `deliver_turn_results(orchestrator, turn_log_entry, scene, bot, config, registry)` to `bot/delivery.py`. Posts narration via `send_public()`. Queries private-referee facts for this turn. Sends each to owning player via `send_private_by_player_id()`. Logs and continues on partial DM failure. |
-| 4.3 | Open | | | Wire `deliver_turn_results` into the auto-resolve path in `bot/handlers.py` (called after `resolve_turn()` in both the all-ready path and the timer-expiry path). |
-| 4.4 | Open | | | Write tests in `tests/unit/test_narration_pipeline.py`: 7 tests per test plan §3.4 (main model called, context assembler used, no referee facts, fallback on failure/timeout, combat uses summarize_combat, NPC dialogue). |
-| 4.5 | Open | | | Write tests in `tests/unit/test_delivery.py`: 7 tests per test plan §3.5 (public sent, private facts to owner only, partial failure continues, control message edited, empty turn no DMs). |
-| 4.6 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 4.7 | Open | | | Stage and commit: "Phase 4: Rich narration via main model and result delivery" |
+| 4.1 | Completed | 2026-04-20 05:52 PM | 2026-04-20 05:58 PM | Create `bot/delivery.py` with `generate_narration(orchestrator, turn_log_entry, scene, committed_actions) -> str`. Uses `ContextAssembler` for scoped prompts, calls `narrate_scene()` or `summarize_combat()` based on scene state, calls `generate_npc_dialogue()` if NPCs involved. Falls back to `turn_log_entry.narration` on failure. |
+| 4.2 | Completed | 2026-04-20 05:52 PM | 2026-04-20 05:58 PM | Add `deliver_turn_results(orchestrator, turn_log_entry, scene, bot, config, registry)` to `bot/delivery.py`. Posts narration via `send_public()`. Queries private-referee facts for this turn. Sends each to owning player via `send_private_by_player_id()`. Logs and continues on partial DM failure. |
+| 4.3 | Completed | 2026-04-20 05:58 PM | 2026-04-20 06:02 PM | Wire `deliver_turn_results` into the auto-resolve path in `bot/handlers.py` (called after `resolve_turn()` in both the all-ready path and the timer-expiry path). |
+| 4.4 | Completed | 2026-04-20 05:58 PM | 2026-04-20 06:10 PM | Write tests in `tests/unit/test_narration_pipeline.py`: 7 tests per test plan §3.4 (main model called, context assembler used, no referee facts, fallback on failure/timeout, combat uses summarize_combat, NPC dialogue). |
+| 4.5 | Completed | 2026-04-20 05:58 PM | 2026-04-20 06:10 PM | Write tests in `tests/unit/test_delivery.py`: 7 tests per test plan §3.5 (public sent, private facts to owner only, partial failure continues, control message edited, empty turn no DMs). |
+| 4.6 | Completed | 2026-04-20 06:10 PM | 2026-04-20 06:14 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 4.7 | Started | 2026-04-20 06:14 PM | | Stage and commit: "Phase 4: Rich narration via main model and result delivery" |
 
 ### Phase 4 Summary
 
