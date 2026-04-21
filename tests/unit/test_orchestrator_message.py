@@ -23,11 +23,12 @@ from server.orchestrator.game_loop import GameOrchestrator
 from tests.fixtures.db_helpers import create_test_session_factory
 
 
-def _make_orchestrator(fast_adapter=None) -> GameOrchestrator:
-    """Build a GameOrchestrator with in-memory DB and optional mock fast adapter."""
+def _make_orchestrator(fast_adapter=None, main_adapter=None) -> GameOrchestrator:
+    """Build a GameOrchestrator with in-memory DB and optional mock adapters."""
     session_factory = create_test_session_factory()
     orch = GameOrchestrator(
         fast_adapter=fast_adapter,
+        main_adapter=main_adapter,
         session_factory=session_factory,
     )
     # Load a minimal scenario so we have a campaign and scene
@@ -110,7 +111,7 @@ class TestHandlePlayerMessage:
 
     @pytest.mark.asyncio
     async def test_question_intent_returns_response(self):
-        """Text classified as 'question' -> response returned (canned for now)."""
+        """Text classified as 'question' -> fallback when no main adapter."""
         fast = MagicMock()
         orch = _make_orchestrator(fast_adapter=fast)
         pid = _add_player(orch)
@@ -123,6 +124,35 @@ class TestHandlePlayerMessage:
 
         assert result.handled is True
         assert result.scope == "private"
+        assert "referee" in result.response_text.lower()
+
+    @pytest.mark.asyncio
+    async def test_question_intent_calls_ruling(self):
+        """Text classified as 'question' with main_adapter -> propose_ruling called."""
+        fast = MagicMock()
+        main = MagicMock()
+        orch = _make_orchestrator(fast_adapter=fast, main_adapter=main)
+        pid = _add_player(orch)
+
+        ruling_output = MagicMock()
+        ruling_output.reason = "Yes, you can see the door."
+        ruling_output.ruling = "allow"
+
+        with (
+            patch(
+                "server.orchestrator.game_loop.classify_intent",
+                _mock_classify("question"),
+            ),
+            patch(
+                "models.main.tasks.propose_ruling",
+                new_callable=AsyncMock,
+                return_value=(ruling_output, MagicMock()),
+            ) as mock_ruling,
+        ):
+            result = await orch.handle_player_message(pid, "Can I see the door?", True)
+
+        mock_ruling.assert_called_once()
+        assert result.response_text == "Yes, you can see the door."
 
     @pytest.mark.asyncio
     async def test_question_private_stays_private(self):

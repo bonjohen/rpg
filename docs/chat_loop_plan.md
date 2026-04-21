@@ -161,7 +161,7 @@ Open  ──>  Started  ──>  Completed
 | 6.3 | Completed | 2026-04-20 08:35 PM | 2026-04-20 08:40 PM | Cancel the scheduled job when a turn resolves early (all-ready path). Store the `Job` reference and call `job.schedule_removal()`. |
 | 6.4 | Completed | 2026-04-20 08:40 PM | 2026-04-20 08:50 PM | Write tests in `tests/unit/test_timer_job.py`: 5 tests per test plan §3.8 (job scheduled, expired turn resolved, already-resolved skipped, fallback actions generated, bot context available). |
 | 6.5 | Completed | 2026-04-20 08:50 PM | 2026-04-20 08:52 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 6.6 | Started | 2026-04-20 08:52 PM | | Stage and commit: "Phase 6: Timer expiry auto-resolve via PTB job queue" |
+| 6.6 | Completed | 2026-04-20 08:52 PM | 2026-04-20 08:55 PM | Stage and commit: "Phase 6: Timer expiry auto-resolve via PTB job queue" |
 
 ### Phase 6 Summary
 
@@ -178,17 +178,17 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 7.1 | Open | | | Replace canned "question" response in `handle_player_message` (`game_loop.py`). Call `propose_ruling()` with the question text, player's character state, and scene context. Return the ruling's response text. |
-| 7.2 | Open | | | Ensure private questions stay private: if `is_private=True`, set `scope="private"` on `DispatchResult`. Handler routes to `send_private()`. |
-| 7.3 | Open | | | Add fallback: if `propose_ruling()` fails, return "The referee considers your question... Try rephrasing or take an action instead." |
-| 7.4 | Open | | | Tests already specified in §3.2 of test plan (`test_question_intent_calls_ruling`, `test_question_private_stays_private`). Verify they pass. |
-| 7.5 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 7.6 | Open | | | Stage and commit: "Phase 7: Question intent handling via propose_ruling" |
+| 7.1 | Completed | 2026-04-20 08:55 PM | 2026-04-20 09:05 PM | Replace canned "question" response in `handle_player_message` (`game_loop.py`). Call `propose_ruling()` with the question text, player's character state, and scene context. Return the ruling's response text. |
+| 7.2 | Completed | 2026-04-20 08:55 PM | 2026-04-20 09:05 PM | Ensure private questions stay private: if `is_private=True`, set `scope="private"` on `DispatchResult`. Handler routes to `send_private()`. |
+| 7.3 | Completed | 2026-04-20 08:55 PM | 2026-04-20 09:05 PM | Add fallback: if `propose_ruling()` fails, return "The referee considers your question... Try rephrasing or take an action instead." |
+| 7.4 | Completed | 2026-04-20 09:05 PM | 2026-04-20 09:10 PM | Tests already specified in §3.2 of test plan (`test_question_intent_calls_ruling`, `test_question_private_stays_private`). Verify they pass. |
+| 7.5 | Completed | 2026-04-20 09:10 PM | 2026-04-20 09:12 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 7.6 | Started | 2026-04-20 09:12 PM | | Stage and commit: "Phase 7: Question intent handling via propose_ruling" |
 
 ### Phase 7 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Added `_handle_as_question()` method to `GameOrchestrator` that calls `propose_ruling()` via main model adapter. Falls back to canned response when no main adapter or on failure. Updated question intent routing. Added `test_question_intent_calls_ruling` test. Updated `_make_orchestrator` to accept `main_adapter`. 1538 tests pass, lint clean.
+- **Changes hosted at:** Local only
 - **Commit:** `Phase 7: Question intent handling via propose_ruling`
 
 ---

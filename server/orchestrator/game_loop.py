@@ -758,12 +758,7 @@ class GameOrchestrator:
         if intent == "action":
             return await self._handle_as_action(player_id, text, is_private)
         elif intent == "question":
-            result.handled = True
-            result.scope = "private"
-            result.response_text = (
-                "Your question has been noted. The referee will respond."
-            )
-            return result
+            return await self._handle_as_question(player_id, text, is_private)
         elif intent == "command":
             result.handled = True
             result.response_text = f"Command received: {text}"
@@ -849,6 +844,62 @@ class GameOrchestrator:
         else:
             result.error = (
                 "Could not submit action. No active turn or already submitted."
+            )
+
+        return result
+
+    async def _handle_as_question(
+        self, player_id: str, text: str, is_private: bool
+    ) -> DispatchResult:
+        """Route a question through propose_ruling for an AI response."""
+        from models.main.context import ActionContext, PlayerContext, SceneContext
+        from models.main.tasks import propose_ruling
+
+        result = DispatchResult()
+        result.handled = True
+        result.scope = "private"
+
+        if self.main_adapter is None:
+            result.response_text = (
+                "The referee considers your question... "
+                "Try rephrasing or take an action instead."
+            )
+            return result
+
+        character = self.get_player_character(player_id)
+        scene = self.get_player_scene(player_id)
+
+        player_ctx = PlayerContext(
+            player_id=player_id,
+            character_name=character.name if character else "Unknown",
+        )
+
+        scene_ctx = SceneContext(
+            scene_id=scene.scene_id if scene else "",
+            location_name=scene.name if scene else "Unknown",
+            description=scene.description if scene else "",
+        )
+
+        action_ctx = ActionContext(
+            player_id=player_id,
+            character_name=character.name if character else "Unknown",
+            action_type="question",
+            notes=text,
+        )
+
+        try:
+            ruling_output, _ = await propose_ruling(
+                self.main_adapter,
+                action_ctx,
+                scene_ctx,
+                player_ctx,
+                trace_id=new_id(),
+            )
+            result.response_text = ruling_output.reason or ruling_output.ruling
+        except Exception:
+            result.response_text = (
+                "The referee considers your question... "
+                "Try rephrasing or take an action instead."
             )
 
         return result
