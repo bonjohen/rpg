@@ -697,8 +697,12 @@ class GameOrchestrator:
         """Process a player message through intent classification and routing."""
         result = DispatchResult()
 
-        # Check idempotency (keyed on player_id + text hash for simplicity)
-        idem_key = f"msg:{player_id}:{hashlib.sha256(text.encode()).hexdigest()[:16]}"
+        # Check idempotency (include turn context to prevent cross-turn collisions)
+        turn_ctx = "no_turn"
+        scene = self.get_player_scene(player_id)
+        if scene and scene.active_turn_window_id:
+            turn_ctx = scene.active_turn_window_id
+        idem_key = f"msg:{player_id}:{turn_ctx}:{hashlib.sha256(text.encode()).hexdigest()[:16]}"
         if not self.idempotency.mark_seen(idem_key):
             result.handled = True
             result.response_text = ""

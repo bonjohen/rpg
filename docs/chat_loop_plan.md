@@ -45,12 +45,12 @@ Open  ──>  Started  ──>  Completed
 | 1.4 | Completed | 2026-04-20 04:26 PM | 2026-04-20 04:32 PM | Rewrite `cmd_join` in `bot/commands.py`: after `add_player()`, post full scene description (reuse `/scene` format). Announce "{name} has entered {scene.name}." to group via `send_public()`. |
 | 1.5 | Completed | 2026-04-20 04:32 PM | 2026-04-20 04:40 PM | Write tests in `tests/unit/test_scene_introduction.py`: 5 tests per test plan §3.6 (newgame shows title/description/scene, join shows scene, join announces arrival, load result carries metadata). |
 | 1.6 | Completed | 2026-04-20 04:40 PM | 2026-04-20 04:48 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 1.7 | Started | 2026-04-20 04:48 PM | | Stage and commit: "Phase 1: Scene introduction on /newgame and /join" |
+| 1.7 | Completed | 2026-04-20 04:48 PM | 2026-04-20 04:50 PM | Stage and commit: "Phase 1: Scene introduction on /newgame and /join" |
 
 ### Phase 1 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Added `title`/`description` fields to `ScenarioLoadResult`. Changed `orchestrator.load_scenario()` to return `ScenarioLoadResult | None`. Rewrote `cmd_newgame` to post narrative intro (title, description, starting scene, exits). Rewrote `cmd_join` to show full scene description and announce arrival via `send_public()`. 6 new tests in `tests/unit/test_scene_introduction.py`. Fixed existing test in `test_bugfix_p0.py` for new return type. 1485 tests pass, lint clean.
+- **Changes hosted at:** local commit `2ff19e1`
 - **Commit:** `Phase 1: Scene introduction on /newgame and /join`
 
 ---
@@ -62,13 +62,13 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 2.1 | Open | | | Wire `_handle_group_message` in `bot/handlers.py`: parse, route, if `play_action` → look up player_id → call `orchestrator.handle_player_message()` → route `DispatchResult` to `send_public()`. Handle `UnknownUserError` gracefully. |
-| 2.2 | Open | | | Wire `_handle_private_message` in `bot/handlers.py`: look up player_id → call `orchestrator.handle_player_message(is_private=True)` → route response to `send_private()`. Handle onboarding and unknown user. |
-| 2.3 | Open | | | Fix idempotency key in `handle_player_message` (`game_loop.py`): include `turn_window_id` (or `'no_turn'`) in hash key to prevent cross-turn collisions. |
-| 2.4 | Open | | | Write tests in `tests/unit/test_bot_handlers.py`: 9 tests per test plan §3.1 (dispatch to orchestrator, response routing, error handling, unknown user). |
-| 2.5 | Open | | | Write tests in `tests/unit/test_orchestrator_message.py`: 9 tests per test plan §3.2 (action/question/chat intent, dedup, cross-turn dedup, fallback). |
-| 2.6 | Open | | | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 2.7 | Open | | | Stage and commit: "Phase 2: Bot handler dispatch and orchestrator wiring" |
+| 2.1 | Completed | 2026-04-20 04:52 PM | 2026-04-20 04:56 PM | Wire `_handle_group_message` in `bot/handlers.py`: parse, route, if `play_action` → look up player_id → call `orchestrator.handle_player_message()` → route `DispatchResult` to `send_public()`. Handle `UnknownUserError` gracefully. |
+| 2.2 | Completed | 2026-04-20 04:56 PM | 2026-04-20 05:00 PM | Wire `_handle_private_message` in `bot/handlers.py`: look up player_id → call `orchestrator.handle_player_message(is_private=True)` → route response to `send_private()`. Handle onboarding and unknown user. |
+| 2.3 | Completed | 2026-04-20 05:00 PM | 2026-04-20 05:03 PM | Fix idempotency key in `handle_player_message` (`game_loop.py`): include `turn_window_id` (or `'no_turn'`) in hash key to prevent cross-turn collisions. |
+| 2.4 | Completed | 2026-04-20 05:03 PM | 2026-04-20 05:12 PM | Write tests in `tests/unit/test_bot_handlers.py`: 9 tests per test plan §3.1 (dispatch to orchestrator, response routing, error handling, unknown user). |
+| 2.5 | Completed | 2026-04-20 05:03 PM | 2026-04-20 05:15 PM | Write tests in `tests/unit/test_orchestrator_message.py`: 9 tests per test plan §3.2 (action/question/chat intent, dedup, cross-turn dedup, fallback). |
+| 2.6 | Completed | 2026-04-20 05:15 PM | 2026-04-20 05:18 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
+| 2.7 | Started | 2026-04-20 05:18 PM | | Stage and commit: "Phase 2: Bot handler dispatch and orchestrator wiring" |
 
 ### Phase 2 Summary
 

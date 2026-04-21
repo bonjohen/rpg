@@ -25,8 +25,9 @@ from bot.commands import (
     cmd_status,
     cmd_who,
 )
-from bot.mapping import BotRegistry
+from bot.mapping import BotRegistry, UnknownUserError
 from bot.onboarding import requires_onboarding, send_onboarding_prompt
+from bot.outbound import send_private, send_public
 from bot.parsers import parse_group_message, parse_private_message
 from bot.routing import RouteTarget, route_message
 
@@ -71,7 +72,7 @@ def register_handlers(app: Application) -> None:
 async def _handle_group_message(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Dispatch a supergroup text message."""
+    """Dispatch a supergroup text message to the orchestrator."""
     message = update.effective_message
     if message is None:
         return
@@ -88,7 +89,35 @@ async def _handle_group_message(
         logger.debug(
             "play_action user=%s text=%r", parsed.telegram_user_id, parsed.text[:60]
         )
-        # Game engine dispatch added in Phase 7+
+        orchestrator = context.application.bot_data.get("orchestrator")
+        if orchestrator is None:
+            return
+
+        registry: BotRegistry = context.application.bot_data.get(
+            "registry", BotRegistry()
+        )
+        try:
+            player_id = registry.player_id_for(parsed.telegram_user_id)
+        except UnknownUserError:
+            if message.from_user:
+                await message.reply_text(
+                    "You need to /join the game first before taking actions."
+                )
+            return
+
+        try:
+            result = await orchestrator.handle_player_message(
+                player_id, parsed.text, is_private=False
+            )
+        except Exception:
+            logger.exception(
+                "handle_player_message failed user=%s", parsed.telegram_user_id
+            )
+            await message.reply_text("Something went wrong processing your message.")
+            return
+
+        if result.response_text:
+            await send_public(context.application.bot, config, result.response_text)
     else:
         logger.debug(
             "group_chat user=%s text=%r", parsed.telegram_user_id, parsed.text[:60]
@@ -98,7 +127,7 @@ async def _handle_group_message(
 async def _handle_private_message(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Dispatch a private DM text message."""
+    """Dispatch a private DM text message to the orchestrator."""
     message = update.effective_message
     if message is None:
         return
@@ -117,4 +146,32 @@ async def _handle_private_message(
     logger.debug(
         "private_action user=%s text=%r", parsed.telegram_user_id, parsed.text[:60]
     )
-    # Game engine dispatch added in Phase 7+
+
+    orchestrator = context.application.bot_data.get("orchestrator")
+    if orchestrator is None:
+        await message.reply_text("No active game. Ask the GM to start one with /newgame.")
+        return
+
+    try:
+        player_id = registry.player_id_for(parsed.telegram_user_id)
+    except UnknownUserError:
+        await message.reply_text(
+            "You need to /join the game first. Send /join in the group chat."
+        )
+        return
+
+    try:
+        result = await orchestrator.handle_player_message(
+            player_id, parsed.text, is_private=True
+        )
+    except Exception:
+        logger.exception(
+            "handle_player_message failed user=%s", parsed.telegram_user_id
+        )
+        await message.reply_text("Something went wrong processing your message.")
+        return
+
+    if result.response_text:
+        await send_private(
+            context.application.bot, registry, parsed.telegram_user_id, result.response_text
+        )
