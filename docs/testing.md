@@ -87,9 +87,27 @@ Cover higher-level game behavior from scenario fixtures:
 
 Use scripted scenario slices (JSON or YAML fixture files). No live Telegram, no live model.
 
+### Chat-Driven Game Loop Tests
+
+Cover the end-to-end chat interaction pipeline:
+
+- Scene introduction on `/newgame` and `/join` (`tests/unit/test_scene_introduction.py`)
+- Bot handler dispatch and orchestrator wiring (`tests/unit/test_bot_handlers.py`)
+- Orchestrator message handling and intent routing (`tests/unit/test_orchestrator_message.py`)
+- Auto-turn management: ensure_turn_open, race guards (`tests/unit/test_auto_turn.py`)
+- Rich narration pipeline: main model call + fallback (`tests/unit/test_narration_pipeline.py`)
+- Turn result delivery: public narration + private DMs (`tests/unit/test_delivery.py`)
+- Inline keyboard and callback queries: Ready/Pass buttons (`tests/unit/test_callback_queries.py`)
+- Timer job integration: schedule, fire, skip, cancel (`tests/unit/test_timer_job.py`)
+- E2E chat turn lifecycle (`tests/integration/test_chat_turn_e2e.py`)
+- Goblin caves scenario playthrough (`tests/integration/test_goblin_caves_playthrough.py`)
+
+Use mock model adapters (canned intent/action/narration) and in-memory SQLite. No live Telegram or model calls.
+
 ## Fixtures
 
 - Entity fixture builders live in `tests/fixtures/` (builders.py plus per-scenario fixtures)
+- Telegram payload builders in `tests/fixtures/telegram_builders.py` (make_user, make_group_message, make_private_message, make_update, make_callback_query, make_callback_update, make_context)
 - Combat scenario fixtures in `tests/fixtures/combat_scenario.py`
 - Exploration scenario fixtures in `tests/fixtures/exploration_scenario.py`
 - NPC social scenario fixtures in `tests/fixtures/npc_social_scenario.py`

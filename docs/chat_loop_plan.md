@@ -208,7 +208,7 @@ Open  ──>  Started  ──>  Completed
 | 8.6 | Completed | 2026-04-20 09:45 PM | 2026-04-20 09:50 PM | **Critical review: all 9 PDR §9 criteria verified. 13 traceability tests passing.** |
 | 8.7 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `docs/release_readiness.md`: check off "10-turn scripted session" and "No scope leakage in extended session" criteria if applicable. |
 | 8.8 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `STARTUP.md` with current phase status and test count. |
-| 8.9 | Started | 2026-04-20 09:55 PM | | Stage and commit: "Phase 8: E2E integration tests and goblin caves playthrough" |
+| 8.9 | Completed | 2026-04-20 09:55 PM | 2026-04-20 09:58 PM | Stage and commit: "Phase 8: E2E integration tests and goblin caves playthrough" |
 
 ### Phase 8 Summary
 
@@ -225,17 +225,17 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 9.1 | Open | | | Update `README.md`: describe chat-driven gameplay, not slash-command-driven. Add "How to Play" section. |
-| 9.2 | Open | | | Update `docs/architecture.md`: mark bot handler stubs as resolved. Update flow diagram. |
-| 9.3 | Open | | | Update `STARTUP.md`: current phase status, test count, known defects. |
-| 9.4 | Open | | | Update `docs/testing.md`: add new test file descriptions to fixture/layer lists. |
-| 9.5 | Open | | | Update `docs/release_readiness.md` with final test count and criteria status. |
-| 9.6 | Open | | | Remove or update stub comments in `bot/handlers.py` ("Phase 7+" comments). |
-| 9.7 | Open | | | Run full suite one final time: `pytest`, `ruff check .`, `ruff format --check .`. |
-| 9.8 | Open | | | Stage and commit: "Phase 9: Documentation update for chat-driven game loop" |
+| 9.1 | Completed | 2026-04-20 09:58 PM | 2026-04-20 10:05 PM | Update `README.md`: describe chat-driven gameplay, not slash-command-driven. Add "How to Play" section. |
+| 9.2 | Completed | 2026-04-20 10:05 PM | 2026-04-20 10:05 PM | Update `docs/architecture.md`: no stubs found, already current. |
+| 9.3 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `STARTUP.md`: current phase status, test count, known defects. (Done in Phase 8.) |
+| 9.4 | Completed | 2026-04-20 10:05 PM | 2026-04-20 10:08 PM | Update `docs/testing.md`: add new test file descriptions to fixture/layer lists. |
+| 9.5 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `docs/release_readiness.md` with final test count and criteria status. (Done in Phase 8.) |
+| 9.6 | Completed | 2026-04-20 10:08 PM | 2026-04-20 10:08 PM | No stub comments found in `bot/handlers.py`. |
+| 9.7 | Completed | 2026-04-20 10:08 PM | 2026-04-20 10:10 PM | Run full suite one final time: 1550 tests pass, lint clean, format clean. |
+| 9.8 | Started | 2026-04-20 10:10 PM | | Stage and commit: "Phase 9: Documentation update for chat-driven game loop" |
 
 ### Phase 9 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** Updated `README.md` with "How to Play" section describing chat-driven gameplay. Updated `docs/testing.md` with chat loop test file descriptions and new fixture builders. Updated test count to 1550. No stubs remaining in bot code.
+- **Changes hosted at:** Local only
 - **Commit:** `Phase 9: Documentation update for chat-driven game loop`

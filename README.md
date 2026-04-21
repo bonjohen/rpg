@@ -157,15 +157,19 @@ The API serves both the REST endpoints (`/api/...`) and the Mini App frontend (`
 | `/scene` | Anywhere | Show your current scene and exits |
 | `/who` | Anywhere | Show which players are in which scenes |
 
-### Starting a Game
+### How to Play
 
 1. Create a Telegram supergroup with forum topics enabled
 2. Add the bot as an admin
 3. Each player DMs the bot with `/start`
-4. Players send `/join` in the group
-5. Admin sends `/newgame scenarios/starters/goblin_caves.yaml`
-6. Admin sends `/nextturn` to open the first turn
-7. Players submit actions via chat or the Mini App action builder
+4. Players send `/join` in the group — they'll see the scene description and exits
+5. Admin sends `/newgame scenarios/starters/goblin_caves.yaml` — the group sees a narrative introduction
+6. Players type actions naturally in the group chat (e.g. "I pick up the torch", "I look around the cave")
+7. The bot classifies each message, auto-opens a turn, and submits the action
+8. When all players have acted (or pressed the Ready/Pass buttons), the turn resolves automatically
+9. The AI narrates the results in the group chat; private facts arrive via DM
+10. If a timer expires before all players act, absent players get a "hold" action automatically
+11. Players can also DM the bot questions (e.g. "Can I tell if the NPC is nervous?") — the AI responds privately
 
 ### Mini App Views
 
@@ -219,7 +223,7 @@ if not result.success:
 ### Running Tests
 
 ```bash
-pytest                              # Run all 1479 tests
+pytest                              # Run all 1550 tests
 pytest tests/unit/                  # Unit tests only
 pytest tests/integration/           # Integration tests only
 pytest -k "test_combat"             # Run tests matching a pattern
@@ -260,7 +264,7 @@ rpg/
 +-- scenarios/           # Scenario schema, loader, validator, patterns
 |   +-- starters/        # 4 starter scenarios (YAML)
 +-- webapp/              # Mini App frontend (HTML/JS/CSS)
-+-- tests/               # 1479 tests (unit + integration)
++-- tests/               # 1550 tests (unit + integration)
 +-- docs/                # Architecture, design, conventions, routing
 ```
 
