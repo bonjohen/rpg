@@ -54,37 +54,37 @@ def _action(player_id: str | None = None, **kwargs):
     )
 
 
-ENGINE = TurnEngine()
-
-
 # ---------------------------------------------------------------------------
 # _assert_transition helper
 # ---------------------------------------------------------------------------
 
 
 class TestAssertTransition:
-    def test_valid_open_to_locked(self):
-        w = _window(state=TurnWindowState.open)
-        _assert_transition(w, TurnWindowState.locked)  # no raise
+    @pytest.mark.parametrize(
+        "from_state, to_state",
+        [
+            (TurnWindowState.open, TurnWindowState.locked),
+            (TurnWindowState.locked, TurnWindowState.resolving),
+        ],
+        ids=["open_to_locked", "locked_to_resolving"],
+    )
+    def test_valid_transition(self, from_state, to_state):
+        w = _window(state=from_state)
+        _assert_transition(w, to_state)  # no raise
 
-    def test_valid_locked_to_resolving(self):
-        w = _window(state=TurnWindowState.locked)
-        _assert_transition(w, TurnWindowState.resolving)
-
-    def test_invalid_open_to_committed(self):
-        w = _window(state=TurnWindowState.open)
+    @pytest.mark.parametrize(
+        "from_state, to_state",
+        [
+            (TurnWindowState.open, TurnWindowState.committed),
+            (TurnWindowState.committed, TurnWindowState.aborted),
+            (TurnWindowState.aborted, TurnWindowState.open),
+        ],
+        ids=["open_to_committed", "committed_is_terminal", "aborted_is_terminal"],
+    )
+    def test_invalid_transition(self, from_state, to_state):
+        w = _window(state=from_state)
         with pytest.raises(InvalidTransitionError):
-            _assert_transition(w, TurnWindowState.committed)
-
-    def test_committed_is_terminal(self):
-        w = _window(state=TurnWindowState.committed)
-        with pytest.raises(InvalidTransitionError):
-            _assert_transition(w, TurnWindowState.aborted)
-
-    def test_aborted_is_terminal(self):
-        w = _window(state=TurnWindowState.aborted)
-        with pytest.raises(InvalidTransitionError):
-            _assert_transition(w, TurnWindowState.open)
+            _assert_transition(w, to_state)
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +93,9 @@ class TestAssertTransition:
 
 
 class TestCheckAllReady:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_transitions_when_all_ready(self):
         p1, p2 = _uid(), _uid()
         w = _window(state=TurnWindowState.open)
@@ -102,7 +105,7 @@ class TestCheckAllReady:
         a2 = _action(
             player_id=p2, ready_state=ReadyState.passed, state=ActionState.submitted
         )
-        result = ENGINE.check_all_ready(w, [a1, a2], [p1, p2])
+        result = self.engine.check_all_ready(w, [a1, a2], [p1, p2])
         assert result.state == TurnWindowState.all_ready
 
     def test_no_transition_when_some_not_ready(self):
@@ -111,7 +114,7 @@ class TestCheckAllReady:
         a1 = _action(
             player_id=p1, ready_state=ReadyState.ready, state=ActionState.submitted
         )
-        result = ENGINE.check_all_ready(w, [a1], [p1, p2])
+        result = self.engine.check_all_ready(w, [a1], [p1, p2])
         assert result.state == TurnWindowState.open
 
     def test_no_transition_when_action_draft(self):
@@ -120,7 +123,7 @@ class TestCheckAllReady:
         a1 = _action(
             player_id=p1, ready_state=ReadyState.ready, state=ActionState.draft
         )
-        result = ENGINE.check_all_ready(w, [a1], [p1])
+        result = self.engine.check_all_ready(w, [a1], [p1])
         assert result.state == TurnWindowState.open
 
     def test_no_op_when_window_not_open(self):
@@ -129,12 +132,12 @@ class TestCheckAllReady:
         a1 = _action(
             player_id=p1, ready_state=ReadyState.ready, state=ActionState.submitted
         )
-        result = ENGINE.check_all_ready(w, [a1], [p1])
+        result = self.engine.check_all_ready(w, [a1], [p1])
         assert result.state == TurnWindowState.locked
 
     def test_no_op_when_no_expected_players(self):
         w = _window(state=TurnWindowState.open)
-        result = ENGINE.check_all_ready(w, [], [])
+        result = self.engine.check_all_ready(w, [], [])
         assert result.state == TurnWindowState.open
 
 
@@ -144,33 +147,36 @@ class TestCheckAllReady:
 
 
 class TestLockWindow:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_lock_from_open(self):
         w = _window(state=TurnWindowState.open)
-        result = ENGINE.lock_window(w)
+        result = self.engine.lock_window(w)
         assert result.locked is True
         assert result.window.state == TurnWindowState.locked
         assert result.window.locked_at is not None
 
     def test_lock_from_all_ready(self):
         w = _window(state=TurnWindowState.all_ready)
-        result = ENGINE.lock_window(w)
+        result = self.engine.lock_window(w)
         assert result.locked is True
         assert result.window.state == TurnWindowState.locked
 
     def test_cannot_lock_from_locked(self):
         w = _window(state=TurnWindowState.locked)
-        result = ENGINE.lock_window(w)
+        result = self.engine.lock_window(w)
         assert result.locked is False
         assert result.window.state == TurnWindowState.locked
 
     def test_cannot_lock_from_committed(self):
         w = _window(state=TurnWindowState.committed)
-        result = ENGINE.lock_window(w)
+        result = self.engine.lock_window(w)
         assert result.locked is False
 
     def test_cannot_lock_from_aborted(self):
         w = _window(state=TurnWindowState.aborted)
-        result = ENGINE.lock_window(w)
+        result = self.engine.lock_window(w)
         assert result.locked is False
 
 
@@ -180,12 +186,15 @@ class TestLockWindow:
 
 
 class TestResolveWindow:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_resolve_from_locked(self):
         p1, p2 = _uid(), _uid()
         w = _window(state=TurnWindowState.locked)
         a1 = _action(player_id=p1, turn_window_id=w.turn_window_id)
         a2 = _action(player_id=p2, turn_window_id=w.turn_window_id)
-        result = ENGINE.resolve_window(w, [a1, a2], {}, [])
+        result = self.engine.resolve_window(w, [a1, a2], {}, [])
         assert result.resolved is True
         assert result.window.state == TurnWindowState.resolving
         assert result.window.resolved_at is not None
@@ -193,7 +202,7 @@ class TestResolveWindow:
 
     def test_resolve_requires_locked_state(self):
         w = _window(state=TurnWindowState.open)
-        result = ENGINE.resolve_window(w, [], {}, [])
+        result = self.engine.resolve_window(w, [], {}, [])
         assert result.resolved is False
         assert result.window.state == TurnWindowState.open
 
@@ -207,7 +216,7 @@ class TestResolveWindow:
         a_c = _action(player_id=p_c, turn_window_id=w.turn_window_id)
         a_a = _action(player_id=p_a, turn_window_id=w.turn_window_id)
         a_b = _action(player_id=p_b, turn_window_id=w.turn_window_id)
-        result = ENGINE.resolve_window(w, [a_c, a_a, a_b], {}, [])
+        result = self.engine.resolve_window(w, [a_c, a_a, a_b], {}, [])
         ordered_ids = [a.player_id for a in result.ordered_actions]
         assert ordered_ids == [p_a, p_b, p_c]
 
@@ -217,7 +226,7 @@ class TestResolveWindow:
         a1 = _action(player_id=p1, turn_window_id=w.turn_window_id)
         # p2 did not submit
         chars = {p2: "defend"}
-        result = ENGINE.resolve_window(w, [a1], chars, timeout_player_ids=[p2])
+        result = self.engine.resolve_window(w, [a1], chars, timeout_player_ids=[p2])
         assert result.resolved is True
         fallbacks = [a for a in result.ordered_actions if a.is_timeout_fallback]
         assert len(fallbacks) == 1
@@ -230,7 +239,9 @@ class TestResolveWindow:
         p1 = _uid()
         w = _window(state=TurnWindowState.locked)
         a1 = _action(player_id=p1, turn_window_id=w.turn_window_id)
-        result = ENGINE.resolve_window(w, [a1], {p1: "hold"}, timeout_player_ids=[p1])
+        result = self.engine.resolve_window(
+            w, [a1], {p1: "hold"}, timeout_player_ids=[p1]
+        )
         non_fallbacks = [a for a in result.ordered_actions if not a.is_timeout_fallback]
         fallbacks = [a for a in result.ordered_actions if a.is_timeout_fallback]
         assert len(non_fallbacks) == 1
@@ -241,7 +252,7 @@ class TestResolveWindow:
         w = _window(state=TurnWindowState.locked)
         a1 = _action(player_id=p1, turn_window_id=w.turn_window_id)
         a2 = _action(player_id=p2, turn_window_id=w.turn_window_id)
-        result = ENGINE.resolve_window(w, [a1, a2], {}, [])
+        result = self.engine.resolve_window(w, [a1, a2], {}, [])
         assert set(result.window.committed_action_ids) == {a1.action_id, a2.action_id}
 
 
@@ -251,6 +262,9 @@ class TestResolveWindow:
 
 
 class TestCommitWindow:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def _resolved_window_and_actions(self):
         p1, p2 = _uid(), _uid()
         w = _window(state=TurnWindowState.locked)
@@ -260,12 +274,12 @@ class TestCommitWindow:
         a2 = _action(
             player_id=p2, turn_window_id=w.turn_window_id, state=ActionState.submitted
         )
-        resolve = ENGINE.resolve_window(w, [a1, a2], {}, [])
+        resolve = self.engine.resolve_window(w, [a1, a2], {}, [])
         return resolve.window, resolve.ordered_actions
 
     def test_commit_from_resolving(self):
         w, actions = self._resolved_window_and_actions()
-        result = ENGINE.commit_window(
+        result = self.engine.commit_window(
             w, actions, narration="Heroes advance.", state_snapshot={"scene": "dungeon"}
         )
         assert result.committed is True
@@ -278,18 +292,18 @@ class TestCommitWindow:
 
     def test_commit_marks_actions_resolved(self):
         w, actions = self._resolved_window_and_actions()
-        ENGINE.commit_window(w, actions)
+        self.engine.commit_window(w, actions)
         for action in actions:
             assert action.state == ActionState.resolved
 
     def test_commit_requires_resolving_state(self):
         w = _window(state=TurnWindowState.locked)
-        result = ENGINE.commit_window(w, [])
+        result = self.engine.commit_window(w, [])
         assert result.committed is False
 
     def test_commit_produces_log_entry_with_correct_metadata(self):
         w, actions = self._resolved_window_and_actions()
-        result = ENGINE.commit_window(w, actions)
+        result = self.engine.commit_window(w, actions)
         le = result.log_entry
         assert le.campaign_id == w.campaign_id
         assert le.scene_id == w.scene_id
@@ -304,33 +318,36 @@ class TestCommitWindow:
 
 
 class TestAbortWindow:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_abort_from_open(self):
         w = _window(state=TurnWindowState.open)
-        result = ENGINE.abort_window(w, reason="GM cancelled")
+        result = self.engine.abort_window(w, reason="GM cancelled")
         assert result.aborted is True
         assert result.window.state == TurnWindowState.aborted
         assert result.reason == "GM cancelled"
 
     def test_abort_from_locked(self):
         w = _window(state=TurnWindowState.locked)
-        result = ENGINE.abort_window(w)
+        result = self.engine.abort_window(w)
         assert result.aborted is True
         assert result.window.state == TurnWindowState.aborted
 
     def test_abort_from_resolving(self):
         w = _window(state=TurnWindowState.resolving)
-        result = ENGINE.abort_window(w)
+        result = self.engine.abort_window(w)
         assert result.aborted is True
 
     def test_cannot_abort_committed(self):
         w = _window(state=TurnWindowState.committed)
-        result = ENGINE.abort_window(w)
+        result = self.engine.abort_window(w)
         assert result.aborted is False
         assert result.window.state == TurnWindowState.committed
 
     def test_cannot_abort_already_aborted(self):
         w = _window(state=TurnWindowState.aborted)
-        result = ENGINE.abort_window(w)
+        result = self.engine.abort_window(w)
         assert result.aborted is False
 
 
@@ -340,13 +357,16 @@ class TestAbortWindow:
 
 
 class TestSubmitAction:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_accept_in_open_window(self):
         p1 = _uid()
         w = _window(state=TurnWindowState.open)
         a = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, a, existing_actions=[])
+        result = self.engine.submit_action(w, a, existing_actions=[])
         assert result.accepted is True
         assert result.action.state == ActionState.submitted
 
@@ -356,7 +376,7 @@ class TestSubmitAction:
         a = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, a, existing_actions=[])
+        result = self.engine.submit_action(w, a, existing_actions=[])
         assert result.accepted is True
 
     def test_reject_late_submission_after_lock(self):
@@ -365,7 +385,7 @@ class TestSubmitAction:
         a = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, a, existing_actions=[])
+        result = self.engine.submit_action(w, a, existing_actions=[])
         assert result.accepted is False
         assert result.action.state == ActionState.rejected
         assert "closed" in result.rejection_reason.lower()
@@ -376,7 +396,7 @@ class TestSubmitAction:
         a = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, a, existing_actions=[])
+        result = self.engine.submit_action(w, a, existing_actions=[])
         assert result.accepted is False
 
     def test_reject_duplicate_submitted_action(self):
@@ -388,7 +408,7 @@ class TestSubmitAction:
         new_action = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, new_action, existing_actions=[existing])
+        result = self.engine.submit_action(w, new_action, existing_actions=[existing])
         assert result.accepted is False
         assert result.action.state == ActionState.rejected
 
@@ -401,7 +421,7 @@ class TestSubmitAction:
         new_action = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, new_action, existing_actions=[existing])
+        result = self.engine.submit_action(w, new_action, existing_actions=[existing])
         assert result.accepted is False
 
     def test_allow_second_submission_if_first_was_rejected(self):
@@ -413,7 +433,7 @@ class TestSubmitAction:
         new_action = make_committed_action(
             player_id=p1, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, new_action, existing_actions=[existing])
+        result = self.engine.submit_action(w, new_action, existing_actions=[existing])
         assert result.accepted is True
 
     def test_different_players_can_each_submit(self):
@@ -425,7 +445,7 @@ class TestSubmitAction:
         new_action = make_committed_action(
             player_id=p2, turn_window_id=w.turn_window_id, state=ActionState.draft
         )
-        result = ENGINE.submit_action(w, new_action, existing_actions=[a1])
+        result = self.engine.submit_action(w, new_action, existing_actions=[a1])
         assert result.accepted is True
 
     def test_submit_sets_ready_state(self):
@@ -437,7 +457,7 @@ class TestSubmitAction:
             state=ActionState.draft,
             ready_state=ReadyState.not_ready,
         )
-        result = ENGINE.submit_action(w, a, existing_actions=[])
+        result = self.engine.submit_action(w, a, existing_actions=[])
         assert result.action.ready_state == ReadyState.ready
 
 
@@ -447,10 +467,13 @@ class TestSubmitAction:
 
 
 class TestValidateAction:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_validate_accepted_action_type(self):
         a = _action(state=ActionState.submitted)
         a.declared_action_type = ActionType.move
-        result = ENGINE.validate_action(
+        result = self.engine.validate_action(
             a, allowed_action_types=[ActionType.move, ActionType.inspect]
         )
         assert result.state == ActionState.validated
@@ -459,20 +482,20 @@ class TestValidateAction:
     def test_reject_disallowed_action_type(self):
         a = _action(state=ActionState.submitted)
         a.declared_action_type = ActionType.attack
-        result = ENGINE.validate_action(a, allowed_action_types=[ActionType.move])
+        result = self.engine.validate_action(a, allowed_action_types=[ActionType.move])
         assert result.state == ActionState.rejected
         assert result.validation_status == ValidationStatus.invalid
         assert "not allowed" in result.rejection_reason
 
     def test_no_op_on_non_submitted_action(self):
         a = _action(state=ActionState.draft)
-        result = ENGINE.validate_action(a)
+        result = self.engine.validate_action(a)
         assert result.state == ActionState.draft  # unchanged
 
     def test_allow_all_when_no_filter(self):
         a = _action(state=ActionState.submitted)
         a.declared_action_type = ActionType.attack
-        result = ENGINE.validate_action(a, allowed_action_types=None)
+        result = self.engine.validate_action(a, allowed_action_types=None)
         assert result.state == ActionState.validated
 
 
@@ -482,9 +505,14 @@ class TestValidateAction:
 
 
 class TestRejectAction:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_reject_sets_state_and_reason(self):
         a = _action(state=ActionState.submitted)
-        result = ENGINE.reject_action(a, reason="Action conflicts with scene rules.")
+        result = self.engine.reject_action(
+            a, reason="Action conflicts with scene rules."
+        )
         assert result.state == ActionState.rejected
         assert result.validation_status == ValidationStatus.invalid
         assert result.rejection_reason == "Action conflicts with scene rules."
@@ -496,6 +524,9 @@ class TestRejectAction:
 
 
 class TestReplayTurn:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_replay_returns_actions_in_deterministic_order(self):
         p_a = "aaaaaaaa-0000-0000-0000-000000000001"
         p_b = "bbbbbbbb-0000-0000-0000-000000000002"
@@ -504,7 +535,7 @@ class TestReplayTurn:
         log = make_turn_log_entry(
             action_ids=[a1.action_id, a2.action_id],
         )
-        replayed = ENGINE.replay_turn(log, [a1, a2])
+        replayed = self.engine.replay_turn(log, [a1, a2])
         assert [a.player_id for a in replayed] == [p_a, p_b]
 
     def test_replay_ignores_missing_action_ids(self):
@@ -512,7 +543,7 @@ class TestReplayTurn:
         a1 = _action(player_id=p1, state=ActionState.resolved)
         missing_id = _uid()
         log = make_turn_log_entry(action_ids=[a1.action_id, missing_id])
-        replayed = ENGINE.replay_turn(log, [a1])
+        replayed = self.engine.replay_turn(log, [a1])
         assert len(replayed) == 1
         assert replayed[0].action_id == a1.action_id
 
@@ -520,7 +551,7 @@ class TestReplayTurn:
         p1 = _uid()
         a1 = _action(player_id=p1, state=ActionState.resolved)
         log = make_turn_log_entry(action_ids=[a1.action_id])
-        ENGINE.replay_turn(log, [a1])
+        self.engine.replay_turn(log, [a1])
         assert a1.state == ActionState.resolved
 
 
@@ -530,6 +561,9 @@ class TestReplayTurn:
 
 
 class TestFullLifecycle:
+    def setup_method(self):
+        self.engine = TurnEngine()
+
     def test_open_to_committed(self):
         """Walk a TurnWindow all the way from open → committed."""
         p1, p2 = _uid(), _uid()
@@ -560,35 +594,35 @@ class TestFullLifecycle:
             state=ActionState.draft,
             declared_action_type=ActionType.inspect,
         )
-        r1 = ENGINE.submit_action(w, a1, existing_actions=[])
+        r1 = self.engine.submit_action(w, a1, existing_actions=[])
         assert r1.accepted
-        r2 = ENGINE.submit_action(w, a2, existing_actions=[r1.action])
+        r2 = self.engine.submit_action(w, a2, existing_actions=[r1.action])
         assert r2.accepted
 
         # 3. Check all-ready (p1 and p2 both ready)
         r1.action.ready_state = ReadyState.ready
         r2.action.ready_state = ReadyState.ready
-        w = ENGINE.check_all_ready(w, [r1.action, r2.action], [p1, p2])
+        w = self.engine.check_all_ready(w, [r1.action, r2.action], [p1, p2])
         assert w.state == TurnWindowState.all_ready
 
         # 4. Lock window (early close)
-        lock_result = ENGINE.lock_window(w)
+        lock_result = self.engine.lock_window(w)
         assert lock_result.locked
         w = lock_result.window
         assert w.state == TurnWindowState.locked
 
         # 5. Validate actions
-        r1.action = ENGINE.validate_action(r1.action)
-        r2.action = ENGINE.validate_action(r2.action)
+        r1.action = self.engine.validate_action(r1.action)
+        r2.action = self.engine.validate_action(r2.action)
 
         # 6. Resolve
-        resolve_result = ENGINE.resolve_window(w, [r1.action, r2.action], {}, [])
+        resolve_result = self.engine.resolve_window(w, [r1.action, r2.action], {}, [])
         assert resolve_result.resolved
         w = resolve_result.window
         assert w.state == TurnWindowState.resolving
 
         # 7. Commit
-        commit_result = ENGINE.commit_window(
+        commit_result = self.engine.commit_window(
             w,
             resolve_result.ordered_actions,
             narration="The heroes explore the chamber.",
@@ -605,7 +639,7 @@ class TestFullLifecycle:
         assert len(le.action_ids) == 2
 
         # 9. Replay produces same deterministic order
-        replayed = ENGINE.replay_turn(le, resolve_result.ordered_actions)
+        replayed = self.engine.replay_turn(le, resolve_result.ordered_actions)
         assert [a.player_id for a in replayed] == sorted([p1, p2])
 
     def test_timeout_fallback_in_full_lifecycle(self):
@@ -623,15 +657,15 @@ class TestFullLifecycle:
             turn_window_id=tw_id,
             state=ActionState.draft,
         )
-        r1 = ENGINE.submit_action(w, a1, existing_actions=[])
+        r1 = self.engine.submit_action(w, a1, existing_actions=[])
         assert r1.accepted
 
         # Lock (timer expired)
-        lock_result = ENGINE.lock_window(w)
+        lock_result = self.engine.lock_window(w)
         assert lock_result.locked
 
         # Resolve with p2 timed out, using "defend" fallback
-        resolve_result = ENGINE.resolve_window(
+        resolve_result = self.engine.resolve_window(
             lock_result.window,
             [r1.action],
             characters_by_player={p2: "defend"},
@@ -644,7 +678,7 @@ class TestFullLifecycle:
         assert fallback.declared_action_type == ActionType.defend
 
         # Commit
-        commit_result = ENGINE.commit_window(
+        commit_result = self.engine.commit_window(
             resolve_result.window,
             resolve_result.ordered_actions,
         )

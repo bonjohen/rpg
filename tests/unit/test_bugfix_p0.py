@@ -15,12 +15,12 @@ from fastapi.testclient import TestClient
 from server.api.app import create_api_app
 from server.api.routes import set_bot_token
 from server.domain.entities import (
-    ConversationScope,
     KnowledgeFact,
     VisibilityGrant,
 )
 from server.domain.enums import KnowledgeFactType, ScopeType
 from server.domain.helpers import new_id as _uid, utc_now as _now
+from tests.fixtures.builders import make_conversation_scope
 from server.orchestrator.game_loop import GameOrchestrator
 from server.scope.engine import ScopeEngine
 from tests.fixtures.db_helpers import create_test_session_factory
@@ -31,13 +31,8 @@ GOBLIN_CAVES_PATH = os.path.join(
 )
 
 
-def _scope(
-    scope_type: ScopeType,
-    player_id: str | None = None,
-    side_channel_id: str | None = None,
-) -> ConversationScope:
-    return ConversationScope(
-        scope_id=_uid(),
+def _scope(scope_type, player_id=None, side_channel_id=None):
+    return make_conversation_scope(
         campaign_id="c1",
         scope_type=scope_type,
         player_id=player_id,

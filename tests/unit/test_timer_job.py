@@ -135,12 +135,8 @@ class TestTimerSkipsAlreadyResolved:
 
 class TestTimerGeneratesFallbackActions:
     @pytest.mark.asyncio
-    async def test_timer_job_generates_fallback_actions(self):
-        """Timer expires with missing submissions -> resolve_turn synthesizes fallbacks.
-
-        The fallback action generation happens inside resolve_turn, so we verify
-        resolve_turn is called (it handles fallback internally).
-        """
+    async def test_timer_job_passes_resolved_entry_to_delivery(self):
+        """Timer fires -> resolved log entry passed to deliver_turn_results."""
         orch = _make_orchestrator()
         ctx = _make_context(orchestrator=orch)
 
@@ -148,12 +144,17 @@ class TestTimerGeneratesFallbackActions:
             patch(
                 "bot.delivery.generate_narration", new_callable=AsyncMock
             ) as mock_narrate,
-            patch("bot.delivery.deliver_turn_results", new_callable=AsyncMock),
+            patch(
+                "bot.delivery.deliver_turn_results", new_callable=AsyncMock
+            ) as mock_deliver,
         ):
             mock_narrate.return_value = "Narration."
             await turn_timer_callback(ctx)
 
-        orch.resolve_turn.assert_called_once_with("tw-1")
+        # Verify the resolved log entry was forwarded to delivery
+        mock_deliver.assert_called_once()
+        delivered_entry = mock_deliver.call_args.kwargs["turn_log_entry"]
+        assert delivered_entry.turn_window_id == "tw-1"
 
 
 class TestTimerHasBotContext:

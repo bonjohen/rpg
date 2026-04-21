@@ -9,19 +9,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from bot.config import BotConfig
 from bot.handlers import _handle_callback_query
 from bot.mapping import BotRegistry
 from bot.turn_controls import CALLBACK_PASS, CALLBACK_READY, build_turn_keyboard
 from tests.fixtures.telegram_builders import (
+    make_bot_config,
     make_callback_query,
     make_callback_update,
     make_context,
 )
-
-
-def _make_config() -> BotConfig:
-    return BotConfig(group_chat_id=-1001234567890)
 
 
 def _make_orchestrator(
@@ -78,13 +74,13 @@ class TestTurnControlMessagePosted:
 
 class TestReadyButton:
     @pytest.mark.asyncio
-    async def test_ready_button_submits_hold_action(self):
-        """Player presses Ready -> submit_action called with hold."""
+    async def test_ready_button_calls_submit_action(self):
+        """Player presses Ready -> handler calls submit_action with hold (mock orchestrator)."""
         from server.domain.enums import ActionType
 
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
         orch = _make_orchestrator()
 
         query = make_callback_query(data=CALLBACK_READY, user_id=100)
@@ -100,13 +96,13 @@ class TestReadyButton:
 
 class TestPassButton:
     @pytest.mark.asyncio
-    async def test_pass_button_submits_pass_action(self):
-        """Player presses Pass -> hold action with pass_turn type."""
+    async def test_pass_button_calls_submit_action(self):
+        """Player presses Pass -> handler calls submit_action with pass_turn (mock orchestrator)."""
         from server.domain.enums import ActionType
 
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
         orch = _make_orchestrator()
 
         query = make_callback_query(data=CALLBACK_PASS, user_id=100)
@@ -125,7 +121,7 @@ class TestNonPlayerRejected:
     async def test_button_press_from_non_player_rejected(self):
         """Unregistered user presses button -> callback answered with error."""
         registry = BotRegistry()  # No players registered
-        config = _make_config()
+        config = make_bot_config()
         orch = _make_orchestrator()
 
         query = make_callback_query(data=CALLBACK_READY, user_id=999)
@@ -146,7 +142,7 @@ class TestPostResolveRejected:
         """Button pressed after turn committed -> answered with 'already resolved'."""
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
         orch = _make_orchestrator(tw_state="committed")
 
         query = make_callback_query(data=CALLBACK_READY, user_id=100)
@@ -167,7 +163,7 @@ class TestControlMessageUpdates:
         """Player submits action -> control message edited to show remaining."""
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
         orch = _make_orchestrator()
         orch.turn_control_message_ids["tw-1"] = 42
 
@@ -202,7 +198,7 @@ class TestCallbackAnswered:
         """Every button press -> callback_query.answer() called."""
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
         orch = _make_orchestrator()
 
         query = make_callback_query(data=CALLBACK_READY, user_id=100)
@@ -211,4 +207,24 @@ class TestCallbackAnswered:
 
         await _handle_callback_query(update, ctx)
 
+        query.answer.assert_called_once()
+
+
+class TestUnknownCallbackData:
+    @pytest.mark.asyncio
+    async def test_unknown_callback_data_rejected_gracefully(self):
+        """Unrecognized callback_data -> answered with error, no crash."""
+        registry = BotRegistry()
+        registry.register_player(100, "p-1")
+        config = make_bot_config()
+        orch = _make_orchestrator()
+
+        query = make_callback_query(data="totally:bogus:data", user_id=100)
+        update = make_callback_update(query)
+        ctx = make_context(registry=registry, config=config, orchestrator=orch)
+
+        # Should not raise
+        await _handle_callback_query(update, ctx)
+
+        # Callback should still be answered (no hang)
         query.answer.assert_called_once()

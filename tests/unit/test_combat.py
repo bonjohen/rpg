@@ -7,6 +7,8 @@ and a full goblin patrol scenario integration.
 
 from __future__ import annotations
 
+import pytest
+
 from server.combat.actions import CombatActionEngine
 from server.combat.conditions import CombatConditionEngine
 from server.combat.monsters import MonsterBehaviorEngine, MoraleEngine
@@ -650,46 +652,53 @@ class TestAwarenessTransitions:
     def setup_method(self):
         self.engine = CombatVisibilityEngine()
 
-    def test_unaware_noise_to_alert(self):
-        g = make_wolf_pack(awareness=AwarenessState.unaware)
-        self.engine.transition_awareness(g, "noise")
-        assert g.awareness_state == AwarenessState.alert
+    @pytest.mark.parametrize(
+        "factory, from_state, trigger, to_state",
+        [
+            (make_wolf_pack, AwarenessState.unaware, "noise", AwarenessState.alert),
+            (
+                make_wolf_pack,
+                AwarenessState.unaware,
+                "nearby_combat",
+                AwarenessState.alert,
+            ),
+            (make_wolf_pack, AwarenessState.alert, "spotted", AwarenessState.aware),
+            (make_wolf_pack, AwarenessState.alert, "searched", AwarenessState.aware),
+            (make_wolf_pack, AwarenessState.aware, "attacked", AwarenessState.engaged),
+            (
+                make_wolf_pack,
+                AwarenessState.aware,
+                "entered_territory",
+                AwarenessState.engaged,
+            ),
+            (make_goblin_patrol, AwarenessState.engaged, "truce", AwarenessState.aware),
+            (
+                make_goblin_patrol,
+                AwarenessState.engaged,
+                "flee_success",
+                AwarenessState.aware,
+            ),
+        ],
+        ids=[
+            "unaware_noise_to_alert",
+            "unaware_nearby_combat_to_alert",
+            "alert_spotted_to_aware",
+            "alert_searched_to_aware",
+            "aware_attacked_to_engaged",
+            "aware_entered_territory_to_engaged",
+            "engaged_truce_to_aware",
+            "engaged_flee_success_to_aware",
+        ],
+    )
+    def test_valid_transition(self, factory, from_state, trigger, to_state):
+        g = factory(awareness=from_state)
+        self.engine.transition_awareness(g, trigger)
+        assert g.awareness_state == to_state
 
-    def test_unaware_nearby_combat_to_alert(self):
-        g = make_wolf_pack(awareness=AwarenessState.unaware)
-        self.engine.transition_awareness(g, "nearby_combat")
-        assert g.awareness_state == AwarenessState.alert
-
-    def test_alert_spotted_to_aware(self):
+    def test_alert_spotted_sets_visible(self):
         g = make_wolf_pack(awareness=AwarenessState.alert)
         self.engine.transition_awareness(g, "spotted")
-        assert g.awareness_state == AwarenessState.aware
         assert g.is_visible is True
-
-    def test_alert_searched_to_aware(self):
-        g = make_wolf_pack(awareness=AwarenessState.alert)
-        self.engine.transition_awareness(g, "searched")
-        assert g.awareness_state == AwarenessState.aware
-
-    def test_aware_attacked_to_engaged(self):
-        g = make_wolf_pack(awareness=AwarenessState.aware)
-        self.engine.transition_awareness(g, "attacked")
-        assert g.awareness_state == AwarenessState.engaged
-
-    def test_aware_entered_territory_to_engaged(self):
-        g = make_wolf_pack(awareness=AwarenessState.aware)
-        self.engine.transition_awareness(g, "entered_territory")
-        assert g.awareness_state == AwarenessState.engaged
-
-    def test_engaged_truce_to_aware(self):
-        g = make_goblin_patrol(awareness=AwarenessState.engaged)
-        self.engine.transition_awareness(g, "truce")
-        assert g.awareness_state == AwarenessState.aware
-
-    def test_engaged_flee_success_to_aware(self):
-        g = make_goblin_patrol(awareness=AwarenessState.engaged)
-        self.engine.transition_awareness(g, "flee_success")
-        assert g.awareness_state == AwarenessState.aware
 
     def test_invalid_transition_noop(self):
         g = make_wolf_pack(awareness=AwarenessState.unaware)

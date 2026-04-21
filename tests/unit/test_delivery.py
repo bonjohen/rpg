@@ -10,42 +10,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from bot.config import BotConfig
 from bot.delivery import deliver_turn_results
 from bot.mapping import BotRegistry, UnknownUserError
-from server.domain.entities import TurnLogEntry
+from tests.fixtures.builders import make_scene, make_turn_log_entry
+from tests.fixtures.telegram_builders import make_bot_config
 
 _NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
-
-
-def _make_log_entry() -> TurnLogEntry:
-    return TurnLogEntry(
-        log_entry_id="log1",
-        campaign_id="c1",
-        scene_id="s1",
-        turn_window_id="tw1",
-        turn_number=1,
-        committed_at=_NOW,
-        narration="Basic narration.",
-    )
-
-
-def _make_scene():
-    from server.domain.entities import Scene
-    from server.domain.enums import SceneState
-
-    return Scene(
-        scene_id="s1",
-        campaign_id="c1",
-        name="Cave",
-        description="A cave.",
-        created_at=_NOW,
-        state=SceneState.idle,
-    )
-
-
-def _make_config() -> BotConfig:
-    return BotConfig(group_chat_id=-1001234567890)
 
 
 class TestDeliverTurnResults:
@@ -54,12 +24,12 @@ class TestDeliverTurnResults:
         """After resolution, send_public called with narration text."""
         bot = AsyncMock()
         registry = BotRegistry()
-        config = _make_config()
+        config = make_bot_config()
 
         with patch("bot.delivery.send_public", new_callable=AsyncMock) as mock_pub:
             await deliver_turn_results(
-                _make_log_entry(),
-                _make_scene(),
+                make_turn_log_entry(narration="Basic narration."),
+                make_scene(name="Cave", description="A cave."),
                 "Rich narration text.",
                 bot,
                 config,
@@ -76,7 +46,7 @@ class TestDeliverTurnResults:
         bot = AsyncMock()
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
 
         facts = [("p-1", "You notice a hidden door.")]
 
@@ -87,8 +57,8 @@ class TestDeliverTurnResults:
             ) as mock_priv,
         ):
             await deliver_turn_results(
-                _make_log_entry(),
-                _make_scene(),
+                make_turn_log_entry(narration="Basic narration."),
+                make_scene(name="Cave", description="A cave."),
                 "Narration.",
                 bot,
                 config,
@@ -106,7 +76,7 @@ class TestDeliverTurnResults:
         registry = BotRegistry()
         registry.register_player(100, "p-1")
         registry.register_player(200, "p-2")
-        config = _make_config()
+        config = make_bot_config()
 
         facts = [("p-1", "Secret for player 1 only.")]
 
@@ -117,8 +87,8 @@ class TestDeliverTurnResults:
             ) as mock_priv,
         ):
             await deliver_turn_results(
-                _make_log_entry(),
-                _make_scene(),
+                make_turn_log_entry(narration="Basic narration."),
+                make_scene(name="Cave", description="A cave."),
                 "Narration.",
                 bot,
                 config,
@@ -136,7 +106,7 @@ class TestDeliverTurnResults:
         registry = BotRegistry()
         registry.register_player(100, "p-1")
         registry.register_player(200, "p-2")
-        config = _make_config()
+        config = make_bot_config()
 
         facts = [
             ("p-1", "Fact for p-1."),
@@ -160,8 +130,8 @@ class TestDeliverTurnResults:
         ):
             # Should not raise — logs error and continues
             await deliver_turn_results(
-                _make_log_entry(),
-                _make_scene(),
+                make_turn_log_entry(narration="Basic narration."),
+                make_scene(name="Cave", description="A cave."),
                 "Narration.",
                 bot,
                 config,
@@ -178,7 +148,7 @@ class TestDeliverTurnResults:
         bot = AsyncMock()
         registry = BotRegistry()
         registry.register_player(100, "p-1")
-        config = _make_config()
+        config = make_bot_config()
 
         facts = [("p-1", "Secret.")]
 
@@ -194,8 +164,8 @@ class TestDeliverTurnResults:
 
             with caplog.at_level(logging.ERROR, logger="bot.delivery"):
                 await deliver_turn_results(
-                    _make_log_entry(),
-                    _make_scene(),
+                    make_turn_log_entry(narration="Basic narration."),
+                    make_scene(name="Cave", description="A cave."),
                     "Narration.",
                     bot,
                     config,
@@ -210,7 +180,7 @@ class TestDeliverTurnResults:
         """Turn with no private revelations -> no DMs sent."""
         bot = AsyncMock()
         registry = BotRegistry()
-        config = _make_config()
+        config = make_bot_config()
 
         with (
             patch("bot.delivery.send_public", new_callable=AsyncMock),
@@ -219,8 +189,8 @@ class TestDeliverTurnResults:
             ) as mock_priv,
         ):
             await deliver_turn_results(
-                _make_log_entry(),
-                _make_scene(),
+                make_turn_log_entry(narration="Basic narration."),
+                make_scene(name="Cave", description="A cave."),
                 "Narration.",
                 bot,
                 config,

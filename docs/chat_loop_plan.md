@@ -232,7 +232,7 @@ Open  ──>  Started  ──>  Completed
 | 9.5 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `docs/release_readiness.md` with final test count and criteria status. (Done in Phase 8.) |
 | 9.6 | Completed | 2026-04-20 10:08 PM | 2026-04-20 10:08 PM | No stub comments found in `bot/handlers.py`. |
 | 9.7 | Completed | 2026-04-20 10:08 PM | 2026-04-20 10:10 PM | Run full suite one final time: 1550 tests pass, lint clean, format clean. |
-| 9.8 | Started | 2026-04-20 10:10 PM | | Stage and commit: "Phase 9: Documentation update for chat-driven game loop" |
+| 9.8 | Completed | 2026-04-20 10:10 PM | 2026-04-20 10:12 PM | Stage and commit: "Phase 9: Documentation update for chat-driven game loop" |
 
 ### Phase 9 Summary
 

@@ -23,6 +23,7 @@ from bot.mapping import BotRegistry
 from bot.routing import RouteTarget
 from server.orchestrator.game_loop import DispatchResult
 from tests.fixtures.telegram_builders import (
+    make_bot_config,
     make_context,
     make_group_message,
     make_private_message,
@@ -31,9 +32,7 @@ from tests.fixtures.telegram_builders import (
 
 
 def _make_config():
-    from bot.config import BotConfig
-
-    return BotConfig(group_chat_id=-1001234567890, play_topic_id=42)
+    return make_bot_config(play_topic_id=42)
 
 
 def _make_dispatch_result(
@@ -119,7 +118,8 @@ class TestGroupMessageDispatch:
             with patch("bot.handlers.send_public", new_callable=AsyncMock) as mock_pub:
                 await _handle_group_message(update, ctx)
                 mock_pub.assert_called_once()
-                assert "Action submitted" in mock_pub.call_args[0][2]
+                text_arg = mock_pub.call_args[0][2]  # send_public(bot, config, text)
+                assert "Action submitted" in text_arg
 
     @pytest.mark.asyncio
     async def test_group_action_submitted_triggers_resolve_check(self):
@@ -233,7 +233,10 @@ class TestPrivateMessageDispatch:
         with patch("bot.handlers.send_private", new_callable=AsyncMock) as mock_priv:
             await _handle_private_message(update, ctx)
             mock_priv.assert_called_once()
-            assert "lock clicks" in mock_priv.call_args[0][3]
+            text_arg = mock_priv.call_args[0][
+                3
+            ]  # send_private(bot, registry, user_id, text)
+            assert "lock clicks" in text_arg
 
     @pytest.mark.asyncio
     async def test_private_unregistered_user_gets_onboarding(self):

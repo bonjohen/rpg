@@ -20,6 +20,7 @@ from bot.mapping import BotRegistry
 from scenarios.loader import ScenarioLoadResult
 from server.domain.entities import Scene
 from server.domain.enums import SceneState
+from tests.fixtures.builders import make_scene
 from tests.fixtures.telegram_builders import (
     make_context,
     make_group_message,
@@ -34,13 +35,12 @@ def _make_scene(
     name: str = "Cave Entrance",
     description: str = "A dark mouth in the hillside.",
     exits: dict | None = None,
-) -> Scene:
-    return Scene(
+):
+    return make_scene(
         scene_id=scene_id,
         campaign_id="test-campaign",
         name=name,
         description=description,
-        created_at=_NOW,
         state=SceneState.idle,
         exits=exits or {"north": "main_hall"},
     )

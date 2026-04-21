@@ -88,6 +88,29 @@ class TestCmdJoin:
         assert registry.player_id_for(30) == "existing-uuid"
         assert "already" in msg.reply_text.call_args[0][0]
 
+    async def test_duplicate_join_with_game_state_shows_character_and_scene(self):
+        """Second /join when orchestrator has character+scene returns descriptive message."""
+        registry = BotRegistry()
+        registry.register_player(40, "p-40")
+        orch = MagicMock()
+        char = MagicMock()
+        char.name = "Kira"
+        scene = MagicMock()
+        scene.name = "Cave Entrance"
+        orch.get_player_character = MagicMock(return_value=char)
+        orch.get_player_scene = MagicMock(return_value=scene)
+
+        msg = make_group_message(user_id=40)
+        update = make_update(msg)
+        ctx = make_context(registry=registry, orchestrator=orch)
+        await cmd_join(update, ctx)
+
+        text = msg.reply_text.call_args[0][0]
+        assert "Kira" in text
+        assert "Cave Entrance" in text
+        # Should NOT have called add_player
+        orch.add_player.assert_not_called()
+
 
 class TestCmdHelp:
     async def test_help_shows_commands(self):

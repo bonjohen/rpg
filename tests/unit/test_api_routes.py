@@ -18,6 +18,7 @@ from server.api.auth import validate_init_data
 from server.domain.enums import ActionType
 from server.orchestrator.game_loop import GameOrchestrator
 from tests.fixtures.db_helpers import create_test_session_factory
+from tests.fixtures.orchestrator_builder import add_test_players
 
 GOBLIN_CAVES_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "scenarios", "starters", "goblin_caves.yaml"
@@ -45,16 +46,6 @@ def _make_client(
     app = create_api_app(orch, bot_token=BOT_TOKEN)
     init_data = _build_init_data(user_id, "TestUser", BOT_TOKEN)
     return TestClient(app, headers={"X-Init-Data": init_data})
-
-
-def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:
-    """Add test players and return their player_ids."""
-    ids = []
-    for i in range(count):
-        pid = f"player_{i}"
-        orch.add_player(pid, f"Player {i}", telegram_user_id=1000 + i)
-        ids.append(pid)
-    return ids
 
 
 def _build_init_data(user_id: int, first_name: str, bot_token: str) -> str:
@@ -125,7 +116,7 @@ class TestAuth:
 class TestCharacterSheet:
     def test_get_character_returns_full_state(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}")
@@ -143,7 +134,7 @@ class TestCharacterSheet:
 
     def test_get_character_includes_status_effects(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         char.status_effects = ["poisoned", "stunned"]
         with orch._session_scope() as session:
@@ -158,7 +149,7 @@ class TestCharacterSheet:
 
     def test_get_character_shows_scene_id(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         client = _make_client(orch)
         resp = client.get(f"/api/character/{char.character_id}")
@@ -174,7 +165,7 @@ class TestCharacterSheet:
 class TestInventory:
     def test_get_inventory_returns_items(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         # Give the character an item
         from server.domain.entities import InventoryItem
@@ -204,7 +195,7 @@ class TestInventory:
 
     def test_get_inventory_empty_returns_empty_list(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         # Remove any default items owned by this character
         with orch._session_scope() as session:
@@ -224,7 +215,7 @@ class TestInventory:
 
     def test_get_inventory_includes_properties(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         from server.domain.entities import InventoryItem
         from datetime import datetime, timezone
@@ -275,7 +266,7 @@ class TestScene:
 
     def test_get_scene_includes_present_players(self):
         orch = _make_orchestrator()
-        _add_players(orch, 2)
+        add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         client = _make_client(orch)
         resp = client.get(f"/api/scene/{scene_id}")
@@ -313,7 +304,7 @@ class TestRecap:
     def _setup_with_turns(self) -> tuple[GameOrchestrator, str]:
         """Setup orchestrator with a completed turn for recap testing."""
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         assert tw is not None
@@ -383,7 +374,7 @@ class TestRecap:
 class TestPlayer:
     def test_get_player_returns_info(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         client = _make_client(orch)
         resp = client.get(f"/api/player/{pids[0]}")
         assert resp.status_code == 200
@@ -409,7 +400,7 @@ class TestFullHydration:
         """Load scenario, add players, play a turn, then verify all API
         endpoints return consistent state."""
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
 
         # Play one turn
         scene_id = orch._find_starting_scene_id()

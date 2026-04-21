@@ -76,61 +76,59 @@ def _channel(member_ids: list[str], is_open: bool = True) -> SideChannel:
     )
 
 
-ENGINE = ScopeEngine()
-REFEREE = RefereeGuard()
-FACT_POLICY = FactOwnershipPolicy()
-SC_POLICY = SideChannelPolicy()
-LEAKAGE = LeakageGuard()
-
-
 # ---------------------------------------------------------------------------
 # ScopeEngine.delivery_targets_for
 # ---------------------------------------------------------------------------
 
 
 class TestDeliveryTargets:
+    def setup_method(self):
+        self.engine = ScopeEngine()
+
     def test_public_sends_to_group(self):
         scope = _scope(ScopeType.public)
-        target = ENGINE.delivery_targets_for(scope, ["p1", "p2"])
+        target = self.engine.delivery_targets_for(scope, ["p1", "p2"])
         assert target.send_public is True
         assert target.send_private_to == []
 
     def test_private_referee_sends_to_one_player(self):
         """Awareness result or hidden clue → only the owning player's DM."""
         scope = _scope(ScopeType.private_referee, player_id="p1")
-        target = ENGINE.delivery_targets_for(scope, ["p1", "p2"])
+        target = self.engine.delivery_targets_for(scope, ["p1", "p2"])
         assert target.send_public is False
         assert target.send_private_to == ["p1"]
 
     def test_private_referee_missing_player_id_raises(self):
         scope = _scope(ScopeType.private_referee, player_id=None)
         with pytest.raises(ScopeViolationError):
-            ENGINE.delivery_targets_for(scope, ["p1"])
+            self.engine.delivery_targets_for(scope, ["p1"])
 
     def test_side_channel_sends_to_members(self):
         ch = _channel(["p1", "p2"])
         scope = _scope(ScopeType.side_channel, side_channel_id=ch.side_channel_id)
-        target = ENGINE.delivery_targets_for(scope, ["p1", "p2", "p3"], side_channel=ch)
+        target = self.engine.delivery_targets_for(
+            scope, ["p1", "p2", "p3"], side_channel=ch
+        )
         assert target.send_public is False
         assert set(target.send_private_to) == {"p1", "p2"}
 
     def test_side_channel_closed_delivers_nothing(self):
         ch = _channel(["p1", "p2"], is_open=False)
         scope = _scope(ScopeType.side_channel, side_channel_id=ch.side_channel_id)
-        target = ENGINE.delivery_targets_for(scope, ["p1", "p2"], side_channel=ch)
+        target = self.engine.delivery_targets_for(scope, ["p1", "p2"], side_channel=ch)
         assert target.send_private_to == []
         assert target.send_public is False
 
     def test_side_channel_missing_object_raises(self):
         scope = _scope(ScopeType.side_channel)
         with pytest.raises(ScopeViolationError, match="SideChannel"):
-            ENGINE.delivery_targets_for(scope, ["p1"])
+            self.engine.delivery_targets_for(scope, ["p1"])
 
     def test_referee_only_raises(self):
         """referee_only must never be delivered."""
         scope = _scope(ScopeType.referee_only)
         with pytest.raises(ScopeViolationError, match="referee_only"):
-            ENGINE.delivery_targets_for(scope, ["p1"])
+            self.engine.delivery_targets_for(scope, ["p1"])
 
 
 # ---------------------------------------------------------------------------
@@ -139,38 +137,44 @@ class TestDeliveryTargets:
 
 
 class TestCanPlayerSeeFact:
+    def setup_method(self):
+        self.engine = ScopeEngine()
+
     def test_public_fact_visible_to_all(self):
         scope = _scope(ScopeType.public)
         fact = _fact(scope.scope_id)
         for pid in ["p1", "p2", "p3"]:
-            assert ENGINE.can_player_see_fact(pid, fact, scope, []) is True
+            assert self.engine.can_player_see_fact(pid, fact, scope, []) is True
 
     def test_private_fact_visible_only_to_owner(self):
         """Hidden clue or awareness result — only the target player sees it."""
         scope = _scope(ScopeType.private_referee, player_id="p1")
         fact = _fact(scope.scope_id, KnowledgeFactType.clue, "You notice a tripwire")
-        assert ENGINE.can_player_see_fact("p1", fact, scope, []) is True
-        assert ENGINE.can_player_see_fact("p2", fact, scope, []) is False
+        assert self.engine.can_player_see_fact("p1", fact, scope, []) is True
+        assert self.engine.can_player_see_fact("p2", fact, scope, []) is False
 
     def test_referee_only_fact_invisible_to_all(self):
         """Stealth tracker, NPC true intent — no player ever sees it."""
         scope = _scope(ScopeType.referee_only)
         fact = _fact(scope.scope_id, KnowledgeFactType.trap, "Spike trap behind door")
         for pid in ["p1", "p2", "gm"]:
-            assert ENGINE.can_player_see_fact(pid, fact, scope, []) is False
+            assert self.engine.can_player_see_fact(pid, fact, scope, []) is False
 
     def test_side_channel_fact_visible_to_members(self):
         ch = _channel(["p1", "p2"])
         scope = _scope(ScopeType.side_channel, side_channel_id=ch.side_channel_id)
         fact = _fact(scope.scope_id)
         assert (
-            ENGINE.can_player_see_fact("p1", fact, scope, [], side_channel=ch) is True
+            self.engine.can_player_see_fact("p1", fact, scope, [], side_channel=ch)
+            is True
         )
         assert (
-            ENGINE.can_player_see_fact("p2", fact, scope, [], side_channel=ch) is True
+            self.engine.can_player_see_fact("p2", fact, scope, [], side_channel=ch)
+            is True
         )
         assert (
-            ENGINE.can_player_see_fact("p3", fact, scope, [], side_channel=ch) is False
+            self.engine.can_player_see_fact("p3", fact, scope, [], side_channel=ch)
+            is False
         )
 
     def test_secret_objective_private_to_owner(self):
@@ -180,8 +184,8 @@ class TestCanPlayerSeeFact:
             KnowledgeFactType.secret_objective,
             "Steal the artifact without the others knowing",
         )
-        assert ENGINE.can_player_see_fact("p2", fact, scope, []) is True
-        assert ENGINE.can_player_see_fact("p1", fact, scope, []) is False
+        assert self.engine.can_player_see_fact("p2", fact, scope, []) is True
+        assert self.engine.can_player_see_fact("p1", fact, scope, []) is False
 
     def test_visibility_grant_broadens_access(self):
         """Player p1 shares their private clue with the whole party via a grant."""
@@ -199,7 +203,7 @@ class TestCanPlayerSeeFact:
         scopes = {priv_scope.scope_id: priv_scope, pub_scope.scope_id: pub_scope}
         # p2 can now see via the grant to a public scope
         assert (
-            ENGINE.can_player_see_fact(
+            self.engine.can_player_see_fact(
                 "p2", fact, priv_scope, [grant], scopes_by_id=scopes
             )
             is True
@@ -224,14 +228,14 @@ class TestCanPlayerSeeFact:
         }
         # p2 (the grantee) can see it
         assert (
-            ENGINE.can_player_see_fact(
+            self.engine.can_player_see_fact(
                 "p2", fact, priv_scope_a, [grant], scopes_by_id=scopes
             )
             is True
         )
         # p3 (not the grantee) cannot see it
         assert (
-            ENGINE.can_player_see_fact(
+            self.engine.can_player_see_fact(
                 "p3", fact, priv_scope_a, [grant], scopes_by_id=scopes
             )
             is False
@@ -240,7 +244,7 @@ class TestCanPlayerSeeFact:
     def test_no_grant_no_cross_player_visibility(self):
         priv_scope = _scope(ScopeType.private_referee, player_id="p1")
         fact = _fact(priv_scope.scope_id)
-        assert ENGINE.can_player_see_fact("p2", fact, priv_scope, []) is False
+        assert self.engine.can_player_see_fact("p2", fact, priv_scope, []) is False
 
     def test_grant_without_scopes_by_id_denies(self):
         """Legacy callers without scopes_by_id should deny grants by default."""
@@ -256,7 +260,7 @@ class TestCanPlayerSeeFact:
             granted_by_player_id="p1",
         )
         # Without scopes_by_id, grants are denied
-        assert ENGINE.can_player_see_fact("p2", fact, priv_scope, [grant]) is False
+        assert self.engine.can_player_see_fact("p2", fact, priv_scope, [grant]) is False
 
 
 # ---------------------------------------------------------------------------
@@ -265,6 +269,9 @@ class TestCanPlayerSeeFact:
 
 
 class TestFilterFactsForPlayer:
+    def setup_method(self):
+        self.engine = ScopeEngine()
+
     def test_filters_to_visible_only(self):
         pub = _scope(ScopeType.public)
         priv_p1 = _scope(ScopeType.private_referee, player_id="p1")
@@ -277,7 +284,7 @@ class TestFilterFactsForPlayer:
         f_ref = _fact(ref.scope_id)
 
         scopes = {s.scope_id: s for s in [pub, priv_p1, priv_p2, ref]}
-        visible = ENGINE.filter_facts_for_player(
+        visible = self.engine.filter_facts_for_player(
             "p1", [f_pub, f_p1, f_p2, f_ref], scopes, {}, {}
         )
         ids = {f.fact_id for f in visible}
@@ -293,17 +300,20 @@ class TestFilterFactsForPlayer:
 
 
 class TestAssembleContext:
+    def setup_method(self):
+        self.engine = ScopeEngine()
+
     def test_public_context_rejects_private_fact(self):
         priv = _scope(ScopeType.private_referee, player_id="p1")
         fact = _fact(priv.scope_id)
         with pytest.raises(ScopeViolationError):
-            ENGINE.assemble_public_context([fact], {priv.scope_id: priv})
+            self.engine.assemble_public_context([fact], {priv.scope_id: priv})
 
     def test_public_context_rejects_referee_fact(self):
         ref = _scope(ScopeType.referee_only)
         fact = _fact(ref.scope_id)
         with pytest.raises(ScopeViolationError):
-            ENGINE.assemble_public_context([fact], {ref.scope_id: ref})
+            self.engine.assemble_public_context([fact], {ref.scope_id: ref})
 
     def test_private_context_strips_referee_facts(self):
         pub = _scope(ScopeType.public)
@@ -311,7 +321,9 @@ class TestAssembleContext:
         f_pub = _fact(pub.scope_id)
         f_ref = _fact(ref.scope_id)
         scopes = {pub.scope_id: pub, ref.scope_id: ref}
-        result = ENGINE.assemble_private_context("p1", [f_pub, f_ref], scopes, {}, {})
+        result = self.engine.assemble_private_context(
+            "p1", [f_pub, f_ref], scopes, {}, {}
+        )
         assert f_pub.fact_id in {f.fact_id for f in result}
         assert f_ref.fact_id not in {f.fact_id for f in result}
 
@@ -321,7 +333,7 @@ class TestAssembleContext:
         scopes = {pub.scope_id: pub, ref.scope_id: ref}
         f_pub = _fact(pub.scope_id)
         f_ref = _fact(ref.scope_id)
-        result = ENGINE.assemble_referee_context([f_pub, f_ref], scopes)
+        result = self.engine.assemble_referee_context([f_pub, f_ref], scopes)
         assert len(result) == 2
 
 
@@ -331,24 +343,27 @@ class TestAssembleContext:
 
 
 class TestRefereeGuard:
+    def setup_method(self):
+        self.referee = RefereeGuard()
+
     def test_is_referee_only(self):
         scope = _scope(ScopeType.referee_only)
-        assert REFEREE.is_referee_only(scope) is True
+        assert self.referee.is_referee_only(scope) is True
 
     def test_not_referee_only(self):
-        assert REFEREE.is_referee_only(_scope(ScopeType.public)) is False
+        assert self.referee.is_referee_only(_scope(ScopeType.public)) is False
 
     def test_assert_raises_for_referee_scope(self):
         scope = _scope(ScopeType.referee_only)
         with pytest.raises(ScopeViolationError):
-            REFEREE.assert_not_referee_only(scope)
+            self.referee.assert_not_referee_only(scope)
 
     def test_strip_referee_facts(self):
         pub = _scope(ScopeType.public)
         ref = _scope(ScopeType.referee_only)
         scopes = {pub.scope_id: pub, ref.scope_id: ref}
         facts = [_fact(pub.scope_id), _fact(ref.scope_id)]
-        stripped = REFEREE.strip_referee_facts(facts, scopes)
+        stripped = self.referee.strip_referee_facts(facts, scopes)
         assert len(stripped) == 1
         assert stripped[0].owner_scope_id == pub.scope_id
 
@@ -356,7 +371,7 @@ class TestRefereeGuard:
         ref = _scope(ScopeType.referee_only)
         fact = _fact(ref.scope_id)
         with pytest.raises(ScopeViolationError):
-            REFEREE.assert_no_referee_facts([fact], {ref.scope_id: ref})
+            self.referee.assert_no_referee_facts([fact], {ref.scope_id: ref})
 
 
 # ---------------------------------------------------------------------------
@@ -365,9 +380,12 @@ class TestRefereeGuard:
 
 
 class TestFactOwnershipPolicy:
+    def setup_method(self):
+        self.policy = FactOwnershipPolicy()
+
     def test_create_fact_returns_knowledge_fact(self):
         scope = _scope(ScopeType.public)
-        fact = FACT_POLICY.create_fact(
+        fact = self.policy.create_fact(
             campaign_id="c1",
             scene_id="sc1",
             owner_scope=scope,
@@ -381,10 +399,10 @@ class TestFactOwnershipPolicy:
     def test_create_visibility_grant(self):
         priv = _scope(ScopeType.private_referee, player_id="p1")
         pub = _scope(ScopeType.public)
-        fact = FACT_POLICY.create_fact(
+        fact = self.policy.create_fact(
             "c1", "sc1", priv, KnowledgeFactType.clue, "clue"
         )
-        grant = FACT_POLICY.create_visibility_grant(
+        grant = self.policy.create_visibility_grant(
             fact, priv, pub, granting_player_id="p1"
         )
         assert grant.fact_id == fact.fact_id
@@ -393,16 +411,16 @@ class TestFactOwnershipPolicy:
     def test_cannot_grant_referee_only_fact(self):
         ref = _scope(ScopeType.referee_only)
         pub = _scope(ScopeType.public)
-        fact = FACT_POLICY.create_fact("c1", "sc1", ref, KnowledgeFactType.trap, "trap")
+        fact = self.policy.create_fact("c1", "sc1", ref, KnowledgeFactType.trap, "trap")
         with pytest.raises(ScopeViolationError, match="referee_only"):
-            FACT_POLICY.create_visibility_grant(fact, ref, pub)
+            self.policy.create_visibility_grant(fact, ref, pub)
 
     def test_cannot_grant_to_referee_only_scope(self):
         pub = _scope(ScopeType.public)
         ref = _scope(ScopeType.referee_only)
-        fact = FACT_POLICY.create_fact("c1", "sc1", pub, KnowledgeFactType.clue, "c")
+        fact = self.policy.create_fact("c1", "sc1", pub, KnowledgeFactType.clue, "c")
         with pytest.raises(ScopeViolationError, match="referee_only"):
-            FACT_POLICY.create_visibility_grant(fact, pub, ref)
+            self.policy.create_visibility_grant(fact, pub, ref)
 
 
 # ---------------------------------------------------------------------------
@@ -411,50 +429,53 @@ class TestFactOwnershipPolicy:
 
 
 class TestSideChannelPolicy:
+    def setup_method(self):
+        self.policy = SideChannelPolicy()
+
     def test_valid_creation(self):
-        SC_POLICY.validate_creation("p1", ["p1", "p2"], ["p1", "p2", "p3"])
+        self.policy.validate_creation("p1", ["p1", "p2"], ["p1", "p2", "p3"])
 
     def test_creation_requires_min_members(self):
         with pytest.raises(SideChannelError, match="at least"):
-            SC_POLICY.validate_creation("p1", ["p1"], ["p1", "p2"])
+            self.policy.validate_creation("p1", ["p1"], ["p1", "p2"])
 
     def test_creator_must_be_member(self):
         with pytest.raises(SideChannelError, match="Creator must"):
-            SC_POLICY.validate_creation("p1", ["p2", "p3"], ["p1", "p2", "p3"])
+            self.policy.validate_creation("p1", ["p2", "p3"], ["p1", "p2", "p3"])
 
     def test_unknown_member_raises(self):
         with pytest.raises(SideChannelError, match="Unknown"):
-            SC_POLICY.validate_creation("p1", ["p1", "unknown"], ["p1", "p2"])
+            self.policy.validate_creation("p1", ["p1", "unknown"], ["p1", "p2"])
 
     def test_is_member_true(self):
         ch = _channel(["p1", "p2"])
-        assert SC_POLICY.is_member(ch, "p1") is True
+        assert self.policy.is_member(ch, "p1") is True
 
     def test_is_member_false(self):
         ch = _channel(["p1", "p2"])
-        assert SC_POLICY.is_member(ch, "p3") is False
+        assert self.policy.is_member(ch, "p3") is False
 
     def test_can_receive_when_open(self):
         ch = _channel(["p1", "p2"])
-        assert SC_POLICY.can_receive_message(ch, "p1") is True
+        assert self.policy.can_receive_message(ch, "p1") is True
 
     def test_cannot_receive_when_closed(self):
         ch = _channel(["p1", "p2"], is_open=False)
-        assert SC_POLICY.can_receive_message(ch, "p1") is False
+        assert self.policy.can_receive_message(ch, "p1") is False
 
     def test_close_channel(self):
         ch = _channel(["p1", "p2"])
-        SC_POLICY.close_channel(ch)
+        self.policy.close_channel(ch)
         assert ch.is_open is False
 
     def test_close_already_closed_raises(self):
         ch = _channel(["p1", "p2"], is_open=False)
         with pytest.raises(SideChannelError, match="already closed"):
-            SC_POLICY.close_channel(ch)
+            self.policy.close_channel(ch)
 
     def test_recipients_empty_when_closed(self):
         ch = _channel(["p1", "p2"], is_open=False)
-        assert SC_POLICY.recipients(ch) == []
+        assert self.policy.recipients(ch) == []
 
 
 # ---------------------------------------------------------------------------
@@ -463,43 +484,46 @@ class TestSideChannelPolicy:
 
 
 class TestLeakageGuard:
+    def setup_method(self):
+        self.guard = LeakageGuard()
+
     def test_public_prompt_passes_with_public_facts(self):
         pub = _scope(ScopeType.public)
         facts = [_fact(pub.scope_id), _fact(pub.scope_id)]
-        LEAKAGE.check_public_prompt(facts, {pub.scope_id: pub})
+        self.guard.check_public_prompt(facts, {pub.scope_id: pub})
 
     def test_public_prompt_blocks_private_fact(self):
         priv = _scope(ScopeType.private_referee, player_id="p1")
         fact = _fact(priv.scope_id)
         with pytest.raises(ScopeViolationError):
-            LEAKAGE.check_public_prompt([fact], {priv.scope_id: priv})
+            self.guard.check_public_prompt([fact], {priv.scope_id: priv})
 
     def test_public_prompt_blocks_referee_fact(self):
         ref = _scope(ScopeType.referee_only)
         fact = _fact(ref.scope_id)
         with pytest.raises(ScopeViolationError):
-            LEAKAGE.check_public_prompt([fact], {ref.scope_id: ref})
+            self.guard.check_public_prompt([fact], {ref.scope_id: ref})
 
     def test_player_prompt_allows_own_private_fact(self):
         priv = _scope(ScopeType.private_referee, player_id="p1")
         fact = _fact(priv.scope_id)
-        LEAKAGE.check_player_prompt("p1", [fact], {priv.scope_id: priv}, {}, {})
+        self.guard.check_player_prompt("p1", [fact], {priv.scope_id: priv}, {}, {})
 
     def test_player_prompt_blocks_other_players_private_fact(self):
         """p1 must not see p2's hidden clue."""
         priv = _scope(ScopeType.private_referee, player_id="p2")
         fact = _fact(priv.scope_id, KnowledgeFactType.clue, "Only p2 sees this")
         with pytest.raises(ScopeViolationError, match="not visible"):
-            LEAKAGE.check_player_prompt("p1", [fact], {priv.scope_id: priv}, {}, {})
+            self.guard.check_player_prompt("p1", [fact], {priv.scope_id: priv}, {}, {})
 
     def test_player_prompt_blocks_referee_only_fact(self):
         """Stealth result must never reach any player prompt."""
         ref = _scope(ScopeType.referee_only)
         fact = _fact(ref.scope_id, KnowledgeFactType.trap, "Hidden trap")
         with pytest.raises(ScopeViolationError):
-            LEAKAGE.check_player_prompt("p1", [fact], {ref.scope_id: ref}, {}, {})
+            self.guard.check_player_prompt("p1", [fact], {ref.scope_id: ref}, {}, {})
 
     def test_player_prompt_blocks_unknown_scope(self):
         fact = _fact("nonexistent-scope-id")
         with pytest.raises(ScopeViolationError):
-            LEAKAGE.check_player_prompt("p1", [fact], {}, {}, {})
+            self.guard.check_player_prompt("p1", [fact], {}, {}, {})

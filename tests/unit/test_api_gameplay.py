@@ -27,6 +27,7 @@ from server.domain.enums import (
 from server.domain.helpers import utc_now as _now
 from server.orchestrator.game_loop import GameOrchestrator
 from tests.fixtures.db_helpers import create_test_session_factory
+from tests.fixtures.orchestrator_builder import add_test_players
 
 GOBLIN_CAVES_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "scenarios", "starters", "goblin_caves.yaml"
@@ -65,15 +66,6 @@ def _make_client(
     app = create_api_app(orch, bot_token=BOT_TOKEN)
     init_data = _build_init_data(user_id, "TestUser", BOT_TOKEN)
     return TestClient(app, headers={"X-Init-Data": init_data})
-
-
-def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:
-    ids = []
-    for i in range(count):
-        pid = f"player_{i}"
-        orch.add_player(pid, f"Player {i}", telegram_user_id=1000 + i)
-        ids.append(pid)
-    return ids
 
 
 def _add_private_fact(
@@ -162,7 +154,7 @@ def _add_side_channel(
 class TestSceneContext:
     def test_get_scene_context_returns_exits_and_targets(self):
         orch = _make_orchestrator()
-        _add_players(orch, 1)
+        add_test_players(orch, 1)
         scene_id = orch._find_starting_scene_id()
         client = _make_client(orch)
         resp = client.get(f"/api/scene/{scene_id}/context")
@@ -194,7 +186,7 @@ class TestSceneContext:
 class TestActionSubmission:
     def test_submit_action_accepted(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         client = _make_client(orch)
@@ -214,7 +206,7 @@ class TestActionSubmission:
 
     def test_submit_action_rejected_after_lock(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         # Submit for both and resolve to lock
@@ -235,7 +227,7 @@ class TestActionSubmission:
 
     def test_submit_action_rejected_duplicate_player(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         # First submission
@@ -255,7 +247,7 @@ class TestActionSubmission:
 
     def test_submit_action_validates_action_type(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         client = _make_client(orch)
@@ -280,7 +272,7 @@ class TestActionSubmission:
 class TestDraft:
     def test_get_draft_returns_current_draft(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         orch.drafts[pids[0]] = {
             "turn_window_id": "tw-1",
             "action_type": "move",
@@ -296,7 +288,7 @@ class TestDraft:
 
     def test_get_draft_empty_when_no_draft(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         client = _make_client(orch)
         resp = client.get(f"/api/action/draft/{pids[0]}")
         data = resp.json()
@@ -311,7 +303,7 @@ class TestDraft:
 class TestInbox:
     def test_get_inbox_returns_private_facts_only(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         _add_private_fact(orch, pids[0], payload="Secret for player 0")
         client = _make_client(orch)
         resp = client.get(f"/api/player/{pids[0]}/inbox")
@@ -322,7 +314,7 @@ class TestInbox:
 
     def test_get_inbox_excludes_public_facts(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         _add_public_fact(orch, payload="Public knowledge")
         client = _make_client(orch)
         resp = client.get(f"/api/player/{pids[0]}/inbox")
@@ -332,7 +324,7 @@ class TestInbox:
 
     def test_get_inbox_excludes_other_player_facts(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         _add_private_fact(orch, pids[1], payload="Secret for player 1")
         client = _make_client(orch)
         resp = client.get(f"/api/player/{pids[0]}/inbox")
@@ -342,7 +334,7 @@ class TestInbox:
 
     def test_get_inbox_unread_count(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         _add_private_fact(orch, pids[0], payload="Fact A")
         _add_private_fact(orch, pids[0], payload="Fact B")
         client = _make_client(orch)
@@ -363,7 +355,7 @@ class TestInbox:
 class TestChannels:
     def test_get_channels_returns_player_channels(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 3)
+        pids = add_test_players(orch, 3)
         _add_side_channel(orch, [pids[0], pids[1]], label="heist")
         client = _make_client(orch)
         resp = client.get(f"/api/player/{pids[0]}/channels")
@@ -373,7 +365,7 @@ class TestChannels:
 
     def test_get_channels_excludes_non_member(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 3)
+        pids = add_test_players(orch, 3)
         _add_side_channel(orch, [pids[0], pids[1]], label="heist")
         client = _make_client(orch)
         resp = client.get(f"/api/player/{pids[2]}/channels")
@@ -382,7 +374,7 @@ class TestChannels:
 
     def test_create_channel_success(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 3)
+        pids = add_test_players(orch, 3)
         client = _make_client(orch)
         resp = client.post(
             "/api/channel/create",
@@ -398,7 +390,7 @@ class TestChannels:
 
     def test_create_channel_validates_members(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         client = _make_client(orch)
         resp = client.post(
             "/api/channel/create",
@@ -413,7 +405,7 @@ class TestChannels:
 
     def test_send_channel_message(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         _add_side_channel(orch, [pids[0], pids[1]], label="chat")
         client = _make_client(orch)
         resp = client.post(
@@ -430,7 +422,7 @@ class TestChannels:
 
     def test_leave_channel(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 3)
+        pids = add_test_players(orch, 3)
         _add_side_channel(orch, [pids[0], pids[1], pids[2]], label="trio")
         client = _make_client(orch)
         resp = client.post(
@@ -455,7 +447,7 @@ class TestChannels:
 class TestQuests:
     def test_get_quests_grouped_by_status(self):
         orch = _make_orchestrator()
-        _add_players(orch, 1)
+        add_test_players(orch, 1)
         client = _make_client(orch)
         campaign_id = orch.campaign_id
         resp = client.get(f"/api/campaign/{campaign_id}/quests")
@@ -465,7 +457,7 @@ class TestQuests:
 
     def test_get_quests_includes_objectives(self):
         orch = _make_orchestrator()
-        _add_players(orch, 1)
+        add_test_players(orch, 1)
         # Update a quest status to active
         quests = orch.get_quests()
         if quests:
@@ -490,7 +482,7 @@ class TestQuests:
 class TestClues:
     def test_get_clues_returns_player_discoverable_facts(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         _add_private_fact(
             orch, pids[0], fact_type=KnowledgeFactType.clue, payload="Hidden gem"
         )
@@ -502,7 +494,7 @@ class TestClues:
 
     def test_get_clues_grouped_by_scene(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         scene_id = orch._find_starting_scene_id()
         _add_private_fact(
             orch,
@@ -534,7 +526,7 @@ class TestClues:
 class TestMap:
     def test_get_map_returns_discovered_scenes(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
@@ -546,7 +538,7 @@ class TestMap:
     def test_get_map_excludes_unvisited(self):
         """Scenes not connected to the player's current scene are excluded."""
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
@@ -557,7 +549,7 @@ class TestMap:
     def test_get_map_shows_adjacent_undiscovered_as_question(self):
         """Adjacent scenes to the current scene should appear as nodes."""
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")
@@ -577,7 +569,7 @@ class TestMap:
         its exits dict.
         """
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         campaign_id = orch.campaign_id
         client = _make_client(orch)
         resp = client.get(f"/api/campaign/{campaign_id}/map?player_id={pids[0]}")

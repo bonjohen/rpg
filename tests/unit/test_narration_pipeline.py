@@ -13,33 +13,10 @@ import pytest
 from bot.delivery import generate_narration
 from models.main.context import ActionContext
 from models.main.schemas import NarrationOutput
-from server.domain.entities import Scene, TurnLogEntry
 from server.domain.enums import SceneState
+from tests.fixtures.builders import make_scene, make_turn_log_entry
 
 _NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
-
-
-def _make_scene(state: SceneState = SceneState.idle) -> Scene:
-    return Scene(
-        scene_id="s1",
-        campaign_id="c1",
-        name="Cave Entrance",
-        description="A dark mouth.",
-        created_at=_NOW,
-        state=state,
-    )
-
-
-def _make_log_entry(narration: str = "Basic fallback narration.") -> TurnLogEntry:
-    return TurnLogEntry(
-        log_entry_id="log1",
-        campaign_id="c1",
-        scene_id="s1",
-        turn_window_id="tw1",
-        turn_number=1,
-        committed_at=_NOW,
-        narration=narration,
-    )
 
 
 def _make_action_ctx() -> ActionContext:
@@ -64,7 +41,10 @@ class TestGenerateNarration:
         ) as mock_narrate:
             mock_narrate.return_value = (output, log)
             result = await generate_narration(
-                adapter, _make_log_entry(), _make_scene(), [_make_action_ctx()]
+                adapter,
+                make_turn_log_entry(),
+                make_scene(name="Cave Entrance", description="A dark mouth."),
+                [_make_action_ctx()],
             )
 
         assert result == "The torchlight reveals old bones."
@@ -81,7 +61,10 @@ class TestGenerateNarration:
             side_effect=RuntimeError("model timeout"),
         ):
             result = await generate_narration(
-                adapter, _make_log_entry(), _make_scene(), [_make_action_ctx()]
+                adapter,
+                make_turn_log_entry(narration="Basic fallback narration."),
+                make_scene(name="Cave Entrance", description="A dark mouth."),
+                [_make_action_ctx()],
             )
 
         assert result == "Basic fallback narration."
@@ -97,7 +80,10 @@ class TestGenerateNarration:
             side_effect=TimeoutError("slow"),
         ):
             result = await generate_narration(
-                adapter, _make_log_entry(), _make_scene(), [_make_action_ctx()]
+                adapter,
+                make_turn_log_entry(narration="Basic fallback narration."),
+                make_scene(name="Cave Entrance", description="A dark mouth."),
+                [_make_action_ctx()],
             )
 
         assert result == "Basic fallback narration."
@@ -115,8 +101,12 @@ class TestGenerateNarration:
             mock_narrate.return_value = (output, log)
             result = await generate_narration(
                 adapter,
-                _make_log_entry(),
-                _make_scene(state=SceneState.resolving),
+                make_turn_log_entry(),
+                make_scene(
+                    name="Cave Entrance",
+                    description="A dark mouth.",
+                    state=SceneState.resolving,
+                ),
                 [_make_action_ctx()],
             )
 
@@ -127,7 +117,10 @@ class TestGenerateNarration:
     async def test_no_main_adapter_uses_fallback(self):
         """No main adapter -> fallback narration."""
         result = await generate_narration(
-            None, _make_log_entry(), _make_scene(), [_make_action_ctx()]
+            None,
+            make_turn_log_entry(narration="Basic fallback narration."),
+            make_scene(name="Cave Entrance", description="A dark mouth."),
+            [_make_action_ctx()],
         )
         assert result == "Basic fallback narration."
 
@@ -143,7 +136,10 @@ class TestGenerateNarration:
         ) as mock_narrate:
             mock_narrate.return_value = (output, log)
             result = await generate_narration(
-                adapter, _make_log_entry(), _make_scene(), [_make_action_ctx()]
+                adapter,
+                make_turn_log_entry(narration="Basic fallback narration."),
+                make_scene(name="Cave Entrance", description="A dark mouth."),
+                [_make_action_ctx()],
             )
 
         assert result == "Basic fallback narration."
@@ -159,8 +155,11 @@ class TestGenerateNarration:
             "bot.delivery.narrate_scene", new_callable=AsyncMock
         ) as mock_narrate:
             mock_narrate.return_value = (output, log)
+            scene = make_scene(
+                scene_id="s1", name="Cave Entrance", description="A dark mouth."
+            )
             await generate_narration(
-                adapter, _make_log_entry(), _make_scene(), [_make_action_ctx()]
+                adapter, make_turn_log_entry(), scene, [_make_action_ctx()]
             )
 
         call_args = mock_narrate.call_args

@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from server.domain.entities import Character, NPC, Scene
+from server.domain.entities import Character, NPC
 from server.domain.enums import SceneState, StanceToParty
+from tests.fixtures.builders import make_scene
 from server.npc.social import SocialActionInput, SocialEngine, SocialOutcome
 from server.scene.membership import SceneMembershipEngine
 
@@ -50,14 +51,13 @@ def _make_input(
     )
 
 
-def _make_scene(scene_id: str, character_ids: list[str] | None = None) -> Scene:
-    return Scene(
+def _make_scene(scene_id: str, character_ids: list[str] | None = None):
+    return make_scene(
         scene_id=scene_id,
         campaign_id="c1",
         name=f"Scene {scene_id}",
         description="",
         state=SceneState.awaiting_actions,
-        created_at=datetime(2026, 1, 1),
         character_ids=character_ids or [],
         player_ids=[],
     )

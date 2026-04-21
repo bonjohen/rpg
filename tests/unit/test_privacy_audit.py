@@ -13,12 +13,12 @@ from __future__ import annotations
 import pytest
 
 from server.domain.entities import (
-    ConversationScope,
     KnowledgeFact,
     SideChannel,
     VisibilityGrant,
 )
 from server.domain.enums import KnowledgeFactType, ScopeType
+from tests.fixtures.builders import make_conversation_scope
 from server.scope.engine import ScopeEngine, ScopeViolationError
 from server.scope.facts import FactOwnershipPolicy
 from server.scope.leakage_guard import LeakageGuard
@@ -34,13 +34,8 @@ from server.domain.helpers import new_id as _uid, utc_now as _now
 # ---------------------------------------------------------------------------
 
 
-def _scope(
-    scope_type: ScopeType,
-    player_id: str | None = None,
-    side_channel_id: str | None = None,
-) -> ConversationScope:
-    return ConversationScope(
-        scope_id=_uid(),
+def _scope(scope_type, player_id=None, side_channel_id=None):
+    return make_conversation_scope(
         campaign_id="c1",
         scope_type=scope_type,
         player_id=player_id,

@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 from server.api.app import create_api_app
 from server.orchestrator.game_loop import GameOrchestrator
 from tests.fixtures.db_helpers import create_test_session_factory
+from tests.fixtures.orchestrator_builder import add_test_players
 
 GOBLIN_CAVES_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "scenarios", "starters", "goblin_caves.yaml"
@@ -39,15 +40,6 @@ def _make_orchestrator() -> GameOrchestrator:
     return orch
 
 
-def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:
-    ids = []
-    for i in range(count):
-        pid = f"player_{i}"
-        orch.add_player(pid, f"Player {i}", telegram_user_id=1000 + i)
-        ids.append(pid)
-    return ids
-
-
 # -------------------------------------------------------------------
 # BUG-055: Auth guard on data-returning endpoints
 # -------------------------------------------------------------------
@@ -56,7 +48,7 @@ def _add_players(orch: GameOrchestrator, count: int = 2) -> list[str]:
 class TestBUG055AuthGuard:
     def test_get_player_requires_auth(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         app = create_api_app(orch, bot_token=BOT_TOKEN)
         client = TestClient(app, raise_server_exceptions=False)
         # No X-Init-Data header → 422 (missing required header)
@@ -65,7 +57,7 @@ class TestBUG055AuthGuard:
 
     def test_get_player_rejects_invalid_auth(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         app = create_api_app(orch, bot_token=BOT_TOKEN)
         bad_init = _build_init_data(1000, "TestUser", "wrong_token")
         client = TestClient(app, headers={"X-Init-Data": bad_init})
@@ -74,7 +66,7 @@ class TestBUG055AuthGuard:
 
     def test_get_player_succeeds_with_valid_auth(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         app = create_api_app(orch, bot_token=BOT_TOKEN)
         init_data = _build_init_data(1000, "TestUser", BOT_TOKEN)
         client = TestClient(app, headers={"X-Init-Data": init_data})
@@ -91,7 +83,7 @@ class TestBUG055AuthGuard:
 
     def test_get_character_requires_auth(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 1)
+        pids = add_test_players(orch, 1)
         char = orch.get_player_character(pids[0])
         app = create_api_app(orch, bot_token=BOT_TOKEN)
         client = TestClient(app, raise_server_exceptions=False)
@@ -116,7 +108,7 @@ class TestBUG055AuthGuard:
 class TestBUG056ActionSubmitterVerification:
     def test_submit_action_for_own_player_accepted(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         app = create_api_app(orch, bot_token=BOT_TOKEN)
@@ -137,7 +129,7 @@ class TestBUG056ActionSubmitterVerification:
 
     def test_submit_action_for_other_player_rejected(self):
         orch = _make_orchestrator()
-        pids = _add_players(orch, 2)
+        pids = add_test_players(orch, 2)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         app = create_api_app(orch, bot_token=BOT_TOKEN)
@@ -159,7 +151,7 @@ class TestBUG056ActionSubmitterVerification:
 
     def test_submit_action_for_nonexistent_player_rejected(self):
         orch = _make_orchestrator()
-        _add_players(orch, 1)
+        add_test_players(orch, 1)
         scene_id = orch._find_starting_scene_id()
         tw = orch.open_turn(scene_id, duration_seconds=90)
         app = create_api_app(orch, bot_token=BOT_TOKEN)

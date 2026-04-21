@@ -12,6 +12,16 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 
+def make_bot_config(**kwargs):
+    """Build a BotConfig with sensible defaults."""
+    from bot.config import BotConfig
+
+    return BotConfig(
+        group_chat_id=kwargs.get("group_chat_id", -1001234567890),
+        play_topic_id=kwargs.get("play_topic_id", None),
+    )
+
+
 def make_user(
     user_id: int = 100,
     first_name: str = "Alice",
