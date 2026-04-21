@@ -8,15 +8,39 @@ AI-refereed multiplayer text RPG delivered via Telegram. The game server owns st
 
 ## Active Plan
 
-`docs/plan.md` — work one phase at a time, one task at a time.
+`docs/chat_loop_plan.md` — 9-phase plan to wire the chat-driven game loop. Work one phase at a time, one task at a time.
 
-Current phase: **All bug-fix plans complete.** Only 1 P3 bug remains open (BUG-002: narration fallback text repetitive). Plans: `docs/bugfix_plan.md` (P0/P1), `docs/p2_bugfix_plan.md` (P2).
+**Current phase: Phase 9 (Documentation and Cleanup) — Phases 1-8 complete, 1550 tests pass.**
+
+### Chat-Driven Game Loop
+
+The core UX problem: all infrastructure (turn engine, scope, combat, models, persistence, 1479 tests) exists, but bot handlers log and drop player messages instead of dispatching to the orchestrator. The design doc describes a conversational game loop; the implementation requires slash commands for every action. This plan closes that gap.
+
+**Design docs:**
+- `docs/chat_loop_pdr.md` — Physical design requirements (7 integration gaps, async/sync boundary, scope safety, replayability)
+- `docs/chat_loop_test_plan.md` — ~73 new tests across 8 specification sections
+- `docs/chat_loop_plan.md` — 9-phase implementation plan
+
+**Phases:**
+1. Scene Introduction & Scenario Metadata — `/newgame` and `/join` produce narrative output
+2. Bot Handler Dispatch & Orchestrator Wiring — messages dispatch to orchestrator
+3. Auto-Turn Management — turns open/resolve automatically
+4. Rich Narration & Result Delivery — main model narration, private facts via DM
+5. Inline Keyboard & Callback Queries — Ready/Pass buttons
+6. Timer Expiry via Job Queue — PTB `job_queue.run_once()` auto-resolve
+7. Question Intent Handling — AI responses via `propose_ruling()`
+8. E2E Integration Tests — goblin_caves playthrough, PDR §9 verification
+9. Documentation & Cleanup
+
+### Prior Completed Plans
 
 All 20 original phases, 7 database integration phases, 7 P0/P1 bug-fix phases, and 7 P2 bug-fix phases are complete:
 - **DB Phase 1-7**: Full database integration (SQLite/PostgreSQL via SQLAlchemy, repositories, optimistic locking). 1327 tests.
 - **Bug-fix Phase 1-7 (P0/P1)**: 24 bugs fixed across security, bot handlers, combat, contracts, timer, NPC, reliability. 1396 tests pass.
 - **P2 Bug-fix Phase 1-7**: 48 P2 bugs fixed across API auth, timer arithmetic, combat scaling, exploration state, NPC types, model contracts, API routes, bot safety, scenario errors, connection reuse, datetime hardening, replay warnings. 1479 tests pass.
 - **P3 Bug fixes**: 12 of 13 P3 bugs fixed (correctness, performance, data model). Enum type safety for NPC/MonsterGroup fields, BFS deque optimization, set-based lookups, quest title persistence, exploration memory text, side channel typing, scope nullability.
+- **App wiring**: dotenv loading, GameOrchestrator creation at startup, `/join` calls `add_player()`, campaign dedup on `/newgame`.
+- **Chat loop Phases 1-8**: Scene introductions, handler dispatch, auto-turn management, rich narration, inline keyboard turn controls, timer expiry via job queue, question intent handling, E2E integration tests. 1550 tests pass.
 
 ## Key Design Decisions (do not revisit without cause)
 
@@ -71,6 +95,9 @@ C:\Projects\rpg\
 │   └── starters/            # 4 starter scenarios (goblin_caves, haunted_manor, forest_ambush, merchant_quarter)
 ├── webapp/                  # Mini App frontend (HTML/JS/CSS)
 ├── docs/                    # Design docs, plan, release readiness
+│   ├── chat_loop_pdr.md     # Chat-driven game loop PDR (active)
+│   ├── chat_loop_test_plan.md # Chat loop test plan (~73 new tests)
+│   ├── chat_loop_plan.md    # Chat loop implementation plan (active, 9 phases)
 │   ├── release_readiness.md # Open bugs and release criteria
 │   ├── feature_freeze.md   # Feature freeze notice
 │   ├── miniapp_architecture.md # Mini App architecture
@@ -93,10 +120,15 @@ See `docs/phase_status.md` for the authoritative phase log.
 
 ## Environment Quick Reference
 
-- Python version: 3.12+ (see `docs/repo_conventions.md`)
+- Python version: 3.14+ (3.14 in use locally)
 - Database: SQLite by default (`sqlite:///rpg.db`), PostgreSQL via `DATABASE_URL` env var
+- Environment variables: loaded from `.env` via `python-dotenv` in `bot/__main__.py`
+  - `BOT_TOKEN` — Telegram bot token (from BotFather)
+  - `GROUP_CHAT_ID` — Telegram supergroup chat ID
+  - `OPENAI_API_KEY` — system env var (not in .env), used by main model adapter
+  - `FAST_MODEL_BASE_URL` — Ollama endpoint (default `http://localhost:11434`)
+- Startup: `python -m bot` from project root. Creates DB tables, loads orchestrator with all subsystems.
 - Startup recovery: `GameOrchestrator.startup()` creates tables, loads campaigns, reconstructs timers, recovers stuck turns
-- Secrets: see `docs/repo_conventions.md`
 - Run tests: `pytest`
 - Lint: `ruff check . && ruff format --check .`
 - Never push without explicit per-message authorization

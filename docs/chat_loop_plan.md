@@ -183,7 +183,7 @@ Open  ──>  Started  ──>  Completed
 | 7.3 | Completed | 2026-04-20 08:55 PM | 2026-04-20 09:05 PM | Add fallback: if `propose_ruling()` fails, return "The referee considers your question... Try rephrasing or take an action instead." |
 | 7.4 | Completed | 2026-04-20 09:05 PM | 2026-04-20 09:10 PM | Tests already specified in §3.2 of test plan (`test_question_intent_calls_ruling`, `test_question_private_stays_private`). Verify they pass. |
 | 7.5 | Completed | 2026-04-20 09:10 PM | 2026-04-20 09:12 PM | Run `pytest`, `ruff check .`, `ruff format --check .`. All green. |
-| 7.6 | Started | 2026-04-20 09:12 PM | | Stage and commit: "Phase 7: Question intent handling via propose_ruling" |
+| 7.6 | Completed | 2026-04-20 09:12 PM | 2026-04-20 09:14 PM | Stage and commit: "Phase 7: Question intent handling via propose_ruling" |
 
 ### Phase 7 Summary
 
@@ -200,20 +200,20 @@ Open  ──>  Started  ──>  Completed
 
 | Task | Status | Started (PST) | Completed (PST) | Description |
 |------|--------|---------------|------------------|-------------|
-| 8.1 | Open | | | Write `tests/integration/test_chat_turn_e2e.py`: 6 tests per test plan §4.1 (full turn via chat, multi-player, private question, timeout fallback, consecutive turns, private fact delivery). |
-| 8.2 | Open | | | Write `tests/integration/test_goblin_caves_playthrough.py`: 6 tests per test plan §4.2 (newgame intro, join cave entrance, pick up torch, enter cave triggers lookout, talk to Grix, private awareness check). |
-| 8.3 | Open | | | Add any needed fixture builders per test plan §6 (`make_mock_orchestrator_with_scenario`, `make_mock_fast_adapter`, `make_mock_main_adapter`, `make_mock_job_queue`). |
-| 8.4 | Open | | | Run full suite: `pytest`. Verify all 1,479 existing tests still pass plus ~73 new tests. |
-| 8.5 | Open | | | Run `ruff check .`, `ruff format --check .`. All green. |
-| 8.6 | Open | | | **Critical review: walk through every PDR §9 verification criterion against the test traceability matrix (test plan §9). Confirm each criterion has a passing test.** |
-| 8.7 | Open | | | Update `docs/release_readiness.md`: check off "10-turn scripted session" and "No scope leakage in extended session" criteria if applicable. |
-| 8.8 | Open | | | Update `STARTUP.md` with current phase status and test count. |
-| 8.9 | Open | | | Stage and commit: "Phase 8: E2E integration tests and goblin caves playthrough" |
+| 8.1 | Completed | 2026-04-20 09:14 PM | 2026-04-20 09:25 PM | Write `tests/integration/test_chat_turn_e2e.py`: 6 tests per test plan §4.1 (full turn via chat, multi-player, private question, timeout fallback, consecutive turns, private fact delivery). |
+| 8.2 | Completed | 2026-04-20 09:25 PM | 2026-04-20 09:40 PM | Write `tests/integration/test_goblin_caves_playthrough.py`: 6 tests per test plan §4.2 (newgame intro, join cave entrance, pick up torch, enter cave triggers lookout, talk to Grix, private awareness check). |
+| 8.3 | Completed | 2026-04-20 09:25 PM | 2026-04-20 09:40 PM | Add any needed fixture builders per test plan §6 — mock classify/extract helpers added inline in integration test files. `make_callback_query` and `make_callback_update` already added in Phase 5. |
+| 8.4 | Completed | 2026-04-20 09:40 PM | 2026-04-20 09:45 PM | Run full suite: `pytest`. 1550 tests pass (1479 existing + 71 new). |
+| 8.5 | Completed | 2026-04-20 09:40 PM | 2026-04-20 09:45 PM | Run `ruff check .`, `ruff format --check .`. All green. |
+| 8.6 | Completed | 2026-04-20 09:45 PM | 2026-04-20 09:50 PM | **Critical review: all 9 PDR §9 criteria verified. 13 traceability tests passing.** |
+| 8.7 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `docs/release_readiness.md`: check off "10-turn scripted session" and "No scope leakage in extended session" criteria if applicable. |
+| 8.8 | Completed | 2026-04-20 09:50 PM | 2026-04-20 09:55 PM | Update `STARTUP.md` with current phase status and test count. |
+| 8.9 | Started | 2026-04-20 09:55 PM | | Stage and commit: "Phase 8: E2E integration tests and goblin caves playthrough" |
 
 ### Phase 8 Summary
 
-- **Changes:** TBD
-- **Changes hosted at:** TBD
+- **Changes:** New `tests/integration/test_chat_turn_e2e.py` (6 tests) and `tests/integration/test_goblin_caves_playthrough.py` (6 tests). All 9 PDR §9 verification criteria covered by passing tests. Updated `docs/release_readiness.md` with criteria check-offs. Updated `STARTUP.md` with current status. 1550 tests pass, lint clean.
+- **Changes hosted at:** Local only
 - **Commit:** `Phase 8: E2E integration tests and goblin caves playthrough`
 
 ---

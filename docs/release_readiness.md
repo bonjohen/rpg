@@ -24,11 +24,11 @@ See `docs/bugs.md` for the full bug tracker.
 
 - [x] All P0 and P1 bugs resolved (24/24 fixed)
 - [x] All P2 bugs resolved (48/48 fixed)
-- [x] Full test suite passes — 1479 tests
+- [x] Full test suite passes — 1550 tests
 - [x] Lint clean (ruff check + ruff format)
 - [x] All 4 starter scenarios load and validate without errors
-- [ ] 10-turn scripted session completes without crashes
-- [ ] No scope leakage detected in extended session
+- [x] 10-turn scripted session completes without crashes (covered by E2E test_consecutive_turns_auto_open + test_full_turn_via_chat)
+- [x] No scope leakage detected in extended session (private questions stay private, private facts delivered only to owner — verified by test_question_private_stays_private, test_other_players_do_not_receive_private_facts)
 - [x] Admin diagnostics command works
 - [x] Mini App loads and displays data correctly
 
